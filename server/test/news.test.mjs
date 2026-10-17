@@ -94,6 +94,8 @@ test("scheduled news becomes visible exactly on time without a background worker
   advance(1);
   assert.equal((await news.newsList(member))[0].id, article.id);
   assert.equal((await news.newsGet(member, article.id)).id, article.id);
+  assert.equal((await news.newsList(member))[0].status, "published");
+  assert.equal((await news.newsGet(member, article.id)).status, "published");
 });
 test("saving a draft cancels a scheduled publication and archive hides a published article", async () => {
   const { news, actor, advance } = await fixture();
@@ -215,4 +217,18 @@ test("HTTP news routes require sign-in, reject member writes and support publish
   await store.set("users/publisher", { ...actor, role: "member" });
   assert.equal((await call("/api/news", "POST", input())).status, 403);
   assert.equal((await call("/api/news/manage")).status, 403);
+});
+
+test("due article status uses server time and list responses omit bodies", async () => {
+  const { news, actor, advance } = await fixture();
+  const article = await news.newsSave(
+    actor,
+    input({ status: "scheduled", publishAt: "2026-10-17T12:01:00Z" }),
+  );
+  advance(60000);
+  assert.equal((await news.newsGet(actor, article.id)).status, "published");
+  assert.equal((await news.newsList(actor))[0].status, "published");
+  const managed = (await news.newsList(actor, true))[0];
+  assert.equal(managed.status, "published");
+  assert.equal("body" in managed, false);
 });

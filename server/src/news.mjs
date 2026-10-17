@@ -70,13 +70,19 @@ const summary = (article) => {
   return card;
 };
 export function createNews(store, { now = Date.now } = {}) {
+  const visibleArticle = (article) =>
+    article.status === "scheduled" && article.publishAt <= now()
+      ? { ...article, status: "published" }
+      : article;
   async function list(profile, manage = false) {
     approved(profile);
     if (manage) {
       newsPublisher(profile);
-      return store.newsList(base, null, 200);
+      return (await store.newsList(base, null, 200)).map((article) =>
+        summary(visibleArticle(article)),
+      );
     }
-    return store.newsList(feed, now(), 200);
+    return (await store.newsList(feed, now(), 200)).map(visibleArticle);
   }
   async function get(profile, id) {
     approved(profile);
@@ -87,7 +93,7 @@ export function createNews(store, { now = Date.now } = {}) {
       ["published", "scheduled"].includes(article.status) &&
       article.publishAt <= now();
     if (!visible) newsPublisher(profile);
-    return article;
+    return visibleArticle(article);
   }
   async function save(profile, body, id = null) {
     newsPublisher(profile);
