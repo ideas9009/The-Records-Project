@@ -12,7 +12,7 @@ Sessions use random 256-bit tokens. Only a SHA-256 digest is stored in server_se
 ## Deploy in Render
 
 1. Push this source to the repository above. In Render choose New > Web Service and connect that repository. Or create a Blueprint using render.yaml.
-2. Use the repository root (do not set Root Directory to server). Runtime: Node. Region: Frankfurt. Build: npm ci --prefix server. Start: npm start --prefix server. Health check: /health. The Blueprint selects the free plan; Render may sleep while idle and requests can take longer after inactivity.
+2. Use the repository root (do not set Root Directory to server). Runtime: Node. Region: Oregon. Build: npm ci --prefix server. Start: npm start --prefix server. Health check: /health. The Blueprint selects the free plan; Render may sleep while idle and requests can take longer after inactivity.
 3. Set FIREBASE_PROJECT_ID to the-records-project-plus. Set GOOGLE_APPLICATION_CREDENTIALS to /etc/secrets/firebase-service-account.json. Set ALLOWED_ORIGINS to http://127.0.0.1:1420,http://localhost:1420,http://tauri.localhost,https://tauri.localhost. Add another exact origin only if needed for a known app preview.
 4. Create a dedicated Google Cloud service account for Render in the-records-project-plus and grant Cloud Datastore User for Firestore access. Generate its JSON key yourself and put its contents directly into a Render Secret File named firebase-service-account.json. Do not put this file in Git, paste it in chat, or use the Firebase web configuration as a server credential.
 5. Deploy the service. Startup checks Firestore access and fails if credentials are unavailable. Confirm /health returns status ok. The key and the source code are never sent to the desktop app.
