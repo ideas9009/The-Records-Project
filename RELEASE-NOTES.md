@@ -122,3 +122,7 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 
 - Replaced News navigation browser confirmations with the app’s styled discard dialog, with Keep editing and Discard changes actions.
 - Expanded News Preview to show the full article/meeting using the published article layout, including thumbnail, heading, subtitle, author, date, formatted text and meeting controls. Preview preserves editor changes and does not publish content.
+
+- Added loading spinners to server requests, active navigation, data views and asynchronous actions, including sign-in, registration, news publishing, gallery uploads and approvals.
+- Added a map-loading indicator and feedback while Windows preferences are loading or saving.
+- Changed discard and logout confirmations to expand from their initiating button and overlay nearby content, keeping the rest of the page visible.

@@ -1,3 +1,5 @@
+import { Spinner, LoadingStatus } from "../components/Loading";
+import ExpandingConfirmation from "../components/ExpandingConfirmation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "../lib/auth-context";
 import { canPublishNews } from "../lib/access";
@@ -116,7 +118,7 @@ export default function News({ page, go }: { page: string; go: Go }) {
             disabled={undoBusy}
             onClick={() => void undoPublish()}
           >
-            <Icon name="undo" />
+            {undoBusy ? <Spinner /> : <Icon name="undo" />}
             {undoBusy ? "Undoing…" : "Undo"}
             {!undoBusy && <small>{seconds}s</small>}
           </button>
@@ -137,6 +139,8 @@ export default function News({ page, go }: { page: string; go: Go }) {
   );
 }
 export function MeetingActions({ url }: { url: string }) {
+  const [joining, setJoining] = useState(false),
+    [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false),
     [error, setError] = useState("");
   useEffect(() => {
@@ -145,12 +149,16 @@ export function MeetingActions({ url }: { url: string }) {
     return () => clearTimeout(timer);
   }, [copied]);
   async function copy() {
+    if (copying) return;
+    setCopying(true);
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setError("");
     } catch {
       setError("The meeting link could not be copied. Please try again.");
+    } finally {
+      setCopying(false);
     }
   }
   return (
@@ -159,21 +167,32 @@ export function MeetingActions({ url }: { url: string }) {
         <button
           type="button"
           className="news-primary"
+          disabled={joining}
+          aria-busy={joining}
           onClick={() => {
+            setJoining(true);
             setError("");
-            void external(url).catch((reason) => setError(message(reason)));
+            void external(url)
+              .catch((reason) => setError(message(reason)))
+              .finally(() => setJoining(false));
           }}
         >
-          <Icon name="videocam" />
+          {joining ? <Spinner /> : <Icon name="videocam" />}
           Join Meeting
         </button>
         <button
           type="button"
+          disabled={copying}
+          aria-busy={copying}
           aria-label="Copy meeting link"
           title={copied ? "Copied" : "Copy meeting link"}
           onClick={() => void copy()}
         >
-          <Icon name={copied ? "check" : "content_copy"} />
+          {copying ? (
+            <Spinner />
+          ) : (
+            <Icon name={copied ? "check" : "content_copy"} />
+          )}
         </button>
       </div>
       {copied && (
@@ -298,7 +317,7 @@ export function Feed({
         </div>
       )}
       {loading ? (
-        <p role="status">Loading news…</p>
+        <LoadingStatus>Loading news…</LoadingStatus>
       ) : (
         <>
           <p className="news-count" role="status">
@@ -450,7 +469,7 @@ function Article({
             </button>
             {article.status !== "archived" && (
               <button disabled={busy} onClick={() => void archive()}>
-                <Icon name="archive" />
+                {busy ? <Spinner /> : <Icon name="archive" />}
                 {busy ? "Archiving…" : "Archive"}
               </button>
             )}
@@ -468,7 +487,7 @@ function Article({
       {article ? (
         <ArticleContent article={article} />
       ) : (
-        !error && <p role="status">Loading article…</p>
+        !error && <LoadingStatus>Loading article…</LoadingStatus>
       )}
     </div>
   );
@@ -548,16 +567,20 @@ function NewsEditor({
     [dirty, setDirty] = useState(false);
   const picker = useRef<HTMLInputElement>(null),
     unsaved = useRef(false),
-    discardDialog = useRef<HTMLDialogElement>(null),
     pendingNavigation = useRef<null | (() => void)>(null);
+  const [discardAnchor, setDiscardAnchor] = useState<HTMLElement | null>(null);
   unsaved.current = dirty;
   useEffect(() => {
     const guard = (event: Event) => {
       if (!unsaved.current) return;
       event.preventDefault();
       pendingNavigation.current =
-        (event as CustomEvent<{ proceed: () => void }>).detail?.proceed || null;
-      if (!discardDialog.current?.open) discardDialog.current?.showModal();
+        (event as CustomEvent<{ proceed: () => void; anchor?: HTMLElement }>)
+          .detail?.proceed || null;
+      setDiscardAnchor(
+        (event as CustomEvent<{ anchor?: HTMLElement }>).detail?.anchor ||
+          (document.activeElement as HTMLElement),
+      );
     };
     window.addEventListener("records-navigate", guard);
     return () => window.removeEventListener("records-navigate", guard);
@@ -694,35 +717,38 @@ function NewsEditor({
   };
   function cancelDiscard() {
     pendingNavigation.current = null;
-    discardDialog.current?.close();
+    setDiscardAnchor(null);
   }
   function discard() {
     const proceed = pendingNavigation.current;
     pendingNavigation.current = null;
     unsaved.current = false;
     setDirty(false);
-    discardDialog.current?.close();
+    setDiscardAnchor(null);
     proceed?.();
   }
   return (
     <div className="news-page">
-      <dialog
-        ref={discardDialog}
-        className="card logout-dialog news-discard-dialog"
-        aria-labelledby="news-discard-heading"
-        onCancel={() => {
-          pendingNavigation.current = null;
-        }}
-      >
-        <h2 id="news-discard-heading">Discard unsaved changes?</h2>
-        <p>Your changes have not been saved.</p>
-        <div className="logout-actions">
-          <button autoFocus onClick={cancelDiscard}>
-            Keep editing
-          </button>
-          <button onClick={discard}>Discard changes</button>
-        </div>
-      </dialog>
+      <ExpandingConfirmation
+        anchor={discardAnchor}
+        title="Discard unsaved changes?"
+        message="Your changes have not been saved."
+        triggerLabel={
+          discardAnchor?.querySelector(".nav-label")?.textContent ||
+          discardAnchor?.getAttribute("aria-label") ||
+          discardAnchor?.textContent
+            ?.replace(/arrow_back|north_east/g, "")
+            .trim() ||
+          "News"
+        }
+        triggerIcon={
+          discardAnchor?.querySelector(".material-symbol")?.textContent ||
+          "arrow_back"
+        }
+        confirmText="Discard changes"
+        onCancel={cancelDiscard}
+        onConfirm={discard}
+      />
       <div className="news-article-actions">
         <button onClick={() => go(id ? "news:" + id : "news")}>
           <Icon name="arrow_back" />
@@ -749,7 +775,7 @@ function NewsEditor({
         </p>
       )}
       {loading ? (
-        <p role="status">Loading article…</p>
+        <LoadingStatus>Loading article…</LoadingStatus>
       ) : id && !article ? null : (
         <form
           noValidate
@@ -857,7 +883,11 @@ function NewsEditor({
                   disabled={processing || busy}
                   onClick={() => picker.current?.click()}
                 >
-                  <Icon name="add_photo_alternate" />
+                  {processing ? (
+                    <Spinner />
+                  ) : (
+                    <Icon name="add_photo_alternate" />
+                  )}
                   {processing
                     ? "Processing…"
                     : thumbnail
@@ -909,6 +939,7 @@ function NewsEditor({
                   type="submit"
                   disabled={busy || processing}
                 >
+                  {(busy || processing) && <Spinner />}
                   {busy
                     ? "Saving…"
                     : publication === "schedule"
@@ -920,7 +951,7 @@ function NewsEditor({
                   disabled={busy || processing}
                   onClick={() => void save(true)}
                 >
-                  Save draft
+                  {busy && <Spinner />}Save draft
                 </button>
               </div>
             </section>

@@ -1,9 +1,80 @@
-import {beforeEach,afterEach,it,expect,vi} from "vitest";
-import {apiRequest,session,setSession} from "../src/lib/api";
-import {signInCloud,signOutCloud,registerCloud} from "../src/lib/cloud-auth";
-beforeEach(()=>{vi.stubEnv("VITE_API_URL","");const records=new Map<string,string>();vi.stubGlobal("sessionStorage",{getItem:(key:string)=>records.get(key)??null,setItem:(key:string,value:string)=>records.set(key,value),removeItem:(key:string)=>records.delete(key)});vi.stubGlobal("window",{dispatchEvent:vi.fn()});vi.stubGlobal("fetch",vi.fn())});afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs()});
-it("signs in through The Records Project API and stores only the session token",async()=>{vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({token:"opaque-token",account:{username:"Citizen"}}),{status:200}));await signInCloud("Citizen","test-password");expect(session()).toBe("opaque-token");const [path,options]=vi.mocked(fetch).mock.calls[0];expect(path).toBe("/api/auth/login");expect(options?.body).toBe(JSON.stringify({username:"Citizen",password:"test-password"}));expect(options?.credentials).toBe("omit")});
-it("revokes a session at the API before returning to login",async()=>{setSession("opaque-token");vi.mocked(fetch).mockResolvedValue(new Response('{"ok":true}',{status:200}));await signOutCloud();expect(vi.mocked(fetch).mock.calls[0][0]).toBe("/api/auth/logout");expect(session()).toBeNull()});
-it("keeps the session available to retry if logout fails",async()=>{setSession("opaque-token");vi.mocked(fetch).mockRejectedValue(Error("offline"));await expect(signOutCloud()).rejects.toThrow("could not be reached");expect(session()).toBe("opaque-token")});
-it("clears an expired session and never falls back to a local account",async()=>{setSession("expired-token");vi.mocked(fetch).mockResolvedValue(new Response('{"error":"Expired"}',{status:401}));await expect(apiRequest("/api/auth/me")).rejects.toThrow("Expired");expect(session()).toBeNull()});
-it("does not send mismatched passwords to registration",async()=>{await expect(registerCloud("Citizen","test-password","different")).rejects.toThrow("match");expect(fetch).not.toHaveBeenCalled()});
+import { requestCount } from "../src/lib/request-activity";
+import { beforeEach, afterEach, it, expect, vi } from "vitest";
+import { apiRequest, session, setSession } from "../src/lib/api";
+import {
+  signInCloud,
+  signOutCloud,
+  registerCloud,
+} from "../src/lib/cloud-auth";
+beforeEach(() => {
+  vi.stubEnv("VITE_API_URL", "");
+  const records = new Map<string, string>();
+  vi.stubGlobal("sessionStorage", {
+    getItem: (key: string) => records.get(key) ?? null,
+    setItem: (key: string, value: string) => records.set(key, value),
+    removeItem: (key: string) => records.delete(key),
+  });
+  vi.stubGlobal("window", { dispatchEvent: vi.fn() });
+  vi.stubGlobal("fetch", vi.fn());
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
+it("signs in through The Records Project API and stores only the session token", async () => {
+  vi.mocked(fetch).mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        token: "opaque-token",
+        account: { username: "Citizen" },
+      }),
+      { status: 200 },
+    ),
+  );
+  await signInCloud("Citizen", "test-password");
+  expect(session()).toBe("opaque-token");
+  const [path, options] = vi.mocked(fetch).mock.calls[0];
+  expect(path).toBe("/api/auth/login");
+  expect(options?.body).toBe(
+    JSON.stringify({ username: "Citizen", password: "test-password" }),
+  );
+  expect(options?.credentials).toBe("omit");
+});
+it("revokes a session at the API before returning to login", async () => {
+  setSession("opaque-token");
+  vi.mocked(fetch).mockResolvedValue(
+    new Response('{"ok":true}', { status: 200 }),
+  );
+  await signOutCloud();
+  expect(vi.mocked(fetch).mock.calls[0][0]).toBe("/api/auth/logout");
+  expect(session()).toBeNull();
+});
+it("keeps the session available to retry if logout fails", async () => {
+  setSession("opaque-token");
+  vi.mocked(fetch).mockRejectedValue(Error("offline"));
+  await expect(signOutCloud()).rejects.toThrow("could not be reached");
+  expect(session()).toBe("opaque-token");
+});
+it("clears an expired session and never falls back to a local account", async () => {
+  setSession("expired-token");
+  vi.mocked(fetch).mockResolvedValue(
+    new Response('{"error":"Expired"}', { status: 401 }),
+  );
+  await expect(apiRequest("/api/auth/me")).rejects.toThrow("Expired");
+  expect(session()).toBeNull();
+});
+it("does not send mismatched passwords to registration", async () => {
+  await expect(
+    registerCloud("Citizen", "test-password", "different"),
+  ).rejects.toThrow("match");
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+it("clears loading activity on invalid responses and network failures", async () => {
+  vi.mocked(fetch).mockResolvedValue(new Response("not json", { status: 200 }));
+  await expect(apiRequest("/api/news")).rejects.toThrow("invalid response");
+  expect(requestCount()).toBe(0);
+  vi.mocked(fetch).mockRejectedValue(Error("offline"));
+  await expect(apiRequest("/api/news")).rejects.toThrow("could not be reached");
+  expect(requestCount()).toBe(0);
+});

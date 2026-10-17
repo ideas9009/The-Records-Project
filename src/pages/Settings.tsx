@@ -1,3 +1,4 @@
+import { LoadingStatus } from "../components/Loading";
 import { useEffect, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import {
@@ -78,7 +79,8 @@ export default function Settings() {
       else localStorage.setItem(key, previous);
       applyAppearance();
       await restoreWallpaper();
-      setScale(savedScale());setPotato(savedPotato());
+      setScale(savedScale());
+      setPotato(savedPotato());
       setError("Could not save your preference on this device.");
     }
   }
@@ -170,12 +172,40 @@ export default function Settings() {
                     <h2>Interface scale</h2>
                   </div>
                   <div className="scale-control">
-                    <div className="scale-value"><output htmlFor="interface-scale">{scale}%{scale===100 ? " (Default)" : ""}</output>
-                      {scale!==100 && <button type="button" className="scale-reset" onClick={()=>void saveAppearance("records-zoom","100")}>Reset</button>}
+                    <div className="scale-value">
+                      <output htmlFor="interface-scale">
+                        {scale}%{scale === 100 ? " (Default)" : ""}
+                      </output>
+                      {scale !== 100 && (
+                        <button
+                          type="button"
+                          className="scale-reset"
+                          onClick={() =>
+                            void saveAppearance("records-zoom", "100")
+                          }
+                        >
+                          Reset
+                        </button>
+                      )}
                     </div>
-                    <input id="interface-scale" type="range" aria-label="Interface scale" aria-valuetext={scale+" percent"} min={interfaceScale.min} max={interfaceScale.max} step={interfaceScale.step} value={scale}
-                      onChange={e=>void saveAppearance("records-zoom",e.target.value)}/>
-                    <div className="scale-endpoints" aria-hidden="true"><span>20%</span><span>100%</span><span>180%</span></div>
+                    <input
+                      id="interface-scale"
+                      type="range"
+                      aria-label="Interface scale"
+                      aria-valuetext={scale + " percent"}
+                      min={interfaceScale.min}
+                      max={interfaceScale.max}
+                      step={interfaceScale.step}
+                      value={scale}
+                      onChange={(e) =>
+                        void saveAppearance("records-zoom", e.target.value)
+                      }
+                    />
+                    <div className="scale-endpoints" aria-hidden="true">
+                      <span>20%</span>
+                      <span>100%</span>
+                      <span>180%</span>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -184,11 +214,10 @@ export default function Settings() {
                   <span>
                     <h2>Potato Mode</h2>
                     <p>
-                      Solid grey surfaces. Disables blur, tint effects and animations.
+                      Solid grey surfaces. Disables blur, tint effects and
+                      animations.
                     </p>
-                    <small>
-                      Wallpaper selection is preserved.
-                    </small>
+                    <small>Wallpaper selection is preserved.</small>
                   </span>
                   <input
                     type="checkbox"
@@ -278,8 +307,9 @@ export default function Settings() {
                   Available in the Windows app.
                 </p>
               )}
+              {busy && <LoadingStatus>Saving preferences…</LoadingStatus>}
               {desktop && !windows && !error && (
-                <p>Reading your preferences…</p>
+                <LoadingStatus>Reading your preferences…</LoadingStatus>
               )}
               {[
                 [
@@ -287,11 +317,7 @@ export default function Settings() {
                   "Launch with Windows",
                   "Launch automatically at Windows sign-in.",
                 ],
-                [
-                  "minimized",
-                  "Start minimized",
-                  "Launch to the system tray.",
-                ],
+                ["minimized", "Start minimized", "Launch to the system tray."],
                 [
                   "background",
                   "Close to tray",
