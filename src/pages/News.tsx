@@ -12,6 +12,7 @@ import {
 } from "../lib/news";
 import NewsMarkdown from "./NewsMarkdown";
 import "./News.css";
+import { external } from "../lib/native";
 const Icon = ({ name }: { name: string }) => (
   <span className="material-symbol" aria-hidden="true">
     {name}
@@ -25,31 +26,165 @@ export default function News({ page, go }: { page: string; go: Go }) {
     publisher = canPublishNews(account);
   const [search, setSearch] = useState(""),
     [tab, setTab] = useState("published");
-  const editing = page === "news:new" || page.startsWith("news:edit:");
-  if (editing)
-    return publisher ? (
+  const [undo, setUndo] = useState<{
+      id: string;
+      version: number;
+      until: number;
+    } | null>(null),
+    [seconds, setSeconds] = useState(0),
+    [undoBusy, setUndoBusy] = useState(false),
+    [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (!undo) return;
+    const tick = () => {
+      const left = Math.max(
+        0,
+        Math.ceil((undo.until - performance.now()) / 1000),
+      );
+      setSeconds(left);
+      if (!left) setUndo(null);
+    };
+    tick();
+    const timer = window.setInterval(tick, 100);
+    return () => clearInterval(timer);
+  }, [undo]);
+  const published = (article: NewsArticle) => {
+    setNotice("");
+    setUndo(null);
+    if (article.undoRemainingMs) {
+      setUndo({
+        id: article.id,
+        version: article.version,
+        until: performance.now() + article.undoRemainingMs,
+      });
+      setSeconds(Math.ceil(article.undoRemainingMs / 1000));
+    }
+  };
+  async function undoPublish() {
+    if (!undo || undoBusy) return;
+    setUndoBusy(true);
+    try {
+      await apiRequest("/api/news/" + undo.id + "/undo", {
+        method: "POST",
+        body: { version: undo.version },
+      });
+      setUndo(null);
+      setNotice("Publication undone. Saved as draft.");
+      go("news:" + undo.id);
+      window.dispatchEvent(new Event("records-news-refresh"));
+    } catch (reason) {
+      setUndo(null);
+      setNotice(message(reason));
+    } finally {
+      setUndoBusy(false);
+    }
+  }
+  const editing =
+    page === "news:new" ||
+    page === "news:meeting" ||
+    page.startsWith("news:edit:");
+  const content = editing ? (
+    publisher ? (
       <NewsEditor
         key={page}
         id={page.startsWith("news:edit:") ? page.slice(10) : undefined}
+        meeting={page === "news:meeting"}
         go={go}
+        onPublished={published}
       />
-    ) : null;
-  if (page.startsWith("news:"))
-    return (
-      <Article key={page} id={page.slice(5)} go={go} publisher={publisher} />
-    );
-  return (
+    ) : null
+  ) : page.startsWith("news:") ? (
+    <Article key={page} id={page.slice(5)} go={go} publisher={publisher} />
+  ) : (
     <Feed
       search={search}
       setSearch={setSearch}
-      tab={tab}
+      tab={publisher ? tab : "published"}
       setTab={setTab}
       publisher={publisher}
       go={go}
     />
   );
+  return (
+    <>
+      {content}
+      {publisher && undo && seconds > 0 && (
+        <div className="news-undo" role="status">
+          <span>News published</span>
+          <button disabled={undoBusy} onClick={() => void undoPublish()}>
+            <Icon name="undo" />
+            {undoBusy ? "Undoing…" : "Undo"}
+            {!undoBusy && <small>{seconds}s</small>}
+          </button>
+        </div>
+      )}
+      {notice && (
+        <div className="news-undo" role="status">
+          <span>{notice}</span>
+          <button
+            aria-label="Dismiss notification"
+            onClick={() => setNotice("")}
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+      )}
+    </>
+  );
 }
-function Feed({
+export function MeetingActions({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false),
+    [error, setError] = useState("");
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setError("");
+    } catch {
+      setError("The meeting link could not be copied. Please try again.");
+    }
+  }
+  return (
+    <div className="news-meeting">
+      <div className="news-meeting-buttons">
+        <button
+          className="news-primary"
+          onClick={() => {
+            setError("");
+            void external(url).catch((reason) => setError(message(reason)));
+          }}
+        >
+          <Icon name="videocam" />
+          Join Meeting
+        </button>
+        <button
+          aria-label="Copy meeting link"
+          title={copied ? "Copied" : "Copy meeting link"}
+          onClick={() => void copy()}
+        >
+          <Icon name={copied ? "check" : "content_copy"} />
+        </button>
+      </div>
+      {copied && (
+        <span className="news-copy-status" role="status">
+          Copied
+        </span>
+      )}
+      {error && (
+        <span className="news-error" role="alert">
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function Feed({
   search,
   setSearch,
   tab,
@@ -69,6 +204,11 @@ function Feed({
     [error, setError] = useState(""),
     [attempt, setAttempt] = useState(0);
   const managing = publisher && tab !== "published";
+  useEffect(() => {
+    const refresh = () => setAttempt((v) => v + 1);
+    window.addEventListener("records-news-refresh", refresh);
+    return () => window.removeEventListener("records-news-refresh", refresh);
+  }, []);
   useEffect(() => {
     setLoading(true);
     setError("");
@@ -99,10 +239,16 @@ function Feed({
       <header className="page-header news-header">
         <h1>News</h1>
         {publisher && (
-          <button className="news-primary" onClick={() => go("news:new")}>
-            <Icon name="add" />
-            Publish News
-          </button>
+          <div className="news-header-buttons">
+            <button onClick={() => go("news:meeting")}>
+              <Icon name="video_call" />
+              Host a meeting
+            </button>
+            <button className="news-primary" onClick={() => go("news:new")}>
+              <Icon name="add" />
+              Publish News
+            </button>
+          </div>
         )}
       </header>
       <div className="news-toolbar">
@@ -154,42 +300,55 @@ function Feed({
           </p>
           <div className="news-grid">
             {filtered.map((article) => (
-              <button
-                key={article.id}
-                className="card news-tile"
-                onClick={() => go("news:" + article.id)}
-              >
-                {article.thumbnail ? (
-                  <img
-                    className="news-thumbnail"
-                    src={article.thumbnail}
-                    alt=""
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="news-thumbnail news-thumbnail-empty">
-                    <Icon name="newspaper" />
+              <article key={article.id} className="card news-tile">
+                <button
+                  className="news-open"
+                  onClick={() => go("news:" + article.id)}
+                  aria-label={"Read " + article.title}
+                >
+                  {article.thumbnail ? (
+                    <img
+                      className="news-thumbnail"
+                      src={article.thumbnail}
+                      alt=""
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="news-thumbnail news-thumbnail-empty">
+                      <Icon name="newspaper" />
+                    </div>
+                  )}
+                  <div className="news-tile-content">
+                    <div className="news-meta">
+                      <span>{article.author}</span>
+                      <time>
+                        {newsDate(article.publishAt || article.updatedAt)}
+                      </time>
+                    </div>
+                    <h2>{article.title}</h2>
+                    {article.subtitle && <p>{article.subtitle}</p>}
+                    <span className="news-read">
+                      {tab === "published"
+                        ? "Read article"
+                        : tab === "scheduled"
+                          ? "Scheduled"
+                          : "View article"}
+                      <Icon name="arrow_forward" />
+                    </span>
                   </div>
-                )}
-                <div className="news-tile-content">
-                  <div className="news-meta">
-                    <span>{article.author}</span>
-                    <time>
-                      {newsDate(article.publishAt || article.updatedAt)}
-                    </time>
-                  </div>
-                  <h2>{article.title}</h2>
-                  {article.subtitle && <p>{article.subtitle}</p>}
-                  <span className="news-read">
-                    {tab === "published"
-                      ? "Read article"
-                      : tab === "scheduled"
-                        ? "Scheduled"
-                        : "View article"}
-                    <Icon name="arrow_forward" />
-                  </span>
+                </button>
+                <div className="news-row-actions">
+                  {article.kind === "meeting" && article.meetingUrl && (
+                    <MeetingActions url={article.meetingUrl} />
+                  )}
+                  {publisher && (
+                    <button onClick={() => go("news:edit:" + article.id)}>
+                      <Icon name="edit" />
+                      Edit
+                    </button>
+                  )}
                 </div>
-              </button>
+              </article>
             ))}
           </div>
           {!filtered.length && !error && (
@@ -233,6 +392,11 @@ function Article({
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const refresh = () => setAttempt((v) => v + 1);
+    window.addEventListener("records-news-refresh", refresh);
+    return () => window.removeEventListener("records-news-refresh", refresh);
+  }, []);
   useEffect(() => {
     let active = true;
     setError("");
@@ -316,6 +480,9 @@ function Article({
               <span>{article.author}</span>
               <time>{newsDate(article.publishAt || article.updatedAt)}</time>
             </div>
+            {article.kind === "meeting" && article.meetingUrl && (
+              <MeetingActions url={article.meetingUrl} />
+            )}
             <NewsMarkdown text={article.body} format={article.format} />
           </div>
         </article>
@@ -331,11 +498,29 @@ function localDate(value: number) {
     .toISOString()
     .slice(0, 16);
 }
-function NewsEditor({ id, go }: { id?: string; go: Go }) {
+function NewsEditor({
+  id,
+  go,
+  meeting = false,
+  onPublished,
+}: {
+  id?: string;
+  go: Go;
+  meeting?: boolean;
+  onPublished: (article: NewsArticle) => void;
+}) {
+  const [kind, setKind] = useState<"article" | "meeting">(
+      meeting ? "meeting" : "article",
+    ),
+    [meetingUrl, setMeetingUrl] = useState(
+      "https://meet.google.com/aeb-wzei-sjd",
+    );
   const [article, setArticle] = useState<NewsArticle | null>(null),
-    [title, setTitle] = useState(""),
+    [title, setTitle] = useState(meeting ? "Meeting" : ""),
     [subtitle, setSubtitle] = useState(""),
-    [text, setText] = useState(""),
+    [text, setText] = useState(
+      meeting ? "Join the meeting using the button below." : "",
+    ),
     [thumbnail, setThumbnail] = useState(""),
     [format, setFormat] = useState<"markdown" | "discord">("discord"),
     [publication, setPublication] = useState("now"),
@@ -364,6 +549,10 @@ function NewsEditor({ id, go }: { id?: string; go: Go }) {
       (data) => {
         if (!active) return;
         setArticle(data);
+        setKind(data.kind || "article");
+        setMeetingUrl(
+          data.meetingUrl || "https://meet.google.com/aeb-wzei-sjd",
+        );
         setTitle(data.title);
         setSubtitle(data.subtitle);
         setText(data.body);
@@ -419,6 +608,8 @@ function NewsEditor({ id, go }: { id?: string; go: Go }) {
         {
           method: id ? "PUT" : "POST",
           body: {
+            kind,
+            meetingUrl,
             title,
             subtitle,
             body: text,
@@ -436,6 +627,7 @@ function NewsEditor({ id, go }: { id?: string; go: Go }) {
       );
       unsaved.current = false;
       setDirty(false);
+      onPublished(result);
       go("news:" + result.id);
     } catch (reason) {
       setError(message(reason));
@@ -467,7 +659,9 @@ function NewsEditor({ id, go }: { id?: string; go: Go }) {
         </button>
       </div>
       <header className="page-header">
-        <h1>{id ? "Edit News" : "Publish News"}</h1>
+        <h1>
+          {id ? "Edit News" : meeting ? "Host a meeting" : "Publish News"}
+        </h1>
       </header>
       {error && (
         <p role="alert" className="news-error">
@@ -486,6 +680,18 @@ function NewsEditor({ id, go }: { id?: string; go: Go }) {
           onChange={change}
         >
           <section className="card news-compose">
+            {kind === "meeting" && (
+              <label>
+                Google Meet link
+                <input
+                  type="url"
+                  required
+                  maxLength={500}
+                  value={meetingUrl}
+                  onChange={(e) => setMeetingUrl(e.target.value)}
+                />
+              </label>
+            )}
             <label>
               Title
               <input

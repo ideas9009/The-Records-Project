@@ -1,3 +1,4 @@
+import { Feed, MeetingActions } from "../src/pages/News";
 import { describe, it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import NewsMarkdown from "../src/pages/NewsMarkdown";
@@ -74,4 +75,41 @@ it("scheduled article labels change at the publication boundary", () => {
   const article = { status: "scheduled", publishAt: 100 } as NewsCard;
   expect(articleStatus(article, 99)).toBe("scheduled");
   expect(articleStatus(article, 100)).toBe("published");
+});
+
+it("meeting actions show Join Meeting and an icon-only copy control without exposing the link as text", () => {
+  const url = "https://meet.google.com/aeb-wzei-sjd";
+  const html = renderToStaticMarkup(<MeetingActions url={url} />);
+  expect(html).toContain("Join Meeting");
+  expect(html).toContain('aria-label="Copy meeting link"');
+  expect(html).toContain("content_copy");
+  expect(html).not.toContain(url);
+});
+it("ordinary readers cannot see publishing controls, drafts or schedules", () => {
+  const props = {
+    search: "",
+    setSearch: () => {},
+    tab: "published",
+    setTab: () => {},
+    go: () => {},
+  };
+  const reader = renderToStaticMarkup(<Feed {...props} publisher={false} />);
+  for (const text of [
+    "Publish News",
+    "Host a meeting",
+    "Drafts",
+    "Scheduled",
+    "Archived",
+  ])
+    expect(reader).not.toContain(text);
+  const publisher = renderToStaticMarkup(<Feed {...props} publisher={true} />);
+  for (const text of ["Publish News", "Host a meeting", "Drafts", "Scheduled"])
+    expect(publisher).toContain(text);
+  const member: Account = {
+    username: "Citizen",
+    role: "member",
+    status: "approved",
+    createdAt: "",
+  };
+  expect(canAccessPage(member, "news:meeting")).toBe(false);
 });

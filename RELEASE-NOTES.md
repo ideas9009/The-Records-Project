@@ -115,3 +115,7 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Added optional compressed thumbnails and subtitles, Discord/standard Markdown, and article preview.
 - Added drafts, editing, recoverable archiving and scheduled publication using the server clock. Scheduled articles appear on the next feed refresh after their publication time.
 - News articles are stored in Firestore through the Render API; drafts and future publications are restricted to publishers.
+
+- Changed News to full-width rows with direct Edit controls for publishers.
+- Added a server-enforced 10-second Undo after immediate publication, returning the post to a private draft.
+- Added meeting posts with editable Google Meet links, Join Meeting and an icon-only copy button. Publishing and draft/schedule visibility remain restricted to approved Operators, Admins, the Leader and Ministers.

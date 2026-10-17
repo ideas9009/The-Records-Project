@@ -232,3 +232,157 @@ test("due article status uses server time and list responses omit bodies", async
   assert.equal(managed.status, "published");
   assert.equal("body" in managed, false);
 });
+
+test("publication undo returns the article to a private draft before the 10-second boundary", async () => {
+  const { news, actor, advance } = await fixture();
+  const article = await news.newsSave(actor, input());
+  assert.equal(article.undoRemainingMs, 10000);
+  advance(9999);
+  const draft = await news.newsUndo(actor, article.id, {
+    version: article.version,
+  });
+  assert.equal(draft.status, "draft");
+  assert.equal(draft.body, article.body);
+  assert.deepEqual(await news.newsList(actor), []);
+  await assert.rejects(
+    () => news.newsGet({ ...actor, role: "member" }, article.id),
+    { status: 403 },
+  );
+});
+test("undo expires at exactly 10 seconds and edits do not renew it", async () => {
+  const { news, actor, advance } = await fixture();
+  const article = await news.newsSave(actor, input());
+  advance(10000);
+  await assert.rejects(
+    () => news.newsUndo(actor, article.id, { version: article.version }),
+    { status: 409 },
+  );
+  const edited = await news.newsSave(
+    actor,
+    input({ version: article.version, title: "Edited news" }),
+    article.id,
+  );
+  assert.equal(edited.undoRemainingMs, 0);
+  await assert.rejects(
+    () => news.newsUndo(actor, article.id, { version: edited.version }),
+    { status: 409 },
+  );
+});
+test("undo requires the original publisher, current privileges and unchanged version", async () => {
+  const { store, news, actor } = await fixture();
+  const article = await news.newsSave(actor, input());
+  const other = { ...actor, uid: "other", role: "minister" };
+  await store.set("users/other", other);
+  await assert.rejects(
+    () => news.newsUndo(other, article.id, { version: article.version }),
+    { status: 403 },
+  );
+  await assert.rejects(() => news.newsUndo(actor, article.id, { version: 0 }), {
+    status: 409,
+  });
+  await store.set("users/publisher", { ...actor, role: "member" });
+  await assert.rejects(
+    () => news.newsUndo(actor, article.id, { version: article.version }),
+    { status: 403 },
+  );
+});
+test("meeting posts keep editable Google Meet links and reject disguised destinations", async () => {
+  const { news, actor } = await fixture("minister");
+  const article = await news.newsSave(
+    actor,
+    input({
+      kind: "meeting",
+      meetingUrl: "https://meet.google.com/aeb-wzei-sjd",
+    }),
+  );
+  assert.equal(article.kind, "meeting");
+  assert.equal(
+    (await news.newsList({ ...actor, role: "member" }))[0].meetingUrl,
+    "https://meet.google.com/aeb-wzei-sjd",
+  );
+  const edited = await news.newsSave(
+    actor,
+    input({
+      kind: "meeting",
+      meetingUrl: "https://meet.google.com/abc-defg-hij",
+      version: article.version,
+    }),
+    article.id,
+  );
+  assert.equal(edited.meetingUrl, "https://meet.google.com/abc-defg-hij");
+  for (const meetingUrl of [
+    "javascript:alert(1)",
+    "http://meet.google.com/aeb-wzei-sjd",
+    "https://meet.google.com.evil.test/aeb-wzei-sjd",
+    "https://meet.google.com@evil.test/aeb-wzei-sjd",
+    "https://user:password@meet.google.com/aeb-wzei-sjd",
+    "https://meet.google.com/",
+  ])
+    await assert.rejects(
+      () => news.newsSave(actor, input({ kind: "meeting", meetingUrl })),
+      { status: 400 },
+    );
+});
+for (const role of ["operator", "admin", "leader", "minister"])
+  test(
+    role + " can read drafts and schedules while ordinary members cannot",
+    async () => {
+      const { news, actor } = await fixture(role);
+      for (const extra of [
+        { status: "draft" },
+        { status: "scheduled", publishAt: "2026-10-18T12:00:00Z" },
+      ]) {
+        const article = await news.newsSave(actor, input(extra));
+        assert.equal((await news.newsGet(actor, article.id)).id, article.id);
+        await assert.rejects(
+          () => news.newsGet({ ...actor, role: "member" }, article.id),
+          { status: 403 },
+        );
+      }
+      assert.equal((await news.newsList(actor, true)).length, 2);
+      assert.deepEqual(await news.newsList({ ...actor, role: "member" }), []);
+    },
+  );
+test("HTTP undo route restores a draft and rejects repeated undo", async (t) => {
+  const { store, actor } = await fixture();
+  const token = "b".repeat(43);
+  await store.set("server_sessions/" + digest(token), {
+    uid: actor.uid,
+    expiresAt: Date.now() + 60000,
+  });
+  const api = createApi(createService(store), { logger: { error: () => {} } });
+  await new Promise((resolve) => api.listen(0, "127.0.0.1", resolve));
+  t.after(() => {
+    api.closeAllConnections();
+    api.close();
+  });
+  const base = "http://127.0.0.1:" + api.address().port,
+    headers = {
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+    };
+  const published = await (
+    await fetch(base + "/api/news", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(input()),
+    })
+  ).json();
+  const undo = await fetch(base + "/api/news/" + published.id + "/undo", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ version: published.version }),
+  });
+  assert.equal(undo.status, 200);
+  assert.equal((await undo.json()).status, "draft");
+  assert.equal(
+    (
+      await fetch(base + "/api/news/" + published.id + "/undo", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ version: published.version }),
+      })
+    ).status,
+    409,
+  );
+});

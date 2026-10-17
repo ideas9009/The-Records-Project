@@ -1,6 +1,9 @@
 import { apiRequest } from "./api";
 export type NewsArticle = {
   id: string;
+  kind?: "article" | "meeting";
+  meetingUrl?: string;
+  undoRemainingMs?: number;
   title: string;
   subtitle: string;
   body: string;
