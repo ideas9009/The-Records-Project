@@ -111,7 +111,11 @@ export default function News({ page, go }: { page: string; go: Go }) {
       {publisher && undo && seconds > 0 && (
         <div className="news-undo" role="status">
           <span>News published</span>
-          <button disabled={undoBusy} onClick={() => void undoPublish()}>
+          <button
+            aria-label="Undo publication"
+            disabled={undoBusy}
+            onClick={() => void undoPublish()}
+          >
             <Icon name="undo" />
             {undoBusy ? "Undoing…" : "Undo"}
             {!undoBusy && <small>{seconds}s</small>}
