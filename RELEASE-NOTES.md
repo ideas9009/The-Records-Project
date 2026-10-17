@@ -135,3 +135,7 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Separated caches by server, account and permission scope; excluded sign-in, profiles, administrative requests, drafts and schedules. Cache is bounded to 50 MB and 24 hours. Disabling SmartSync clears saved data.
 - Kept online sign-in and server-only writes. Offline viewing in an already verified session pauses after 15 minutes without account verification. Logout and permission changes clear the previous cache scope.
 - Aligned Town Registry and News loading messages directly below their search toolbar.
+
+- Fixed interface scaling so the shell fills the window at every supported scale instead of shrinking or overflowing horizontally.
+- Added workspace-based responsive layouts for Settings, News and town details at larger scales; preserved the footer and constrained overlays to the viewport.
+- Interface-scale dragging now previews the value and applies it on release, preventing the slider from moving beneath the pointer mid-drag. Keyboard adjustments and Reset remain available.

@@ -4,10 +4,16 @@ export function confirmationPosition(
   anchor: { left: number; top: number },
   size: { width: number; height: number },
   viewport: { width: number; height: number },
+  scale = 1,
 ) {
+  const zoom = Number.isFinite(scale) && scale > 0 ? scale : 1;
   return {
-    left: Math.max(12, Math.min(anchor.left, viewport.width - size.width - 12)),
-    top: Math.max(12, Math.min(anchor.top, viewport.height - size.height - 12)),
+    left:
+      Math.max(12, Math.min(anchor.left, viewport.width - size.width - 12)) /
+      zoom,
+    top:
+      Math.max(12, Math.min(anchor.top, viewport.height - size.height - 12)) /
+      zoom,
   };
 }
 export default function ExpandingConfirmation({
@@ -44,21 +50,30 @@ export default function ExpandingConfirmation({
       return;
     }
     const place = () => {
+      const scale =
+        Number(getComputedStyle(anchor).getPropertyValue("--ui-scale")) || 1;
+      element.style.maxWidth = (window.innerWidth - 24) / scale + "px";
+      element.style.maxHeight = (window.innerHeight - 24) / scale + "px";
       const rect = anchor.getBoundingClientRect(),
         size = element.getBoundingClientRect(),
-        position = confirmationPosition(rect, size, {
-          width: window.innerWidth,
-          height: window.innerHeight,
-        });
+        position = confirmationPosition(
+          rect,
+          size,
+          {
+            width: window.innerWidth,
+            height: window.innerHeight,
+          },
+          scale,
+        );
       element.style.left = position.left + "px";
       element.style.top = position.top + "px";
       element.style.setProperty(
         "--confirmation-origin-width",
-        rect.width + "px",
+        rect.width / scale + "px",
       );
       element.style.setProperty(
         "--confirmation-origin-height",
-        rect.height + "px",
+        rect.height / scale + "px",
       );
     };
     if (!element.open) element.showModal();

@@ -70,7 +70,7 @@ export default function Settings() {
     try {
       localStorage.setItem(key, value);
       applyAppearance();
-      await restoreWallpaper();
+      if (key !== "records-zoom") await restoreWallpaper();
       setScale(savedScale());
       setPotato(savedPotato());
       setMessage("Saved");
@@ -201,9 +201,39 @@ export default function Settings() {
                       max={interfaceScale.max}
                       step={interfaceScale.step}
                       value={scale}
-                      onChange={(e) =>
-                        void saveAppearance("records-zoom", e.target.value)
+                      onChange={(e) => setScale(Number(e.currentTarget.value))}
+                      onPointerUp={(e) =>
+                        void saveAppearance(
+                          "records-zoom",
+                          e.currentTarget.value,
+                        )
                       }
+                      onPointerCancel={() => setScale(savedScale())}
+                      onKeyUp={(e) => {
+                        if (
+                          [
+                            "ArrowLeft",
+                            "ArrowRight",
+                            "ArrowUp",
+                            "ArrowDown",
+                            "Home",
+                            "End",
+                            "PageUp",
+                            "PageDown",
+                          ].includes(e.key)
+                        )
+                          void saveAppearance(
+                            "records-zoom",
+                            e.currentTarget.value,
+                          );
+                      }}
+                      onBlur={(e) => {
+                        if (Number(e.currentTarget.value) !== savedScale())
+                          void saveAppearance(
+                            "records-zoom",
+                            e.currentTarget.value,
+                          );
+                      }}
                     />
                     <div className="scale-endpoints" aria-hidden="true">
                       <span>20%</span>

@@ -1,6 +1,6 @@
 .rebuild-shell {
   zoom: var(--ui-scale, 1);
-  width: calc(100% / var(--ui-scale, 1));
+  width: calc(100vw / var(--ui-scale, 1));
   height: calc(100dvh / var(--ui-scale, 1));
 }
 .settings-layout {
@@ -332,3 +332,30 @@
 .scale-endpoints { display: flex; justify-content: space-between; margin-top: 3px; color: var(--muted); font-size: 11px; }
 .scale-reset { padding: 2px 6px; border: 0; border-radius: 6px; font-size: 11px; color: var(--muted); }
 .setting-row:has(.scale-control) { flex-wrap: wrap; }
+
+/* Reflow according to the workspace's available space after scaling. */
+.rebuild-shell .workspace-body main { container-type:inline-size; min-height:0; }
+.rebuild-shell .app-footer { flex-shrink:0; min-height:32px; height:auto; gap:12px; padding-block:8px; }
+@container (max-width:760px) {
+ .settings-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .settings-categories { position:static; flex-direction:row; flex-wrap:wrap; }
+ .settings-categories button { min-width:0; }
+ .news-editor { grid-template-columns:minmax(0,1fr); }
+ .news-editor-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .news-header { flex-wrap:wrap; }
+}
+@container (max-width:560px) {
+ .setting-row { flex-wrap:wrap; gap:16px; }
+ .settings-wallpapers { grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr)); }
+ .news-editor-options,.town-detail-grid { grid-template-columns:minmax(0,1fr); }
+ .news-grid .news-open { grid-template-columns:minmax(0,1fr); }
+ .news-open .news-thumbnail { height:190px; min-height:0; }
+ .news-editor-toolbar,.smart-sync-facts>div { flex-wrap:wrap; }
+ .smart-sync-facts dd { text-align:left; overflow-wrap:anywhere; }
+ .town-toolbar { flex-wrap:wrap; gap:12px; }
+ .news-article-actions { flex-wrap:wrap; }
+}
+
+.rebuild-shell .notifications-panel { max-width:calc(100% - 40px); }
+.rebuild-shell .town-photo-dialog { max-width:calc(90vw / var(--ui-scale,1)); max-height:calc(90dvh / var(--ui-scale,1)); }
+.rebuild-shell .town-photo-dialog>img { max-width:calc(85vw / var(--ui-scale,1)); max-height:calc(85dvh / var(--ui-scale,1)); }

@@ -54,3 +54,21 @@ it("shows an accessible loading message alongside its decorative spinner", () =>
   expect(html).toContain('aria-hidden="true"');
   expect(html).toContain("Loading news…");
 });
+
+it("anchors confirmation panels correctly in a scaled interface", () => {
+  expect(
+    confirmationPosition(
+      { left: 180, top: 90 },
+      { width: 756, height: 360 },
+      { width: 1200, height: 900 },
+      1.8,
+    ),
+  ).toEqual({ left: 100, top: 50 });
+  const small = confirmationPosition(
+    { left: 40, top: 20 },
+    { width: 84, height: 44 },
+    { width: 1200, height: 900 },
+    0.2,
+  );
+  expect(small).toEqual({ left: 200, top: 100 });
+});
