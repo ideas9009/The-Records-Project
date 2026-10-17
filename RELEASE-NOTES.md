@@ -98,3 +98,6 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Added revocable sessions, persistent rate limits and server-enforced permissions for approvals, towns, gallery uploads and preferences.
 - Removed Firebase client authentication from the active app and prepared direct-client-deny Firestore rules.
 - Added deployment instructions for ideas9009/The-Records-Project; live deployment still requires the Render service and private Firebase credential.
+
+- Deployed the Render API in Oregon and connected the app to its HTTPS endpoint.
+- Published server-only Firestore rules and verified live account, town and session operations.

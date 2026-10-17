@@ -36,3 +36,15 @@ Old local JSON files, credential hashes and Flutter archives are not imported au
 ## Limits before a public launch
 
 The current API exposes only the rebuilt workflows; other page actions remain unavailable. Lists are capped at 200 records and gallery updates poll every 30 seconds. Add pagination and more efficient image delivery as data grows. Sessions and rate-limit records have enforced expiry but need a scheduled cleanup policy to remove expired records physically. Recovery is administrator-assisted and Microsoft OAuth is deferred. Verify credentials, Operator bootstrap, direct-client deny rules and real read/write access before publishing.
+
+## Verified deployment — 17 October 2026
+
+- Render project: The Records Project, Development environment.
+- Service: the-records-project-api, Oregon, free instance.
+- Public API: https://the-records-project-api.onrender.com
+- Render dashboard: https://dashboard.render.com/web/srv-db9kaqfbtjjs73c21q20
+- Live health returns 200; protected endpoints return 401 without an app session.
+- Server-only Firestore rules published; prior rules saved in the ignored local archive.
+- Initial Sumeitideas app Operator created using the requested temporary development password. No old anonymous account was overwritten.
+- Verified live registration, server session, Firestore town creation/read and logout revocation.
+- App endpoint configured locally and its exact HTTPS origin added to the desktop connection policy.
