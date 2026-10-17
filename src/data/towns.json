@@ -1,0 +1,16 @@
+[
+  {
+    "id": "test-town",
+    "name": "Test Town",
+    "nation": "Byzantium",
+    "mayor": "Sumeitideas",
+    "recordsResidents": 1,
+    "earthmcResidents": 24,
+    "claimedChunks": 128,
+    "registeredResidents": [
+      "Sumeitideas"
+    ],
+    "testData": true,
+    "image": "/wallpapers/2026-06-09_13.05.52_4K.webp"
+  }
+]

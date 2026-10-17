@@ -1,0 +1,8 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  // All app access goes through the Render server using its Admin SDK identity.
+  // The server authorizes every request. No Firebase client can read credentials.
+  match /{document=**} { allow read, write: if false; }
+ }
+}

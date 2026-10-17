@@ -1,0 +1,26 @@
+import {createServer} from 'node:http';
+import {isIP} from 'node:net';
+import {ApiError} from './security.mjs';
+export function createApi(service,{origins=[],trustRenderProxy=false,logger=console}={}){
+ return createServer(async(req,res)=>{res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');const send=(status,data)=>{res.writeHead(status);res.end(JSON.stringify(data))};
+ try{const origin=req.headers.origin;if(origin&&!origins.includes(origin))throw new ApiError(403,'This app origin is not allowed.');if(origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');res.setHeader('Access-Control-Allow-Methods','GET, POST, PUT, OPTIONS')}
+ if(req.method==='OPTIONS'){res.writeHead(204);res.end();return}const path=new URL(req.url,'http://api.local').pathname;
+ if(req.method==='GET'&&path==='/health'){send(200,{status:'ok'});return}
+ let body={};if(['POST','PUT'].includes(req.method)){if(!req.headers['content-type']?.startsWith('application/json'))throw new ApiError(415,'Use JSON for this request.');let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>8*1024*1024)throw new ApiError(413,'Upload is too large.');chunks.push(chunk)}try{body=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}')}catch{throw new ApiError(400,'Invalid JSON.')}if(!body||Array.isArray(body)||typeof body!=='object')throw new ApiError(400,'Invalid request.')}
+ const forwarded=trustRenderProxy?req.headers['x-forwarded-for']?.split(',').at(-1)?.trim():null,ip=forwarded&&isIP(forwarded)?forwarded:req.socket.remoteAddress||'unknown';
+ if(req.method==='POST'&&path==='/api/auth/register'){send(201,await service.register(body,ip));return}if(req.method==='POST'&&path==='/api/auth/login'){send(200,await service.login(body,ip));return}
+ const token=req.headers.authorization?.startsWith('Bearer ')?req.headers.authorization.slice(7):null,profile=await service.authenticate(token);
+ let result;if(req.method==='GET'&&path==='/api/auth/me')result=await service.me(profile);
+ else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
+ else if(req.method==='PUT'&&path==='/api/preferences')result=await service.preferences(profile,body);
+ else if(req.method==='GET'&&path==='/api/towns')result=await service.towns(profile);
+ else if(req.method==='GET'&&path==='/api/admin/registrations')result=await service.requests(profile);
+ else if(req.method==='POST'&&path==='/api/admin/test-town')result=await service.seed(profile);
+ else if(req.method==='POST'&&/^\/api\/admin\/registrations\/[^/]+\/approve$/.test(path))result=await service.approve(profile,path.split('/')[4]);
+ else if(/^\/api\/towns\/[^/]+\/photos$/.test(path)&&req.method==='GET')result=await service.photos(profile,path.split('/')[3]);
+ else if(/^\/api\/towns\/[^/]+\/photos$/.test(path)&&req.method==='POST')result=await service.addPhotos(profile,path.split('/')[3],body);
+ else if(/^\/api\/towns\/[^/]+$/.test(path)&&req.method==='GET')result=await service.town(profile,path.split('/')[3]);
+ else throw new ApiError(404,'Not found.');send(200,result);
+ }catch(error){if(!(error instanceof ApiError))logger.error('API request failed',{code:error.code||'internal'});send(error instanceof ApiError?error.status:503,{error:error instanceof ApiError?error.message:'The service is unavailable. Please try again.'})}
+ });
+}

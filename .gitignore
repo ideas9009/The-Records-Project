@@ -1,0 +1,24 @@
+node_modules/
+dist/
+src-tauri/target/
+.env.local
+*.log
+
+windows-build/
+*.tsbuildinfo
+
+
+.local-data/
+
+.env
+.env.*
+!.env.example
+!server/.env.example
+*service-account*.json
+*serviceAccount*.json
+
+# Local archives and high-resolution originals stay on this device.
+/archive/
+/migration-reference/
+/wallpapers/
+/src-tauri/gen/

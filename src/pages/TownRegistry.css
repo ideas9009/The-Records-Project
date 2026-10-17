@@ -1,0 +1,69 @@
+.town-toolbar { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:24px; }
+.town-registry .page-header { align-items:center; }
+.town-registry .page-header h1 { margin-bottom:0; }
+.town-search { display:flex; align-items:center; gap:10px; width:min(100%,420px); padding:0 16px; min-height:48px; border:1px solid var(--line); border-radius:16px; background:var(--surface); }
+.town-search:focus-within { outline:2px solid #00b8e6; outline-offset:2px; }
+.town-search .material-symbol { font-size:21px; color:var(--muted); flex-basis:21px; }
+.town-search input { background:transparent; border:0; padding:12px 0; border-radius:0; }
+.town-search input:focus-visible { outline:none; }
+.town-result-count { font-size:12px; color:var(--muted); white-space:nowrap; }
+.town-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr)); align-items:start; gap:20px; }
+.town-registry .town-tile { display:block; position:relative; isolation:isolate; padding:22px; width:100%; max-width:480px; min-width:0; min-height:190px; overflow:hidden; text-align:left; cursor:pointer; }
+.town-tile:hover { border-color:#00b8e655; background:var(--surface); }
+.town-tile:focus-visible { outline:2px solid #00b8e6; outline-offset:3px; }
+.town-cover { position:absolute; z-index:-1; inset:0 0 0 auto; width:54%; height:100%; object-fit:cover; object-position:center; mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.2) 24%,#000 72%); -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.2) 24%,#000 72%); pointer-events:none; }
+.town-summary-content { width:70%; min-width:0; }
+.town-tile-heading { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+.town-emblem { display:grid; place-items:center; width:36px; height:36px; flex:0 0 36px; border-radius:11px; background:#00b8e61a; color:#54d5f5; }
+.town-emblem .material-symbol { font-size:23px; font-variation-settings:"FILL" 1,"wght" 400,"GRAD" 0,"opsz" 24; }
+.town-title { min-width:0; }
+.town-title h2 { font-size:20px; margin:0 0 4px; overflow-wrap:anywhere; }
+.town-title > span { font-size:11px; color:var(--muted); }
+.town-test-label { position:absolute; right:16px; top:16px; border:1px solid var(--line); border-radius:8px; padding:5px 8px; background:rgba(20,20,24,.85); color:#dddde3; font-size:9px; white-space:nowrap; }
+.town-open-icon { position:absolute; right:16px; bottom:16px; display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:rgba(20,20,24,.85); color:#f5f5f5; }
+.town-open-icon .material-symbol { font-size:18px; }
+.town-statistics { display:flex; flex-direction:column; gap:10px; margin:0; }
+.town-statistics > div { display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; }
+.town-statistics dt { display:flex; align-items:center; gap:6px; font-size:11px; line-height:1.4; color:#bcbcc5; }
+.town-statistics dt .material-symbol { font-size:16px; flex-basis:16px; }
+.town-statistics dd { margin:0; font-size:16px; line-height:1.4; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); }
+.town-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin:0 0 26px; }
+.town-facts dt { color:var(--muted); font-size:12px; margin-bottom:7px; }
+.town-facts dd { margin:0; font-size:14px; overflow-wrap:anywhere; }
+.town-residents { display:flex; flex-wrap:wrap; gap:8px; padding:0; margin:0; list-style:none; }
+.town-residents li { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:12px; background:var(--soft); }
+.town-residents .material-symbol { font-size:18px; flex-basis:18px; }
+.town-test-note { color:var(--muted); font-size:11px; margin:22px 0 0; }
+.town-no-results { text-align:center; padding:48px 24px; }
+.town-no-results > .material-symbol { font-size:30px; color:var(--muted); margin-bottom:16px; }
+.town-no-results h2 { font-size:20px; }
+.town-detail-page { width:100%; min-width:0; }
+.town-back { margin-bottom:20px; padding:8px 0; border:0; background:transparent; font-size:13px; }
+.town-back .material-symbol { font-size:19px; flex-basis:19px; }
+.town-detail-hero { position:relative; isolation:isolate; overflow:hidden; min-height:220px; display:flex; align-items:flex-end; margin-bottom:20px; }
+.town-detail-hero h1 { margin:8px 0 0; }
+.town-detail-hero h1:focus { outline:none; }
+.town-detail-nation { font-size:13px; color:#c6c6ce; }
+.town-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.town-detail-grid h2 { font-size:18px; margin-bottom:22px; }
+:root[data-potato="true"] .town-emblem { background:#4a4a4d; color:#f5f5f5; }
+:root[data-potato="true"] .town-test-label,:root[data-potato="true"] .town-open-icon { background:#454548; }
+@media(max-width:650px) { .town-detail-grid { grid-template-columns:1fr; } }
+@media(max-width:480px) { .town-registry .town-tile { padding:18px; } .town-summary-content { width:76%; } .town-cover { width:50%; } .town-title h2 { font-size:18px; } .town-statistics dt { font-size:10px; } .town-statistics dd { font-size:15px; } .town-test-label { right:12px; top:12px; } }
+
+.town-gallery { margin-top:20px; }
+.town-gallery-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
+.town-gallery-header h2 { font-size:18px; margin:0; }
+.town-gallery-header button { font-size:12px; }
+.town-gallery-input { display:none; }
+.town-gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+.town-gallery-photo { display:block; padding:0; border-radius:14px; overflow:hidden; aspect-ratio:4/3; background:var(--soft); }
+.town-gallery-photo img { display:block; width:100%; height:100%; object-fit:cover; }
+.town-gallery-empty,.town-gallery-storage { font-size:12px; color:var(--muted); }
+.town-gallery-empty { padding:24px 0; }
+.town-gallery-storage { margin:18px 0 0; font-size:11px; }
+.town-gallery-error { color:#ffb4ab; font-size:13px; }
+.town-photo-dialog { padding:0; border:1px solid var(--line); border-radius:18px; background:#202023; max-width:90vw; max-height:90dvh; overflow:hidden; }
+.town-photo-dialog::backdrop { background:#000b; }
+.town-photo-dialog > img { display:block; max-width:85vw; max-height:85dvh; object-fit:contain; }
+.town-photo-close { position:absolute; top:12px; right:12px; padding:8px; border-radius:50%; background:#202023ee; color:white; }

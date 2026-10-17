@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "revision": 0,
+  "documents": {
+    "users/Sumeitideas": {"username":"Sumeitideas","role":"operator","status":"approved","town":"Nomad","nation":"Byzantium","balance":0,"trust_level":50,"rank_points":0,"shop_limit":5,"job_limit":5,"job_apply_limit":3,"active_upgrades":[],"friends":[],"friend_requests":[],"notifications":[],"screenshots":[],"tutorial_reward_claimed":false},
+    "system/settings": {"motd":"","nation_status":"Peaceful","land_goal":500,"job_board_locked":false},
+    "diplomacy/global": {"allies":[],"enemies":[],"hunters":{}},
+    "war_logs/global": {"logs":[]},
+    "land_claims/global": {"claims":[]},
+    "discord_channels/local": {"name":"local-test","messaging_disabled":false}
+  }
+}

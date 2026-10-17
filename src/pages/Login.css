@@ -1,0 +1,12 @@
+.app.login-screen { display:grid; place-items:center; overflow:auto; padding:24px; }
+.login-card { width:min(100%,440px); }
+.login-logo { width:56px; height:56px; object-fit:contain; display:block; margin-bottom:16px; }
+.login-card h1 { font-size:26px; }.login-card h2 { font-size:18px; margin:24px 0; }
+.login-card form,.login-card label { display:flex; flex-direction:column; gap:10px; }.login-card form { gap:20px; }.login-card label { font-size:13px; }.login-card input { width:100%; box-sizing:border-box; }
+.login-card form > button { justify-content:center; }.login-switch { margin-top:16px; width:100%; justify-content:center; }.login-note { font-size:12px; color:var(--muted); margin:20px 0 0; }.login-error { color:#ffb4ab; margin:0; font-size:13px; }
+.registration-progress { display:grid; gap:18px; padding-left:24px; font-size:14px; }.registration-progress [aria-current] { color:#ffbf58; }.registration-requests { list-style:none; padding:0; }.registration-requests li { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; padding:18px 0; border-bottom:1px solid var(--line); }.registration-requests small { display:block; color:var(--muted); margin-top:6px; }.town-tile:disabled { cursor:default; opacity:1; }.town-tile:disabled:hover { border-color:var(--line); }
+
+.logout-dialog { max-width:min(460px,calc(100vw - 40px)); color:var(--text); }
+.logout-dialog::backdrop { background:#0009; }
+.logout-dialog p { line-height:1.6; }
+.logout-actions { display:flex; justify-content:flex-end; gap:12px; margin-top:24px; }

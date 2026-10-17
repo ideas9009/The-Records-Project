@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function signedIn() { return request.auth != null; }
+  function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+  function member() { return signedIn() && profile().nation == 'byzantium' && profile().status in ['pending','approved']; }
+  function approved() { return member() && profile().status == 'approved'; }
+  function reviewer() { return approved() && profile().role in ['operator','admin','leader']; }
+  match /users/{uid} {
+   allow get: if signedIn() && (request.auth.uid == uid || reviewer());
+   allow list: if reviewer() && resource.data.nation == 'byzantium';
+   allow create: if signedIn() && request.auth.uid == uid
+    && request.resource.data.keys().hasAll(['uid','username','usernameLower','nation','role','status','createdAt'])
+    && request.resource.data.keys().hasOnly(['uid','username','usernameLower','nation','role','status','createdAt'])
+    && request.resource.data.uid == uid
+    && request.resource.data.username is string && request.resource.data.username.matches('^[A-Za-z0-9_]{3,16}$')
+    && request.resource.data.usernameLower == request.resource.data.username.lower()
+    && ((request.auth.token.firebase.sign_in_provider == 'anonymous' && request.resource.data.username == 'Sumeitideas')
+     || (request.auth.token.firebase.sign_in_provider == 'password' && request.auth.token.email == request.resource.data.usernameLower + '@minecraft.therecordsproject.invalid'))
+    && request.resource.data.nation == 'byzantium' && request.resource.data.role == 'member'
+    && request.resource.data.status == 'pending' && request.resource.data.createdAt == request.time;
+   allow update: if reviewer() && resource.data.nation == 'byzantium'
+    && resource.data.status == 'pending' && resource.data.role == 'member'
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','approvedBy','approvedAt'])
+    && request.resource.data.status == 'approved'
+    && request.resource.data.approvedBy == request.auth.uid && request.resource.data.approvedAt == request.time;
+   allow delete: if false;
+   match /preferences/appearance {
+    allow read: if member() && request.auth.uid == uid;
+    allow create, update: if member() && request.auth.uid == uid
+     && request.resource.data.keys().hasOnly(['records-zoom','records-potato','records-wallpaper'])
+     && request.resource.data.get('records-zoom','100') in ['20','30','40','50','60','70','80','90','100','110','120','130','140','150','160','170','180']
+     && request.resource.data.get('records-potato','false') in ['true','false']
+     && request.resource.data.get('records-wallpaper','') is string
+     && request.resource.data.get('records-wallpaper','').size() < 200
+     && (request.resource.data.get('records-wallpaper','') == '' || request.resource.data.get('records-wallpaper','').matches('^/wallpapers/[A-Za-z0-9_ .-]+[.]webp$'));
+    allow delete: if false;
+   }
+  }
+  match /nations/byzantium/towns/{townId} {
+   allow read: if member();
+   allow create, update: if reviewer()
+    && request.resource.data.keys().hasAll(['id','name','nation','mayor','mayorUid','recordsResidents','earthmcResidents','claimedChunks','testData','image'])
+    && request.resource.data.keys().hasOnly(['id','name','nation','mayor','mayorUid','recordsResidents','earthmcResidents','claimedChunks','testData','image'])
+    && request.resource.data.id == townId && request.resource.data.name is string
+    && request.resource.data.mayorUid is string && request.resource.data.mayor is string
+    && request.resource.data.recordsResidents is int && request.resource.data.recordsResidents >= 0
+    && request.resource.data.earthmcResidents is int && request.resource.data.earthmcResidents >= 0
+    && request.resource.data.claimedChunks is int && request.resource.data.claimedChunks >= 0
+    && request.resource.data.testData is bool && request.resource.data.image is string;
+   allow delete: if false;
+  }
+  match /nations/byzantium/town_details/{townId} {
+   allow read: if approved();
+   allow create, update: if reviewer()
+    && request.resource.data.keys().hasAll(['mayor','mayorUid','registeredResidents'])
+    && request.resource.data.keys().hasOnly(['mayor','mayorUid','registeredResidents'])
+    && request.resource.data.mayor is string && request.resource.data.mayorUid is string
+    && request.resource.data.registeredResidents is list && request.resource.data.registeredResidents.size() <= 2000;
+   allow delete: if false;
+   match /photos/{slot} {
+    allow read: if approved();
+    allow create: if approved() && slot.matches('^([0-9]|1[01])$')
+     && get(/databases/$(database)/documents/nations/byzantium/town_details/$(townId)).data.mayorUid == request.auth.uid
+     && request.resource.data.keys().hasAll(['id','src','uploadedBy','createdAt'])
+     && request.resource.data.keys().hasOnly(['id','src','uploadedBy','createdAt'])
+     && request.resource.data.id == slot && request.resource.data.uploadedBy == request.auth.uid
+     && request.resource.data.createdAt == request.time
+     && request.resource.data.src is string && request.resource.data.src.size() <= 650000
+     && request.resource.data.src.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$');
+    allow update, delete: if false;
+   }
+  }
+  // Placeholders: no application writes until each workflow has its own rules.
+  match /nations/byzantium/{section}/{record} {
+   allow read: if (member() && section in ['citizens','shops','companies'])
+    || (approved() && section in ['news','announcements','jobs']);
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}
