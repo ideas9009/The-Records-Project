@@ -1,3 +1,4 @@
+import {roleLabels} from "./lib/access";
 import {SmartSyncManager} from "./components/SmartSync";
 import {Spinner,LoadingStatus,ServerActivity,usePendingRequests} from "./components/Loading";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
@@ -92,7 +93,7 @@ export default function App() {
      </div>
      <button className="sidebar-user" aria-label={account.username+" — My Profile"} title={account.username} onClick={()=>go("profile")}>
        <span className="user-symbol">{account.username.slice(0,2).toUpperCase()}</span>
-       <span className="sidebar-user-name"><strong>{account.username}</strong><small>{PREVIEW_MODE?"Preview":account.status==="pending"?"Pending approval":account.role}</small></span>
+       <span className="sidebar-user-name"><strong>{account.username}</strong><small>{PREVIEW_MODE?"Preview":account.status==="pending"?"Pending approval":roleLabels(account)}</small></span>
        <Symbol name="north_east" className="sidebar-user-arrow"/>
      </button>
    </aside>

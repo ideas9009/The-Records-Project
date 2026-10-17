@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { ApiError, approved, validPhoto } from "./security.mjs";
+import { ApiError, approved, validPhoto, hasRole } from "./security.mjs";
 const base = "nations/byzantium/news",
   feed = "nations/byzantium/news_feed";
 export function newsPublisher(profile) {
   if (!profile) throw new ApiError(403, "Publishing access is unavailable.");
   approved(profile);
-  if (!["operator", "admin", "leader", "minister"].includes(profile.role))
+  if (!hasRole(profile,["operator", "admin", "leader", "prime_minister", "minister", "deputy"]))
     throw new ApiError(
       403,
-      "Only Operators, Admins, the Leader and Ministers can publish news.",
+      "Your roles do not allow publishing news.",
     );
 }
 const identifier = (id) => {

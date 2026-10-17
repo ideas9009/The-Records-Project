@@ -1,16 +1,11 @@
-import { Spinner, LoadingStatus } from "../components/Loading";
+import { roleLabels } from "../lib/access";
+import Administration from "./Administration";
+import { Spinner } from "../components/Loading";
 import ExpandingConfirmation from "../components/ExpandingConfirmation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PREVIEW_MODE } from "../lib/runtime-mode";
-import { seedCloudTown } from "../lib/cloud-towns";
 import { useAuth } from "../lib/auth-context";
-import {
-  approveRegistration,
-  watchRequests,
-  signOutCloud,
-  firebaseError,
-  type Account,
-} from "../lib/cloud-auth";
+import { signOutCloud, firebaseError } from "../lib/cloud-auth";
 export function RegistrationProfile() {
   const { account } = useAuth();
   const [logoutAnchor, setLogoutAnchor] = useState<HTMLElement | null>(null);
@@ -72,7 +67,7 @@ export function RegistrationProfile() {
         {account.status === "pending" ? (
           <p>You may get a confirmation notification on your discord</p>
         ) : (
-          <p>Role: {account.role}</p>
+          <p>Roles: {roleLabels(account)}</p>
         )}
       </section>
       <ExpandingConfirmation
@@ -91,104 +86,5 @@ export function RegistrationProfile() {
   );
 }
 export function RegistrationRequests() {
-  return PREVIEW_MODE ? (
-    <>
-      <header className="page-header">
-        <h1>Administration</h1>
-      </header>
-      <section className="card">
-        <p>Registration approvals are paused in preview mode.</p>
-      </section>
-    </>
-  ) : (
-    <CloudRegistrationRequests />
-  );
-}
-function CloudRegistrationRequests() {
-  const { account } = useAuth();
-  const [requests, setRequests] = useState<Account[]>([]),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(true),
-    [busy, setBusy] = useState("");
-  useEffect(() => {
-    let stop: undefined | (() => void);
-    const refresh = () => {
-      stop?.();
-      stop = watchRequests(
-        (items) => {
-          setRequests(items);
-          setLoading(false);
-        },
-        () => {
-          setError("Registration requests could not be loaded.");
-          setLoading(false);
-        },
-      );
-    };
-    refresh();
-    window.addEventListener("records-approvals", refresh);
-    return () => {
-      stop?.();
-      window.removeEventListener("records-approvals", refresh);
-    };
-  }, []);
-  async function approve(username: string) {
-    if (!account) return;
-    setBusy(username);
-    setError("");
-    try {
-      await approveRegistration(username);
-    } catch (reason) {
-      setError(firebaseError(reason));
-    } finally {
-      setBusy("");
-    }
-  }
-  return (
-    <>
-      <header className="page-header">
-        <h1>Administration</h1>
-      </header>
-      <section className="card">
-        <h2>Registration requests</h2>
-        <button
-          disabled={!!busy}
-          onClick={() => {
-            setBusy("seed");
-            setError("");
-            void seedCloudTown()
-              .then(() => setError("Test town is ready."))
-              .catch((reason) => setError(firebaseError(reason)))
-              .finally(() => setBusy(""));
-          }}
-        >
-          {busy === "seed" && <Spinner />}Create test town
-        </button>
-        {error && <p role="alert">{error}</p>}
-        {loading ? (
-          <LoadingStatus>Loading requests…</LoadingStatus>
-        ) : !requests.length ? (
-          <p>No pending registrations.</p>
-        ) : (
-          <ul className="registration-requests">
-            {requests.map((request) => (
-              <li key={request.uid}>
-                <div>
-                  <strong>{request.username}</strong>
-                  <small>Pending approval</small>
-                </div>
-                <button
-                  disabled={!!busy}
-                  onClick={() => void approve(request.uid)}
-                >
-                  {busy === request.uid && <Spinner />}
-                  {busy === request.uid ? "Approving…" : "Approve registration"}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </>
-  );
+  return <Administration />;
 }

@@ -64,6 +64,8 @@ it("is off by default and excludes authentication, profiles, approvals, drafts a
   for (const path of [
     "/api/auth/me",
     "/api/admin/registrations",
+    "/api/admin/users",
+    "/api/towns/mayor-options",
     "/api/news/manage",
     "/api/preferences",
   ])
@@ -186,4 +188,13 @@ it("does not fall back to saved data for non-JSON permission denials", async () 
   );
   await expect(apiRequest("/api/news")).rejects.toThrow("invalid response");
   expect(await cachedData("/api/news")).toBeNull();
+});
+
+it("invalidates the cache when any role changes even if the primary role stays the same",async()=>{
+ await enable();
+ setSyncIdentity({uid:'multi',role:'operator',roles:['operator','minister'],status:'approved'});
+ await saveCachedData('/api/towns',[{id:'town'}],cacheEpoch());
+ expect(await cachedData('/api/towns')).not.toBeNull();
+ setSyncIdentity({uid:'multi',role:'operator',roles:['operator'],status:'approved'});
+ expect(await cachedData('/api/towns')).toBeNull();
 });

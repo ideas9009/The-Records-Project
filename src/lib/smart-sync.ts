@@ -9,7 +9,12 @@ export type SyncState = {
   syncing: boolean;
   error?: string;
 };
-type Identity = { uid: string; role: string; status: string };
+type Identity = {
+  uid: string;
+  role: string;
+  roles?: readonly string[];
+  status: string;
+};
 type Entry = {
   key: string;
   scope: string;
@@ -68,7 +73,13 @@ export function markSync(path: string, state: SyncState) {
 export function setSyncIdentity(account: Identity | null, server = "") {
   const old = cacheScope();
   const next = account
-    ? server + ":" + account.uid + ":" + account.role + ":" + account.status
+    ? server +
+      ":" +
+      account.uid +
+      ":" +
+      (account.roles?.slice().sort().join(",") || account.role) +
+      ":" +
+      account.status
     : "";
   if (old === next) return;
   identity = account;
@@ -80,11 +91,18 @@ export function setSyncIdentity(account: Identity | null, server = "") {
 }
 export const cacheScope = () =>
   identity
-    ? origin + ":" + identity.uid + ":" + identity.role + ":" + identity.status
+    ? origin +
+      ":" +
+      identity.uid +
+      ":" +
+      (identity.roles?.slice().sort().join(",") || identity.role) +
+      ":" +
+      identity.status
     : "";
 export const cacheEpoch = () => epoch;
 export function cacheAllowed(path: string) {
   if (!identity || !smartSyncSettings().enabled) return false;
+  if (path === "/api/towns/mayor-options") return false;
   if (path === "/api/towns") return true;
   if (identity.status !== "approved") return false;
   return (

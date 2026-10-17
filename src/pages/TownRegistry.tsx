@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { useAuth } from "../lib/auth-context";
+import { canRegisterTown } from "../lib/access";
+import RegisterTown from "./RegisterTown";
 import { SyncStatus } from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
 import { useTowns, type Town } from "../lib/cloud-towns";
@@ -50,6 +54,8 @@ export default function TownRegistry({
   canOpen,
 }: Props) {
   const { towns, loading, error } = useTowns();
+  const { account } = useAuth();
+  const [registering, setRegistering] = useState(false);
   const filtered = towns.filter((town) =>
     town.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
@@ -57,7 +63,22 @@ export default function TownRegistry({
     <div className="town-registry">
       <header className="page-header">
         <h1>Town Registry</h1>
+        {canRegisterTown(account) && (
+          <button onClick={() => setRegistering((value) => !value)}>
+            <TownIcon name="add" />
+            Register Town
+          </button>
+        )}
       </header>
+      {registering && (
+        <RegisterTown
+          onCancel={() => setRegistering(false)}
+          onCreated={(id) => {
+            setRegistering(false);
+            onOpenTown(id);
+          }}
+        />
+      )}
       {error && <p role="alert">{error}</p>}
       <div className="town-toolbar">
         <div className="town-search">

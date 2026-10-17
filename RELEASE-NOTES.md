@@ -139,3 +139,6 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Fixed interface scaling so the shell fills the window at every supported scale instead of shrinking or overflowing horizontally.
 - Added workspace-based responsive layouts for Settings, News and town details at larger scales; preserved the footer and constrained overlays to the viewport.
 - Interface-scale dragging now previews the value and applies it on release, preventing the slider from moving beneath the pointer mid-drag. Keyboard adjustments and Reset remain available.
+
+- Added multiple roles, Prime Minister and Deputy roles, administration registration reviews, user moderation, role management and an activity log.
+- Added Register Town with a user directory for selecting the mayor.
