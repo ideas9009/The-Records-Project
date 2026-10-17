@@ -65,6 +65,8 @@ const pendingPages = [
 export function canAccessPage(account: Account | null, page: string) {
   if (!account) return false;
   if (page === "admin") return canReview(account);
+  if (page.startsWith("citizen:"))
+    return account.status === "approved" || account.status === "pending";
   if (
     page === "news:meeting" ||
     page === "news:new" ||

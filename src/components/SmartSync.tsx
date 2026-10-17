@@ -43,6 +43,7 @@ export function SmartSyncManager() {
   }, [
     account?.uid,
     account?.role,
+    account?.roles?.join(","),
     account?.status,
     prefs.enabled,
     prefs.interval,
@@ -136,7 +137,7 @@ export default function SmartSyncSettingsPanel() {
         <h2>Background pages</h2>
         <p>Keep these pages updated while using other sections.</p>
         <div className="smart-sync-pages">
-          {(["towns", "news"] as const).map((page) => (
+          {(["towns", "news", "citizens"] as const).map((page) => (
             <label key={page}>
               <input
                 type="checkbox"
@@ -151,7 +152,11 @@ export default function SmartSyncSettingsPanel() {
                   })
                 }
               />
-              {page === "towns" ? "Town Registry" : "News"}
+              {page === "towns"
+                ? "Town Registry"
+                : page === "citizens"
+                  ? "Citizens"
+                  : "News"}
             </label>
           ))}
         </div>

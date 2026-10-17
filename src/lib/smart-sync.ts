@@ -1,6 +1,6 @@
 export type SmartSyncSettings = {
   enabled: boolean;
-  pages: ("towns" | "news")[];
+  pages: ("towns" | "news" | "citizens")[];
   interval: number;
 };
 export type SyncState = {
@@ -56,7 +56,9 @@ export function smartSyncSettings(): SmartSyncSettings {
       ? {
           enabled: raw.enabled === true,
           pages: Array.isArray(raw.pages)
-            ? raw.pages.filter((p: string) => ["towns", "news"].includes(p))
+            ? raw.pages.filter((p: string) =>
+                ["towns", "news", "citizens"].includes(p),
+              )
             : defaults.pages,
           interval: [1, 5, 15, 30].includes(raw.interval) ? raw.interval : 5,
         }
@@ -104,6 +106,11 @@ export function cacheAllowed(path: string) {
   if (!identity || !smartSyncSettings().enabled) return false;
   if (path === "/api/towns/mayor-options") return false;
   if (path === "/api/towns") return true;
+  if (
+    (identity.status === "approved" || identity.status === "pending") &&
+    (path === "/api/citizens" || /^\/api\/citizens\/[A-Za-z0-9_-]+$/.test(path))
+  )
+    return true;
   if (identity.status !== "approved") return false;
   return (
     path === "/api/news" ||
@@ -245,9 +252,11 @@ export async function invalidateCache(path: string) {
   epoch++;
   const group = path.startsWith("/api/news")
     ? "/api/news"
-    : path.startsWith("/api/towns")
-      ? "/api/towns"
-      : path;
+    : path.startsWith("/api/citizens")
+      ? "/api/citizens"
+      : path.startsWith("/api/towns")
+        ? "/api/towns"
+        : path;
   for (const key of states.keys())
     if (key.startsWith(group)) states.delete(key);
   const all = await entries();

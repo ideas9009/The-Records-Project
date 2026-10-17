@@ -21,7 +21,7 @@ export function syncSelectedPages() {
   const paths = settings.pages
     .map((page) => ({
       page,
-      path: page === "towns" ? "/api/towns" : "/api/news",
+      path: "/api/" + page,
     }))
     .filter((item) => cacheAllowed(item.path));
   if (!paths.length) return Promise.resolve();
@@ -32,7 +32,13 @@ export function syncSelectedPages() {
     );
     const failed = results.flatMap((result, index) =>
       result.status === "rejected"
-        ? [paths[index].page === "towns" ? "Town Registry" : "News"]
+        ? [
+            paths[index].page === "towns"
+              ? "Town Registry"
+              : paths[index].page === "citizens"
+                ? "Citizens"
+                : "News",
+          ]
         : [],
     );
     update({

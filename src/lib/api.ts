@@ -132,6 +132,13 @@ async function request<T>(path: string, options: Options): Promise<T> {
       await invalidateCache(
         path.startsWith("/api/admin") ? "/api/towns" : path,
       ).catch(() => {});
+    if (
+      !get &&
+      (path.startsWith("/api/admin/users/") ||
+        path.startsWith("/api/admin/registrations/") ||
+        path === "/api/towns")
+    )
+      await invalidateCache("/api/citizens").catch(() => {});
     if (get && cacheAllowed(path)) {
       try {
         await saveCachedData(path, data, generation);

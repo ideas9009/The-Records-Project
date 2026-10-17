@@ -1,3 +1,4 @@
+import Citizens from "./pages/Citizens";
 import {roleLabels} from "./lib/access";
 import {SmartSyncManager} from "./components/SmartSync";
 import {Spinner,LoadingStatus,ServerActivity,usePendingRequests} from "./components/Loading";
@@ -81,9 +82,9 @@ export default function App() {
      </div>
      <div className="sidebar-scroll">
      <nav aria-label="Workspace" ref={navRef} onScroll={trackScroll}>
-       {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"active":""} aria-label={name} title={name} aria-current={page===id || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"page":undefined}
+       {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="citizens" && page.startsWith("citizen:")) || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"active":""} aria-label={name} title={name} aria-current={page===id || (id==="citizens" && page.startsWith("citizen:")) || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"page":undefined}
          style={{"--pill-fill":fill,"--pill-ink":ink} as CSSProperties}>
-         {pendingRequests>0&&(page===id||(id==="news"&&page.startsWith("news:"))||(id==="towns"&&page.startsWith("town:")))?<span className="sidebar-icon-slot"><Spinner/></span>:<Symbol name={icon}/>}<span className="nav-label">{name}</span>
+         {pendingRequests>0&&(page===id||(id==="news"&&page.startsWith("news:"))||(id==="citizens"&&page.startsWith("citizen:"))||(id==="towns"&&page.startsWith("town:")))?<span className="sidebar-icon-slot"><Spinner/></span>:<Symbol name={icon}/>}<span className="nav-label">{name}</span>
        </button>)}
      </nav>
      </div>
@@ -100,7 +101,7 @@ export default function App() {
    </div>
    <div className="workspace-body">
      <main className={page === "map" ? "map-page" : undefined}>
-       {page === "map" ? <div className="map-loading-stage">{mapLoading&&<div className="map-loading-status"><LoadingStatus>Loading map…</LoadingStatus></div>}<iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" onLoad={()=>setMapLoading(false)} allowFullScreen/></div> : page === "news" || page.startsWith("news:") ? <News page={page} go={go}/> : page === "towns" ? <TownRegistry search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile/> : page === "admin" ? <RegistrationRequests/> : page === "settings" ? <Settings/> : page === "about" ? <About/> : <>
+       {page === "map" ? <div className="map-loading-stage">{mapLoading&&<div className="map-loading-status"><LoadingStatus>Loading map…</LoadingStatus></div>}<iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" onLoad={()=>setMapLoading(false)} allowFullScreen/></div> : page === "news" || page.startsWith("news:") ? <News page={page} go={go}/> : page === "citizens" || page.startsWith("citizen:") ? <Citizens citizenId={page.startsWith("citizen:")?page.slice(8):undefined} onOpen={id=>go("citizen:"+id)} onBack={()=>go("citizens")} onTown={id=>go("town:"+id)}/> : page === "towns" ? <TownRegistry search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile/> : page === "admin" ? <RegistrationRequests/> : page === "settings" ? <Settings/> : page === "about" ? <About/> : <>
        <div className="breadcrumb">Workspace <span>/</span> {title}</div>
        <header className="page-header"><div><div className="eyebrow">THE RECORDS PROJECT</div><h1>{title}</h1><p>A fresh workspace for Nostra-2.</p></div><span className="badge">To be rebuilt</span></header>
        <section className="card rebuild-placeholder">

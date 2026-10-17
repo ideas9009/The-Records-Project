@@ -1,0 +1,234 @@
+.citizens-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.citizens-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 240px;
+  max-width: 460px;
+  min-width: 0;
+  padding: 0 16px;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.citizens-search:focus-within {
+  outline: 2px solid #efb1dc;
+  outline-offset: 2px;
+}
+.citizens-search .material-symbol {
+  font-size: 21px;
+  color: var(--muted);
+  flex: 0 0 21px;
+}
+.citizens-search input {
+  background: transparent;
+  border: 0;
+  padding: 12px 0;
+  min-width: 0;
+  width: 100%;
+}
+.citizens-search input:focus-visible {
+  outline: none;
+}
+.citizens-toolbar select {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px;
+  max-width: 100%;
+}
+.citizens-toolbar option {
+  background: #25252b;
+  color: #fff;
+}
+.citizens-count,
+.citizens-muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+.citizens-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 18px;
+}
+.citizens-grid .citizen-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+  padding: 22px;
+  text-align: left;
+  background: var(--surface);
+  cursor: pointer;
+}
+.citizen-card:hover {
+  border-color: #efb1dc80;
+}
+.citizen-card:focus-visible {
+  outline: 2px solid #efb1dc;
+  outline-offset: 3px;
+}
+.citizen-card > .material-symbol {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 20px;
+  flex: 0 0 20px;
+}
+.citizen-avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  background: #efb1dc22;
+  color: #efb1dc;
+  border: 1px solid #efb1dc30;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 17px;
+}
+.citizen-card-info {
+  min-width: 0;
+  flex: 1;
+}
+.citizen-card h2 {
+  font-size: 18px;
+  margin: 0 0 7px;
+  overflow-wrap: anywhere;
+}
+.citizen-card p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+.citizen-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.citizen-role {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 8px;
+  border: 1px solid #efb1dc30;
+  background: #efb1dc14;
+  color: #efcbe4;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.citizen-profile {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+.citizen-profile h2 {
+  font-size: 26px;
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+.citizen-avatar-large {
+  width: 72px;
+  height: 72px;
+  flex-basis: 72px;
+  font-size: 25px;
+  border-radius: 22px;
+}
+.citizen-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.citizen-profile-grid > .card {
+  min-width: 0;
+}
+.citizen-profile-grid h2 {
+  font-size: 18px;
+}
+.citizen-facts {
+  display: grid;
+  gap: 22px;
+  margin: 22px 0 0;
+}
+.citizen-facts dt {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.citizen-facts dd {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.citizen-towns {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+.citizen-towns button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+.citizen-towns button > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.citizen-towns small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 4px;
+}
+.citizens-back {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.citizens-empty {
+  text-align: center;
+  padding: 34px;
+}
+.citizens-empty > .material-symbol {
+  font-size: 32px;
+  color: var(--muted);
+}
+.citizens-empty h2 {
+  font-size: 18px;
+}
+.citizens-page .page-header h1:focus {
+  outline: none;
+}
+@container (max-width:650px) {
+  .citizen-profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .citizen-profile {
+    flex-wrap: wrap;
+  }
+}
+@container (max-width:360px) {
+  .citizens-grid .citizen-card {
+    flex-wrap: wrap;
+  }
+  .citizens-toolbar select {
+    width: 100%;
+  }
+}

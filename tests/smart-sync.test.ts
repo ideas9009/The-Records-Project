@@ -190,11 +190,56 @@ it("does not fall back to saved data for non-JSON permission denials", async () 
   expect(await cachedData("/api/news")).toBeNull();
 });
 
-it("invalidates the cache when any role changes even if the primary role stays the same",async()=>{
- await enable();
- setSyncIdentity({uid:'multi',role:'operator',roles:['operator','minister'],status:'approved'});
- await saveCachedData('/api/towns',[{id:'town'}],cacheEpoch());
- expect(await cachedData('/api/towns')).not.toBeNull();
- setSyncIdentity({uid:'multi',role:'operator',roles:['operator'],status:'approved'});
- expect(await cachedData('/api/towns')).toBeNull();
+it("invalidates the cache when any role changes even if the primary role stays the same", async () => {
+  await enable();
+  setSyncIdentity({
+    uid: "multi",
+    role: "operator",
+    roles: ["operator", "minister"],
+    status: "approved",
+  });
+  await saveCachedData("/api/towns", [{ id: "town" }], cacheEpoch());
+  expect(await cachedData("/api/towns")).not.toBeNull();
+  setSyncIdentity({
+    uid: "multi",
+    role: "operator",
+    roles: ["operator"],
+    status: "approved",
+  });
+  expect(await cachedData("/api/towns")).toBeNull();
+});
+
+it("supports the public Citizens directory for pending users and background page selection", async () => {
+  await enable();
+  setSyncIdentity({
+    uid: "pending-citizens",
+    role: "member",
+    status: "pending",
+  });
+  expect(cacheAllowed("/api/citizens")).toBe(true);
+  expect(cacheAllowed("/api/citizens/public-user")).toBe(true);
+  expect(cacheAllowed("/api/admin/users")).toBe(false);
+  expect(cacheAllowed("/api/citizens/user/private")).toBe(false);
+  await saveSmartSyncSettings({
+    enabled: true,
+    pages: ["citizens"],
+    interval: 5,
+  });
+  expect(smartSyncSettings().pages).toEqual(["citizens"]);
+  await saveCachedData(
+    "/api/citizens",
+    [
+      {
+        uid: "public-user",
+        username: "User",
+        roles: ["citizen"],
+        towns: [],
+        joinedAt: null,
+      },
+    ],
+    cacheEpoch(),
+  );
+  expect((await cachedData<unknown[]>("/api/citizens"))?.data).toHaveLength(1);
+  await invalidateCache("/api/citizens/public-user");
+  expect(await cachedData("/api/citizens")).toBeNull();
 });

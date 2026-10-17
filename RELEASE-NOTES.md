@@ -142,3 +142,5 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 
 - Added multiple roles, Prime Minister and Deputy roles, administration registration reviews, user moderation, role management and an activity log.
 - Added Register Town with a user directory for selecting the mayor.
+
+- Added the Citizens directory with search, role filters, public profiles, town affiliations and optional SmartSync support.
