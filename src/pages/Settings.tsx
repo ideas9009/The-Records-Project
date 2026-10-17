@@ -1,3 +1,4 @@
+import SmartSyncSettingsPanel from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
 import { useEffect, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
@@ -133,6 +134,7 @@ export default function Settings() {
         >
           {[
             ["appearance", "Appearance", "wallpaper"],
+            ["smartsync", "SmartSync", "sync"],
             ["windows", "Windows behaviour", "desktop_windows"],
           ].map(([id, label, icon]) => (
             <button
@@ -164,7 +166,9 @@ export default function Settings() {
               {error}
             </p>
           )}
-          {tab === "appearance" ? (
+          {tab === "smartsync" ? (
+            <SmartSyncSettingsPanel />
+          ) : tab === "appearance" ? (
             <>
               <section className="card setting-card">
                 <div className="setting-row">

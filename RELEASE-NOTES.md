@@ -126,3 +126,12 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Added loading spinners to server requests, active navigation, data views and asynchronous actions, including sign-in, registration, news publishing, gallery uploads and approvals.
 - Added a map-loading indicator and feedback while Windows preferences are loading or saving.
 - Changed discard and logout confirmations to expand from their initiating button and overlay nearby content, keeping the rest of the page visible.
+
+### SmartSync · Beta
+
+- Added an optional device-local offline cache, off by default, for Town Registry, published News and visited public article/town details and galleries. Saved responses appear before the network refresh completes.
+- Added background page selection for Town Registry and News, configurable 1/5/15/30-minute intervals, Sync now, last-synced time, storage usage and Clear saved data.
+- Background syncing pauses while hidden and resumes when the app becomes visible or reconnects.
+- Separated caches by server, account and permission scope; excluded sign-in, profiles, administrative requests, drafts and schedules. Cache is bounded to 50 MB and 24 hours. Disabling SmartSync clears saved data.
+- Kept online sign-in and server-only writes. Offline viewing in an already verified session pauses after 15 minutes without account verification. Logout and permission changes clear the previous cache scope.
+- Aligned Town Registry and News loading messages directly below their search toolbar.

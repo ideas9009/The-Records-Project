@@ -1,3 +1,4 @@
+import { canRetainOfflineSession, setSyncIdentity } from "./smart-sync";
 import { LoadingStatus } from "../components/Loading";
 import "../pages/Login.css";
 import {
@@ -8,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { PREVIEW_MODE, previewAccount } from "./runtime-mode";
-import { session, watchResource } from "./api";
+import { ApiError, session, watchResource } from "./api";
 import type { Account } from "./cloud-auth";
 const AuthContext = createContext<{
   account: Account | null;
@@ -24,6 +25,7 @@ function ServerAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let stop: undefined | (() => void);
     const connect = () => {
+      let verifiedAt = 0;
       stop?.();
       setAccount(null);
       setError("");
@@ -35,13 +37,17 @@ function ServerAuthProvider({ children }: { children: ReactNode }) {
       stop = watchResource<{ account: Account }>(
         "/api/auth/me",
         (result) => {
+          verifiedAt = Date.now();
           setAccount(result.account);
           setLoading(false);
           setError("");
         },
         (reason) => {
           setLoading(false);
-          setError(reason.message);
+          const denied = reason instanceof ApiError && reason.status < 500;
+          if (denied) setSyncIdentity(null);
+          if (denied || !canRetainOfflineSession(verifiedAt))
+            setError(reason.message);
         },
       );
     };

@@ -1,3 +1,4 @@
+import { SyncStatus } from "../components/SmartSync";
 import { Spinner, LoadingStatus } from "../components/Loading";
 import { useEffect, useRef, useState } from "react";
 import { PREVIEW_MODE } from "../lib/runtime-mode";
@@ -41,6 +42,7 @@ export default function TownGallery({
         setLoading(false);
       },
       () => {
+        setPhotos([]);
         setError("Gallery could not be loaded from Firebase.");
         setLoading(false);
       },
@@ -103,6 +105,7 @@ export default function TownGallery({
         aria-label="Upload town images"
         onChange={(event) => void upload(Array.from(event.target.files ?? []))}
       />
+      <SyncStatus path={"/api/towns/" + town.id + "/photos"} />
       {error && (
         <p className="town-gallery-error" role="alert">
           {error}

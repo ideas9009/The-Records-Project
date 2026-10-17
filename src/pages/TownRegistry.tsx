@@ -1,3 +1,4 @@
+import { SyncStatus } from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
 import { useTowns, type Town } from "../lib/cloud-towns";
 import "./TownRegistry.css";
@@ -58,7 +59,6 @@ export default function TownRegistry({
         <h1>Town Registry</h1>
       </header>
       {error && <p role="alert">{error}</p>}
-      {loading && <LoadingStatus>Loading towns…</LoadingStatus>}
       <div className="town-toolbar">
         <div className="town-search">
           <TownIcon name="search" />
@@ -74,6 +74,8 @@ export default function TownRegistry({
           {filtered.length} {filtered.length === 1 ? "town" : "towns"}
         </span>
       </div>
+      {loading && <LoadingStatus>Loading towns…</LoadingStatus>}
+      <SyncStatus path="/api/towns" />
       <div className="town-grid">
         {filtered.map((town) => (
           <button

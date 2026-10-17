@@ -1,3 +1,4 @@
+import {SmartSyncManager} from "./components/SmartSync";
 import {Spinner,LoadingStatus,ServerActivity,usePendingRequests} from "./components/Loading";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { navigationAtPointer } from "./lib/sidebar-hover";
@@ -66,7 +67,7 @@ export default function App() {
  if(loading||error)return <ConnectionStatus/>;
  if(!account)return <Login/>;
  return <div className="app rebuild-shell" data-page={page}>
-   <ServerActivity/><div className="sidebar-slot">
+   <SmartSyncManager/><ServerActivity/><div className="sidebar-slot">
    <aside className="sidebar hover-sidebar" aria-label="Main sidebar"
      onPointerMove={event=>{pointer.current={x:event.clientX,y:event.clientY};refreshHover()}}
      onPointerLeave={()=>{pointer.current=null;setHovered(null)}}>

@@ -1,4 +1,4 @@
-.town-toolbar { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:24px; }
+.town-toolbar { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:22px; }
 .town-registry .page-header { align-items:center; }
 .town-registry .page-header h1 { margin-bottom:0; }
 .town-search { display:flex; align-items:center; gap:10px; width:min(100%,420px); padding:0 16px; min-height:48px; border:1px solid var(--line); border-radius:16px; background:var(--surface); }

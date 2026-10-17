@@ -1,3 +1,4 @@
+import { SyncStatus } from "../components/SmartSync";
 import { Spinner, LoadingStatus } from "../components/Loading";
 import ExpandingConfirmation from "../components/ExpandingConfirmation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -246,6 +247,7 @@ export function Feed({
         setError("");
       },
       (reason) => {
+        setArticles([]);
         setError(message(reason));
         setLoading(false);
       },
@@ -316,6 +318,7 @@ export function Feed({
           <button onClick={() => setAttempt((v) => v + 1)}>Retry</button>
         </div>
       )}
+      <SyncStatus path={managing ? "/api/news/manage" : "/api/news"} />
       {loading ? (
         <LoadingStatus>Loading news…</LoadingStatus>
       ) : (
@@ -422,21 +425,21 @@ function Article({
     window.addEventListener("records-news-refresh", refresh);
     return () => window.removeEventListener("records-news-refresh", refresh);
   }, []);
-  useEffect(() => {
-    let active = true;
-    setError("");
-    void loadArticle(id).then(
-      (data) => {
-        if (active) setArticle(data);
-      },
-      (reason) => {
-        if (active) setError(message(reason));
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [id, attempt]);
+  useEffect(
+    () =>
+      watchResource<NewsArticle>(
+        "/api/news/" + encodeURIComponent(id),
+        (data) => {
+          setArticle(data);
+          setError("");
+        },
+        (reason) => {
+          setArticle(null);
+          setError(message(reason));
+        },
+      ),
+    [id, attempt],
+  );
   async function archive() {
     if (!article) return;
     setBusy(true);
@@ -484,6 +487,7 @@ function Article({
           </button>
         </p>
       )}
+      <SyncStatus path={"/api/news/" + id} />
       {article ? (
         <ArticleContent article={article} />
       ) : (

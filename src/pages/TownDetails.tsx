@@ -1,3 +1,4 @@
+import { SyncStatus } from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
 import { useEffect, useRef } from "react";
 import TownGallery from "./TownGallery";
@@ -23,6 +24,7 @@ export default function TownDetails({
         <TownIcon name="arrow_back" />
         Town Registry
       </button>
+      <SyncStatus path={"/api/towns/" + townId} />
       {loading ? (
         <LoadingStatus>Loading town…</LoadingStatus>
       ) : error ? (
