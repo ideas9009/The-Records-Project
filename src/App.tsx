@@ -81,7 +81,7 @@ export default function App() {
      <nav aria-label="Workspace" ref={navRef} onScroll={trackScroll}>
        {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"active":""} aria-label={name} title={name} aria-current={page===id || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"page":undefined}
          style={{"--pill-fill":fill,"--pill-ink":ink} as CSSProperties}>
-         {pendingRequests>0&&(page===id||(id==="news"&&page.startsWith("news:"))||(id==="towns"&&page.startsWith("town:")))?<Spinner/>:<Symbol name={icon}/>}<span className="nav-label">{name}</span>
+         {pendingRequests>0&&(page===id||(id==="news"&&page.startsWith("news:"))||(id==="towns"&&page.startsWith("town:")))?<span className="sidebar-icon-slot"><Spinner/></span>:<Symbol name={icon}/>}<span className="nav-label">{name}</span>
        </button>)}
      </nav>
      </div>

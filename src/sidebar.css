@@ -305,3 +305,7 @@
 .notifications-heading h2 { margin: 0; }
 .notifications-heading button { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; }
 .notifications-panel p { margin-bottom: 0; }
+
+/* Keep loading indicators centered in the same slot as navigation icons. */
+.rebuild-shell .hover-sidebar nav button .sidebar-icon-slot { display:grid; place-items:center; width:46px; height:46px; flex:0 0 46px; }
+.rebuild-shell .hover-sidebar nav button .sidebar-icon-slot .loading-spinner { width:18px; height:18px; margin:0; }
