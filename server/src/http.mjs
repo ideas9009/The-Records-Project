@@ -12,7 +12,7 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  const token=req.headers.authorization?.startsWith('Bearer ')?req.headers.authorization.slice(7):null,profile=await service.authenticate(token);
  let result;if(req.method==='GET'&&path==='/api/auth/me')result=await service.me(profile);
  else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
- else if(req.method==='PUT'&&path==='/api/preferences')result=await service.preferences(profile,body);
+ else if(req.method==='PUT'&&path==='/api/preferences')throw new ApiError(410,'Appearance preferences are stored on this device.');
  else if(req.method==='GET'&&path==='/api/towns')result=await service.towns(profile);
  else if(req.method==='GET'&&path==='/api/admin/registrations')result=await service.requests(profile);
  else if(req.method==='POST'&&path==='/api/admin/test-town')result=await service.seed(profile);

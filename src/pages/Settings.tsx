@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import {PREVIEW_MODE} from "../lib/runtime-mode";
-import {saveCloudAppearance,firebaseError} from "../lib/cloud-auth";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import {
   wallpapers,
@@ -59,11 +57,9 @@ export default function Settings() {
       setSelected(localStorage.getItem("records-wallpaper") || "");
     };
     window.addEventListener("storage", refresh);
-    window.addEventListener("records-cloud-preferences", refresh);
     window.addEventListener("records-wallpaper", refresh);
     return () => {
       window.removeEventListener("storage", refresh);
-      window.removeEventListener("records-cloud-preferences", refresh);
       window.removeEventListener("records-wallpaper", refresh);
     };
   }, []);
@@ -75,7 +71,6 @@ export default function Settings() {
       await restoreWallpaper();
       setScale(savedScale());
       setPotato(savedPotato());
-      if(!PREVIEW_MODE)await saveCloudAppearance({[key]:value});
       setMessage("Saved");
       setError("");
     } catch (reason) {
@@ -84,12 +79,11 @@ export default function Settings() {
       applyAppearance();
       await restoreWallpaper();
       setScale(savedScale());setPotato(savedPotato());
-      setError(firebaseError(reason));
+      setError("Could not save your preference on this device.");
     }
   }
   async function choose(url: string | null) {
     try {
-      if(!PREVIEW_MODE)await saveCloudAppearance({"records-wallpaper":url||""});
       await selectWallpaper(url);
       setSelected(url || "");
       setMessage("Wallpaper saved");

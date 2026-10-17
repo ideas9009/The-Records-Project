@@ -101,3 +101,9 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 
 - Deployed the Render API in Oregon and connected the app to its HTTPS endpoint.
 - Published server-only Firestore rules and verified live account, town and session operations.
+
+- Renamed Job Board to Task Board in the sidebar and page heading.
+
+- Renamed Shop Showcase to Shop Search and Companies & Orders to Companies.
+
+- Made wallpaper, interface scale and Potato Mode device-local. Sign-in, sign-out and account refresh no longer overwrite appearance settings. Disabled the old cloud preference endpoint; existing cloud preference records are preserved but ignored.

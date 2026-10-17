@@ -7,4 +7,3 @@ export async function signInCloud(username:string,password:string){const result=
 export async function signOutCloud(){await apiRequest("/api/auth/logout",{method:"POST",body:{}});setSession(null)}
 export function watchRequests(next:(accounts:Account[])=>void,error:(reason:Error)=>void){return watchResource<Account[]>("/api/admin/registrations",next,error)}
 export async function approveRegistration(uid:string){await apiRequest("/api/admin/registrations/"+encodeURIComponent(uid)+"/approve",{method:"POST",body:{}});window.dispatchEvent(new Event("records-approvals"))}
-export const saveCloudAppearance=(values:Record<string,string>)=>apiRequest("/api/preferences",{method:"PUT",body:values});

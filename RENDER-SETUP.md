@@ -31,7 +31,7 @@ Install server dependencies with npm ci --prefix server. Set GOOGLE_APPLICATION_
 
 Run npm test --prefix server for backend tests, npm test for frontend tests and npm run build for the app build. Backend tests use an isolated in-memory store with the same service and HTTP code; live Firestore reads/writes must still be verified after deployment.
 
-Old local JSON files, credential hashes and Flutter archives are not imported automatically. Static wallpapers are bundled assets; preferences and uploaded gallery photos go through Render into Firestore. Original high-resolution wallpapers and local archives remain on this device; the repository includes the prepared images needed to build.
+Old local JSON files, credential hashes and Flutter archives are not imported automatically. Static wallpapers are bundled assets; appearance settings stay on the device; uploaded gallery photos go through Render into Firestore. Original high-resolution wallpapers and local archives remain on this device; the repository includes the prepared images needed to build.
 
 ## Limits before a public launch
 

@@ -9,8 +9,8 @@ The active app includes local sign-in and approval-based registration, Town Regi
 | Overview | Dashboard, summary cards, news and announcement previews |
 | Town registry | Searchable compact cards and a dedicated town details page implemented with one test record; live data, onboarding and management remain |
 | Citizens | Citizen directory and public profiles |
-| Job board | Listings, job details, applications, proof, approval and payment flow |
-| Shop showcase | Listings, shop details and management |
+| Task board | Listings, job details, applications, proof, approval and payment flow |
+| Shop search | Listings, shop details and management |
 | Companies | Directory, company details, ownership, products and storage |
 | Orders | Buyer/seller lists, checkout, order details, status and conversation; previously inside Companies |
 | Material requests | Request list, creation, fulfillment and delivery confirmation; previously inside Jobs |
