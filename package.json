@@ -22,7 +22,9 @@
     "lucide-react": "^0.468",
     "react": "^19",
     "react-dom": "^19",
-    "react-markdown": "^10"
+    "react-markdown": "^10",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

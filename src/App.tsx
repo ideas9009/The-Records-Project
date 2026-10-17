@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import About from "./pages/About";
 import TownRegistry from "./pages/TownRegistry";
 import TownDetails from "./pages/TownDetails";
+import News from "./pages/News";
 
 const navigation = [
  ["home", "Overview", "space_dashboard", "#b5a2ff", "#2e2156"],
@@ -57,7 +58,7 @@ export default function App() {
  useEffect(()=>{setPage("home");setTownSearch("");setNotifications(false);setHovered(null)},[account?.username]);
  const page=canAccessPage(account,requestedPage)?requestedPage:"home";
  const title = navigation.find(([id])=>id===page)?.[1] || (page==="about" ? "About" : "Overview");
- const go=(id:string)=>{if(!canAccessPage(account,id))return;setPage(id);setNotifications(false);document.querySelector("main")?.scrollTo(0,0)};
+ const go=(id:string)=>{if(!canAccessPage(account,id))return;if(!window.dispatchEvent(new Event("records-navigate",{cancelable:true})))return;setPage(id);setNotifications(false);document.querySelector("main")?.scrollTo(0,0)};
  if(loading||error)return <ConnectionStatus/>;
  if(!account)return <Login/>;
  return <div className="app rebuild-shell" data-page={page}>
@@ -74,7 +75,7 @@ export default function App() {
      </div>
      <div className="sidebar-scroll">
      <nav aria-label="Workspace" ref={navRef} onScroll={trackScroll}>
-       {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="towns" && page.startsWith("town:"))?"active":""} aria-label={name} title={name} aria-current={page===id || (id==="towns" && page.startsWith("town:"))?"page":undefined}
+       {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"active":""} aria-label={name} title={name} aria-current={page===id || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:"))?"page":undefined}
          style={{"--pill-fill":fill,"--pill-ink":ink} as CSSProperties}>
          <Symbol name={icon}/><span className="nav-label">{name}</span>
        </button>)}
@@ -93,7 +94,7 @@ export default function App() {
    </div>
    <div className="workspace-body">
      <main className={page === "map" ? "map-page" : undefined}>
-       {page === "map" ? <iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" allowFullScreen/> : page === "towns" ? <TownRegistry search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile/> : page === "admin" ? <RegistrationRequests/> : page === "settings" ? <Settings/> : page === "about" ? <About/> : <>
+       {page === "map" ? <iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" allowFullScreen/> : page === "news" || page.startsWith("news:") ? <News page={page} go={go}/> : page === "towns" ? <TownRegistry search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile/> : page === "admin" ? <RegistrationRequests/> : page === "settings" ? <Settings/> : page === "about" ? <About/> : <>
        <div className="breadcrumb">Workspace <span>/</span> {title}</div>
        <header className="page-header"><div><div className="eyebrow">THE RECORDS PROJECT</div><h1>{title}</h1><p>A fresh workspace for Nostra-2.</p></div><span className="badge">To be rebuilt</span></header>
        <section className="card rebuild-placeholder">

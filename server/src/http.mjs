@@ -13,6 +13,12 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  let result;if(req.method==='GET'&&path==='/api/auth/me')result=await service.me(profile);
  else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
  else if(req.method==='PUT'&&path==='/api/preferences')throw new ApiError(410,'Appearance preferences are stored on this device.');
+ else if(req.method==='GET'&&path==='/api/news')result=await service.newsList(profile);
+ else if(req.method==='GET'&&path==='/api/news/manage')result=await service.newsList(profile,true);
+ else if(req.method==='POST'&&path==='/api/news')result=await service.newsSave(profile,body);
+ else if(/^\/api\/news\/[^/]+\/archive$/.test(path)&&req.method==='POST')result=await service.newsArchive(profile,path.split('/')[3],body);
+ else if(/^\/api\/news\/[^/]+$/.test(path)&&req.method==='GET')result=await service.newsGet(profile,path.split('/')[3]);
+ else if(/^\/api\/news\/[^/]+$/.test(path)&&req.method==='PUT')result=await service.newsSave(profile,body,path.split('/')[3]);
  else if(req.method==='GET'&&path==='/api/towns')result=await service.towns(profile);
  else if(req.method==='GET'&&path==='/api/admin/registrations')result=await service.requests(profile);
  else if(req.method==='POST'&&path==='/api/admin/test-town')result=await service.seed(profile);

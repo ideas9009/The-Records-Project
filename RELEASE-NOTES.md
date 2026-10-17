@@ -107,3 +107,11 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Renamed Shop Showcase to Shop Search and Companies & Orders to Companies.
 
 - Made wallpaper, interface scale and Potato Mode device-local. Sign-in, sign-out and account refresh no longer overwrite appearance settings. Disabled the old cloud preference endpoint; existing cloud preference records are preserved but ignored.
+
+### News
+
+- Added a searchable news feed and dedicated article pages.
+- Added Publish News for approved Operators, Admins, the Leader and Ministers, with permissions enforced by the server. Ministers do not receive registration-review access.
+- Added optional compressed thumbnails and subtitles, Discord/standard Markdown, and article preview.
+- Added drafts, editing, recoverable archiving and scheduled publication using the server clock. Scheduled articles appear on the next feed refresh after their publication time.
+- News articles are stored in Firestore through the Render API; drafts and future publications are restricted to publishers.
