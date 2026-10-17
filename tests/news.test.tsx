@@ -1,4 +1,4 @@
-import { Feed, MeetingActions } from "../src/pages/News";
+import { ArticleContent, Feed, MeetingActions } from "../src/pages/News";
 import { describe, it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import NewsMarkdown from "../src/pages/NewsMarkdown";
@@ -112,4 +112,39 @@ it("ordinary readers cannot see publishing controls, drafts or schedules", () =>
     createdAt: "",
   };
   expect(canAccessPage(member, "news:meeting")).toBe(false);
+});
+
+it("whole-article preview includes cover, title, subtitle, author, Markdown and meeting controls", () => {
+  const article = {
+    id: "preview",
+    title: "Meeting preview",
+    subtitle: "Preview subtitle",
+    body: "**Formatted article**",
+    format: "discord" as const,
+    thumbnail: "data:image/jpeg;base64,/9j/AA==",
+    kind: "meeting" as const,
+    meetingUrl: "https://meet.google.com/aeb-wzei-sjd",
+    status: "draft" as const,
+    publishAt: null,
+    author: "Sumeitideas",
+    authorUid: "publisher",
+    createdAt: "",
+    updatedAt: "",
+    version: 1,
+  };
+  const html = renderToStaticMarkup(
+    <ArticleContent article={article} preview />,
+  );
+  for (const text of [
+    "news-article-cover",
+    "Meeting preview",
+    "Preview subtitle",
+    "Sumeitideas",
+    "<strong>Formatted article</strong>",
+    "Join Meeting",
+    "Copy meeting link",
+  ])
+    expect(html).toContain(text);
+  expect(html).not.toContain("news-state");
+  expect(html).toContain('type="button"');
 });

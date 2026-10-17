@@ -58,7 +58,7 @@ export default function App() {
  useEffect(()=>{setPage("home");setTownSearch("");setNotifications(false);setHovered(null)},[account?.username]);
  const page=canAccessPage(account,requestedPage)?requestedPage:"home";
  const title = navigation.find(([id])=>id===page)?.[1] || (page==="about" ? "About" : "Overview");
- const go=(id:string)=>{if(!canAccessPage(account,id))return;if(!window.dispatchEvent(new Event("records-navigate",{cancelable:true})))return;setPage(id);setNotifications(false);document.querySelector("main")?.scrollTo(0,0)};
+ const go=(id:string)=>{if(!canAccessPage(account,id))return;const proceed=()=>{setPage(id);setNotifications(false);document.querySelector("main")?.scrollTo(0,0)};if(!window.dispatchEvent(new CustomEvent("records-navigate",{cancelable:true,detail:{proceed}})))return;proceed()};
  if(loading||error)return <ConnectionStatus/>;
  if(!account)return <Login/>;
  return <div className="app rebuild-shell" data-page={page}>

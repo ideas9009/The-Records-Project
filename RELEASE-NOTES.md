@@ -119,3 +119,6 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Changed News to full-width rows with direct Edit controls for publishers.
 - Added a server-enforced 10-second Undo after immediate publication, returning the post to a private draft.
 - Added meeting posts with editable Google Meet links, Join Meeting and an icon-only copy button. Publishing and draft/schedule visibility remain restricted to approved Operators, Admins, the Leader and Ministers.
+
+- Replaced News navigation browser confirmations with the app’s styled discard dialog, with Keep editing and Discard changes actions.
+- Expanded News Preview to show the full article/meeting using the published article layout, including thumbnail, heading, subtitle, author, date, formatted text and meeting controls. Preview preserves editor changes and does not publish content.

@@ -157,6 +157,7 @@ export function MeetingActions({ url }: { url: string }) {
     <div className="news-meeting">
       <div className="news-meeting-buttons">
         <button
+          type="button"
           className="news-primary"
           onClick={() => {
             setError("");
@@ -167,6 +168,7 @@ export function MeetingActions({ url }: { url: string }) {
           Join Meeting
         </button>
         <button
+          type="button"
           aria-label="Copy meeting link"
           title={copied ? "Copied" : "Copy meeting link"}
           onClick={() => void copy()}
@@ -464,38 +466,46 @@ function Article({
         </p>
       )}
       {article ? (
-        <article className="card news-article">
-          {article.thumbnail && (
-            <img
-              className="news-article-cover"
-              src={article.thumbnail}
-              alt=""
-            />
-          )}
-          <div className="news-article-content">
-            {articleStatus(article) !== "published" && (
-              <span className="news-state">{articleStatus(article)}</span>
-            )}
-            <h1>{article.title}</h1>
-            {article.subtitle && (
-              <p className="news-subtitle">{article.subtitle}</p>
-            )}
-            <div className="news-meta">
-              <span>{article.author}</span>
-              <time>{newsDate(article.publishAt || article.updatedAt)}</time>
-            </div>
-            {article.kind === "meeting" && article.meetingUrl && (
-              <MeetingActions url={article.meetingUrl} />
-            )}
-            <NewsMarkdown text={article.body} format={article.format} />
-          </div>
-        </article>
+        <ArticleContent article={article} />
       ) : (
         !error && <p role="status">Loading article…</p>
       )}
     </div>
   );
 }
+export function ArticleContent({
+  article,
+  preview = false,
+}: {
+  article: NewsArticle;
+  preview?: boolean;
+}) {
+  return (
+    <article className="card news-article">
+      {article.thumbnail && (
+        <img className="news-article-cover" src={article.thumbnail} alt="" />
+      )}
+      <div className="news-article-content">
+        {!preview && articleStatus(article) !== "published" && (
+          <span className="news-state">{articleStatus(article)}</span>
+        )}
+        <h1>{article.title}</h1>
+        {article.subtitle && (
+          <p className="news-subtitle">{article.subtitle}</p>
+        )}
+        <div className="news-meta">
+          <span>{article.author}</span>
+          <time>{newsDate(article.publishAt || article.updatedAt)}</time>
+        </div>
+        {article.kind === "meeting" && article.meetingUrl && (
+          <MeetingActions url={article.meetingUrl} />
+        )}
+        <NewsMarkdown text={article.body} format={article.format} />
+      </div>
+    </article>
+  );
+}
+
 function localDate(value: number) {
   const date = new Date(value);
   return new Date(value - date.getTimezoneOffset() * 60000)
@@ -513,6 +523,7 @@ function NewsEditor({
   meeting?: boolean;
   onPublished: (article: NewsArticle) => void;
 }) {
+  const { account } = useAuth();
   const [kind, setKind] = useState<"article" | "meeting">(
       meeting ? "meeting" : "article",
     ),
@@ -536,12 +547,17 @@ function NewsEditor({
     [error, setError] = useState(""),
     [dirty, setDirty] = useState(false);
   const picker = useRef<HTMLInputElement>(null),
-    unsaved = useRef(false);
+    unsaved = useRef(false),
+    discardDialog = useRef<HTMLDialogElement>(null),
+    pendingNavigation = useRef<null | (() => void)>(null);
   unsaved.current = dirty;
   useEffect(() => {
     const guard = (event: Event) => {
-      if (unsaved.current && !window.confirm("Discard unsaved changes?"))
-        event.preventDefault();
+      if (!unsaved.current) return;
+      event.preventDefault();
+      pendingNavigation.current =
+        (event as CustomEvent<{ proceed: () => void }>).detail?.proceed || null;
+      if (!discardDialog.current?.open) discardDialog.current?.showModal();
     };
     window.addEventListener("records-navigate", guard);
     return () => window.removeEventListener("records-navigate", guard);
@@ -654,18 +670,78 @@ function NewsEditor({
     }
   }
   const change = () => setDirty(true);
+  const previewArticle: NewsArticle = {
+    id: id || "preview",
+    kind,
+    meetingUrl,
+    title: title.trim() || "Untitled",
+    subtitle,
+    body: text || "*No article text.*",
+    thumbnail,
+    format,
+    status: "published",
+    publishAt:
+      publication === "schedule" &&
+      schedule &&
+      Number.isFinite(new Date(schedule).getTime())
+        ? new Date(schedule).getTime()
+        : article?.publishAt || Date.now(),
+    author: article?.author || account?.username || "",
+    authorUid: article?.authorUid || account?.uid || "",
+    createdAt: article?.createdAt || "",
+    updatedAt: article?.updatedAt || "",
+    version: article?.version || 0,
+  };
+  function cancelDiscard() {
+    pendingNavigation.current = null;
+    discardDialog.current?.close();
+  }
+  function discard() {
+    const proceed = pendingNavigation.current;
+    pendingNavigation.current = null;
+    unsaved.current = false;
+    setDirty(false);
+    discardDialog.current?.close();
+    proceed?.();
+  }
   return (
     <div className="news-page">
+      <dialog
+        ref={discardDialog}
+        className="card logout-dialog news-discard-dialog"
+        aria-labelledby="news-discard-heading"
+        onCancel={() => {
+          pendingNavigation.current = null;
+        }}
+      >
+        <h2 id="news-discard-heading">Discard unsaved changes?</h2>
+        <p>Your changes have not been saved.</p>
+        <div className="logout-actions">
+          <button autoFocus onClick={cancelDiscard}>
+            Keep editing
+          </button>
+          <button onClick={discard}>Discard changes</button>
+        </div>
+      </dialog>
       <div className="news-article-actions">
         <button onClick={() => go(id ? "news:" + id : "news")}>
           <Icon name="arrow_back" />
           {id ? "Article" : "News"}
         </button>
       </div>
-      <header className="page-header">
+      <header className="page-header news-header">
         <h1>
           {id ? "Edit News" : meeting ? "Host a meeting" : "Publish News"}
         </h1>
+        <button
+          type="button"
+          disabled={loading || !!(id && !article)}
+          aria-pressed={preview}
+          onClick={() => setPreview((value) => !value)}
+        >
+          <Icon name={preview ? "edit" : "visibility"} />
+          {preview ? "Back to editor" : "Preview"}
+        </button>
       </header>
       {error && (
         <p role="alert" className="news-error">
@@ -676,14 +752,20 @@ function NewsEditor({
         <p role="status">Loading article…</p>
       ) : id && !article ? null : (
         <form
-          className="news-editor"
+          noValidate
+          className={"news-editor" + (preview ? " news-editor-preview" : "")}
           onSubmit={(event: FormEvent) => {
             event.preventDefault();
             void save(false);
           }}
           onChange={change}
         >
-          <section className="card news-compose">
+          {preview && (
+            <section className="news-full-preview" aria-label="Article preview">
+              <ArticleContent article={previewArticle} preview />
+            </section>
+          )}
+          <section className="card news-compose" hidden={preview}>
             {kind === "meeting" && (
               <label>
                 Google Meet link
@@ -726,23 +808,8 @@ function NewsEditor({
                   <option value="markdown">Markdown</option>
                 </select>
               </label>
-              <button
-                type="button"
-                aria-pressed={preview}
-                onClick={() => setPreview((v) => !v)}
-              >
-                <Icon name={preview ? "edit" : "visibility"} />
-                {preview ? "Write" : "Preview"}
-              </button>
             </div>
-            {preview ? (
-              <div className="news-preview">
-                <NewsMarkdown
-                  text={text || "*No article text.*"}
-                  format={format}
-                />
-              </div>
-            ) : (
+            {
               <label>
                 Article text
                 <textarea
@@ -754,7 +821,7 @@ function NewsEditor({
                   placeholder="Write your article…"
                 />
               </label>
-            )}
+            }
             <div className="news-format-help">
               <span>
                 Headings · bold · italics · lists · links · quotes · code ·
@@ -765,7 +832,7 @@ function NewsEditor({
             </div>
           </section>
           <aside className="news-editor-options">
-            <section className="card">
+            <section className="card" hidden={preview}>
               <h2>
                 Thumbnail <small>(optional)</small>
               </h2>
