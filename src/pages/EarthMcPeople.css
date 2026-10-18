@@ -139,3 +139,73 @@
 .earthmc-precise-toggle + .earthmc-details {
   margin-bottom: 22px;
 }
+
+.earthmc-details {
+  align-items: start;
+}
+.earthmc-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+.earthmc-info-table caption {
+  text-align: left;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 10px 0 12px;
+}
+.earthmc-info-table th,
+.earthmc-info-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  overflow-wrap: normal;
+}
+.earthmc-info-table thead th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+}
+.earthmc-info-table tbody th {
+  font-weight: 500;
+}
+.earthmc-info-table tr:last-child td,
+.earthmc-info-table tr:last-child th {
+  border-bottom: 0;
+}
+.earthmc-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: 10px;
+}
+.earthmc-table-scroll:focus-visible {
+  outline: 2px solid #efb1dc;
+  outline-offset: 3px;
+}
+.permission-table {
+  min-width: 450px;
+}
+.permission-table td {
+  text-align: center;
+}
+.permission-table thead th:not(:first-child) {
+  text-align: center;
+}
+.earthmc-table-state {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 12px;
+}
+.earthmc-table-state.yes {
+  background: #8ee0bf19;
+  color: #8ee0bf;
+}
+.earthmc-table-state.no {
+  background: #b5b5bf12;
+  color: var(--muted);
+}
+.earthmc-table-state.unknown {
+  color: var(--muted);
+}

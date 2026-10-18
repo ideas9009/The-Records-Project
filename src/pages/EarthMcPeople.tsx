@@ -1,3 +1,4 @@
+import EarthMcDetailTables from "../components/EarthMcDetailTables";
 import EarthMcProfileSummary from "../components/EarthMcProfileSummary";
 import MinecraftFace from "../components/MinecraftFace";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,6 +9,9 @@ import "./EarthMcPeople.css";
 type Person = { name: string; uuid: string };
 type Directory = { players: Person[]; nations: Person[]; checkedAt: string };
 const label = (key: string) =>
+  (({ perms: "Permissions", stats: "Statistics" }) as Record<string, string>)[
+    key
+  ] ||
   key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/_/g, " ")
@@ -249,7 +253,19 @@ export default function EarthMcPeople({
                 {Object.entries(detail.player).map(([key, value]) => (
                   <section className="card" key={key}>
                     <h2>{label(key)}</h2>
-                    <EarthMcValue value={value} field={key} />
+                    {["perms", "stats", "status", "timestamps"].includes(
+                      key,
+                    ) ? (
+                      <EarthMcDetailTables
+                        section={key}
+                        value={value}
+                        render={(item, field) => (
+                          <EarthMcValue value={item} field={field} />
+                        )}
+                      />
+                    ) : (
+                      <EarthMcValue value={value} field={key} />
+                    )}
                   </section>
                 ))}
               </section>

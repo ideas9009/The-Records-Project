@@ -69,6 +69,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 - Refined EarthMC player profiles with a readable overview, online status, ranks, dates and clickable friends. Complete API details remain available under Show more precise info.
 
+- Clarified precise player information with labeled permission tables (Friends, Town members, Allies, Outsiders), separate plot flags, and compact Statistics, Status and date/time tables.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.
