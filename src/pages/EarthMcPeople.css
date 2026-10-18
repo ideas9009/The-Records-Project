@@ -69,3 +69,73 @@
   white-space: nowrap;
   flex: 0 0 auto;
 }
+
+.earthmc-overview,
+.earthmc-friends-section {
+  margin-bottom: 20px;
+}
+.earthmc-overview h2,
+.earthmc-friends-section h2 {
+  font-size: 18px;
+}
+.earthmc-overview .earthmc-facts {
+  margin-bottom: 0;
+}
+.earthmc-presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 7px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.earthmc-presence:before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8d8d99;
+}
+.earthmc-presence.is-online:before {
+  background: #8ee0bf;
+}
+.earthmc-presence.is-online {
+  color: #8ee0bf;
+}
+.earthmc-display-name {
+  color: var(--muted);
+  margin: 14px 0;
+}
+.earthmc-overview .citizen-roles {
+  margin-top: 16px;
+}
+.earthmc-friend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 12px;
+}
+.earthmc-friend-grid button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  min-width: 0;
+}
+.earthmc-friend-grid button > span:last-child {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.earthmc-updated {
+  margin: 20px 0 14px;
+}
+.earthmc-precise-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.earthmc-precise-toggle + .earthmc-details {
+  margin-bottom: 22px;
+}

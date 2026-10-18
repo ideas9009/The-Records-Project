@@ -67,6 +67,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 - Face icons now show the full square face without rounded cropping. Opened TRP and EarthMC profiles, and My Profile, display a 3D character render.
 
+- Refined EarthMC player profiles with a readable overview, online status, ranks, dates and clickable friends. Complete API details remain available under Show more precise info.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.

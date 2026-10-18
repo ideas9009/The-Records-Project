@@ -1,3 +1,4 @@
+import EarthMcProfileSummary from "../components/EarthMcProfileSummary";
 import MinecraftFace from "../components/MinecraftFace";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../lib/api";
@@ -93,9 +94,11 @@ export default function EarthMcPeople({
     [detailLoading, setDetailLoading] = useState(false),
     [detailError, setDetailError] = useState(""),
     [detailAttempt, setDetailAttempt] = useState(0);
+  const [precise, setPrecise] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
+    setPrecise(false);
   }, [playerId]);
   useEffect(() => {
     let active = true;
@@ -222,18 +225,35 @@ export default function EarthMcPeople({
         )}
         {detail && (
           <>
-            <p className="citizens-muted">
-              EarthMC API v4 / Updated{" "}
-              {new Date(detail.checkedAt).toLocaleString()}
+            <EarthMcProfileSummary player={detail.player} onOpen={onOpen} />
+            <p className="citizens-muted earthmc-updated">
+              Updated {new Date(detail.checkedAt).toLocaleString()}
             </p>
-            <div className="earthmc-details">
-              {Object.entries(detail.player).map(([key, value]) => (
-                <section className="card" key={key}>
-                  <h2>{label(key)}</h2>
-                  <EarthMcValue value={value} field={key} />
-                </section>
-              ))}
-            </div>
+            <button
+              className="earthmc-precise-toggle"
+              aria-expanded={precise}
+              aria-controls="earthmc-precise-info"
+              onClick={() => setPrecise((value) => !value)}
+            >
+              <span className="material-symbol" aria-hidden="true">
+                {precise ? "expand_less" : "expand_more"}
+              </span>
+              {precise ? "Hide more precise info" : "Show more precise info"}
+            </button>
+            {precise && (
+              <section
+                id="earthmc-precise-info"
+                className="earthmc-details"
+                aria-label="Precise player information"
+              >
+                {Object.entries(detail.player).map(([key, value]) => (
+                  <section className="card" key={key}>
+                    <h2>{label(key)}</h2>
+                    <EarthMcValue value={value} field={key} />
+                  </section>
+                ))}
+              </section>
+            )}
           </>
         )}
       </div>
