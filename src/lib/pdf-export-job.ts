@@ -1,3 +1,5 @@
+import { isTauri, invoke } from "@tauri-apps/api/core";
+import { pdfWorkerCount } from "./pdf-export-config";
 import type { PdfPlayer, PdfProgress } from "./players-pdf";
 import { savePlayersPdf } from "./save-players-pdf";
 type State = { busy: boolean; saving: boolean; progress: PdfProgress | null; message: string };
@@ -33,6 +35,10 @@ export function startPdfExport(players: PdfPlayer[]) {
       finally { update({ busy: false, saving: false, progress: null }); }
     };
     task.onerror = () => { if (worker !== task) return; task.terminate(); worker = null; update({ busy: false, progress: null, message: "PDF export stopped. Please try a smaller selection." }); };
-    task.postMessage({ players });
+    if (isTauri()) {
+      void invoke<number>("export_cpu_threads").catch(() => navigator.hardwareConcurrency || 1).then(threads => {
+        if (worker === task) task.postMessage({ players, workers: pdfWorkerCount(threads, players.length) });
+      });
+    } else task.postMessage({ players, workers: 1 });
   } catch (error) { worker?.terminate(); worker = null; update({ busy: false, progress: null, message: error instanceof Error ? error.message : "Could not start PDF export." }); }
 }

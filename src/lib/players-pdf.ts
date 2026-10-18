@@ -34,6 +34,7 @@ export async function buildPlayersPdf(
   players: PdfPlayer[],
   progress: (value: PdfProgress) => void,
   face: (player: PdfPlayer) => Promise<Uint8Array | null> = smallFace,
+  options: { pageOffset?: number; totalPages?: number; concurrency?: number } = {},
 ) {
   const pdf = await PDFDocument.create(),
     font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -41,11 +42,12 @@ export async function buildPlayersPdf(
   pdf.setCreator("The Records Project");
   const perPage = 64,
     pages = Math.max(1, Math.ceil(players.length / perPage));
+  const concurrency = Math.max(1, Math.min(4, Math.floor(options.concurrency || 4)));
   let missing = 0;
   for (let pageIndex = 0; pageIndex < pages; pageIndex++) {
     const page = pdf.addPage([595.28, 841.89]);
     page.drawText("EarthMC players", { x: 36, y: 812, size: 11, font });
-    page.drawText("Page " + (pageIndex + 1) + " of " + pages, {
+    page.drawText("Page " + (pageIndex + 1 + (options.pageOffset || 0)) + " of " + (options.totalPages || pages), {
       x: 36,
       y: 20,
       size: 9,
@@ -53,8 +55,8 @@ export async function buildPlayersPdf(
     });
     const offset = pageIndex * perPage,
       entries = players.slice(offset, offset + perPage);
-    for (let start = 0; start < entries.length; start += 4) {
-      const batch = entries.slice(start, start + 4),
+    for (let start = 0; start < entries.length; start += concurrency) {
+      const batch = entries.slice(start, start + concurrency),
         images = await Promise.all(
           batch.map((player) => face(player).catch(() => null)),
         );

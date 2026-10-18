@@ -130,3 +130,5 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - PDF processing continues while navigating the app, with a flat progress section and Cancel control at the bottom. Completed PDFs save to Downloads.
 - Process small face batches in a background worker instead of capturing the entire directory. Unavailable faces are counted without dropping usernames.
 - Replaced Full display with PDF export and blocked oversized page screenshots to avoid excessive memory usage.
+
+- Windows desktop PDF exports use parallel processing workers sized to 80% of available logical CPU threads, limited by the number of sections to export. Face requests stay bounded, results retain directory order, and merging/saving remains in the background. CPU usage depends on download speed and available work; it is not pinned to 80%.

@@ -1,3 +1,5 @@
+vi.mock("@tauri-apps/api/core", () => ({ isTauri: vi.fn(() => false), invoke: vi.fn(async () => 16) }));
+import { isTauri, invoke } from "@tauri-apps/api/core";
 import { afterEach, expect, it, vi } from "vitest";
 vi.mock("../src/lib/save-players-pdf", () => ({ savePlayersPdf: vi.fn(async () => "Saved to Downloads: players.pdf") }));
 import { savePlayersPdf } from "../src/lib/save-players-pdf";
@@ -9,7 +11,7 @@ class FakeWorker {
  terminate = vi.fn(); postMessage = vi.fn();
  constructor() { FakeWorker.latest = this; }
 }
-afterEach(() => { cancelPdfExport(); dismissPdfExport(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
+afterEach(() => { cancelPdfExport(); dismissPdfExport(); vi.unstubAllGlobals(); vi.clearAllMocks(); vi.mocked(isTauri).mockReturnValue(false); });
 it("keeps processing after page subscribers leave and saves when complete", async () => {
  vi.stubGlobal("Worker", FakeWorker);
  const leave = subscribePdfExport(vi.fn());
@@ -34,4 +36,20 @@ it("terminates a cancelled job and ignores its late messages", () => {
  expect(task.terminate).toHaveBeenCalledOnce();
  expect(savePlayersPdf).not.toHaveBeenCalled();
  expect(pdfExportSnapshot().busy).toBe(false);
+});
+
+it("uses the native logical-thread count for desktop worker allocation", async () => {
+ vi.stubGlobal("Worker", FakeWorker); vi.mocked(isTauri).mockReturnValue(true);
+ const players = Array.from({ length: 4000 }, (_, i) => ({ name: "Player" + i, uuid: String(i) }));
+ startPdfExport(players);
+ await Promise.resolve(); await Promise.resolve();
+ expect(invoke).toHaveBeenCalledWith("export_cpu_threads");
+ expect(FakeWorker.latest.postMessage).toHaveBeenCalledWith({ players, workers: 12 });
+});
+it("does not launch work if cancelled while native CPU discovery is pending", async () => {
+ vi.stubGlobal("Worker", FakeWorker); vi.mocked(isTauri).mockReturnValue(true);
+ startPdfExport([{ name: "Player", uuid: "uuid" }]);
+ const task = FakeWorker.latest; cancelPdfExport();
+ await Promise.resolve(); await Promise.resolve();
+ expect(task.postMessage).not.toHaveBeenCalled();
 });

@@ -9,6 +9,11 @@ struct Preferences {
     background: AtomicBool,
 }
 #[tauri::command]
+fn export_cpu_threads() -> usize {
+    std::thread::available_parallelism().map(|value| value.get()).unwrap_or(1)
+}
+
+#[tauri::command]
 async fn earthmc(endpoint: String, names: Vec<String>) -> Result<serde_json::Value, String> {
     if !["/nations", "/towns", "/players", "/server", "/online", "/"].contains(&endpoint.as_str()) {
         return Err("Unsupported EarthMC endpoint".into());
@@ -216,6 +221,7 @@ fn main() {
             background: AtomicBool::new(false),
         })
         .invoke_handler(tauri::generate_handler![
+            export_cpu_threads,
             database_read,
             database_commit,
             database_path,
