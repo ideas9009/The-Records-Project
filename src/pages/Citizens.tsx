@@ -73,11 +73,13 @@ export default function Citizens({
   onOpen,
   onBack,
   onTown,
+  onEarthMc,
 }: {
   citizenId?: string;
   onOpen: (id: string) => void;
   onBack: () => void;
   onTown: (id: string) => void;
+  onEarthMc: () => void;
 }) {
   const { account } = useAuth(),
     [search, setSearch] = useState(""),
@@ -111,6 +113,12 @@ export default function Citizens({
         <h1 ref={heading} tabIndex={-1}>
           {citizenId ? citizen?.username || "Citizen Profile" : "Citizens"}
         </h1>
+        {!citizenId && (
+          <button onClick={onEarthMc}>
+            <Icon name="public" />
+            View people on EarthMC
+          </button>
+        )}
       </header>
       {!citizenId && (
         <div className="citizens-toolbar">

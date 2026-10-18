@@ -60,6 +60,9 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - EarthMC data loads independently from the TRP profile, with loading feedback, a refresh button and an updated time. Short server caching reduces repeated requests.
 - Handle missing or private EarthMC profiles and service failures without blocking TRP profile viewing. Username lookup does not verify ownership or change TRP roles.
 
+- Added View people on EarthMC: a separate public player directory with username search, nation filters, a Byzantium shortcut and paginated results.
+- EarthMC player pages display every field returned by the public API, including ranks, timestamps, friends and permissions, independently of TRP records. API opt-outs are respected.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.

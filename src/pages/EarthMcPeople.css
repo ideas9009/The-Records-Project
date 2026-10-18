@@ -1,0 +1,66 @@
+.earthmc-nation-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  max-width: 100%;
+}
+.earthmc-nation-filter select {
+  max-width: min(300px, 100%);
+}
+.earthmc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin: 24px 0;
+}
+.earthmc-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.earthmc-details > .card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.earthmc-details h2 {
+  font-size: 18px;
+  margin-top: 0;
+}
+.earthmc-value-object {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+.earthmc-value-object dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.earthmc-value-object dd {
+  margin: 0;
+}
+.earthmc-value-list {
+  padding-left: 20px;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.earthmc-value-list .earthmc-value-object {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.earthmc-details pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.earthmc-people .page-header h1:focus {
+  outline: none;
+}
+@container (max-width:650px) {
+  .earthmc-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
