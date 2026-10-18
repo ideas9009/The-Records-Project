@@ -332,7 +332,11 @@ export default function EarthMcPeople({
               No matching players.
             </section>
           )}
-          <nav className="earthmc-pagination" aria-label="EarthMC player pages">
+          <div
+            role="navigation"
+            className="earthmc-pagination"
+            aria-label="EarthMC player pages"
+          >
             <button
               disabled={current === 0}
               onClick={() => setPage(current - 1)}
