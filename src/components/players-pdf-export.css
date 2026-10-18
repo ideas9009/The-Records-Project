@@ -1,0 +1,11 @@
+.players-pdf-export { position: relative; }
+.players-pdf-export > button { display: inline-flex; align-items: center; gap: 8px; }
+.pdf-export-options { position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: min(300px,75vw); padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #29292f; box-shadow: 0 12px 32px #0005; display: grid; gap: 10px; font-size: 12px; }
+.pdf-export-options button { text-align: left; }
+.pdf-export-dock { flex-shrink: 0; border-top: 1px solid var(--line); border-radius: 0; background: #202126; color: #eee; padding: 12px 24px 0; }
+.pdf-export-dock-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 12px; font-size: 13px; }
+.pdf-export-dock-row > span { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.pdf-export-dock button { border: 1px solid var(--line); padding: 7px 12px; background: #34353c; color: inherit; cursor: pointer; }
+.pdf-export-dock progress { display: block; width: calc(100% + 48px); margin-left: -24px; height: 4px; border: 0; border-radius: 0; accent-color: #b5a2ff; }
+.pdf-export-dock progress::-webkit-progress-bar { background: #414149; border-radius: 0; }
+.pdf-export-dock progress::-webkit-progress-value { background: #b5a2ff; border-radius: 0; }

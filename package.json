@@ -24,6 +24,7 @@
     "firebase": "^13.0.0",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.468",
+    "pdf-lib": "^1.17.1",
     "react": "^19",
     "react-dom": "^19",
     "react-markdown": "^10",

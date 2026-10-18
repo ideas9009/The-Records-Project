@@ -66,11 +66,13 @@ export function localCapture(): Plugin {
           return send(200, { available: true });
         if (
           req.method !== "POST" ||
-          !["/__trp_capture/copy", "/__trp_capture/save"].includes(
+          !["/__trp_capture/copy", "/__trp_capture/save", "/__trp_capture/save-pdf"].includes(
             url.pathname,
           ) ||
           req.headers["x-trp-capture"] !== "1" ||
-          !req.headers["content-type"]?.startsWith("image/png")
+          !req.headers["content-type"]?.startsWith(
+            url.pathname.endsWith("save-pdf") ? "application/pdf" : "image/png",
+          )
         )
           return send(400, { error: "Invalid screenshot request." });
         if (busy)
@@ -88,7 +90,13 @@ export function localCapture(): Plugin {
             chunks.push(Buffer.from(chunk));
           }
           const bytes = Buffer.concat(chunks);
-          if (!validCapture(bytes)) throw Error("Invalid PNG screenshot.");
+          const isPdf = url.pathname.endsWith("save-pdf");
+          if (
+            isPdf
+              ? bytes.toString("ascii", 0, 5) !== "%PDF-"
+              : !validCapture(bytes)
+          )
+            throw Error("Invalid PNG screenshot.");
           if (url.pathname.endsWith("/copy")) {
             const directory = await mkdtemp(join(tmpdir(), "trp-capture-")),
               file = join(directory, "capture.png");
@@ -134,13 +142,14 @@ export function localCapture(): Plugin {
             typeof req.headers["x-trp-filename"] === "string"
               ? req.headers["x-trp-filename"]
               : "Screenshot.png";
+          const extension = isPdf ? ".pdf" : ".png";
           const stem =
             raw
-              .replace(/\.png$/i, "")
+              .replace(/\.(png|pdf)$/i, "")
               .replace(/[^a-z0-9_-]/gi, "-")
               .slice(0, 100) || "Screenshot";
           for (let index = 0; index < 1000; index++) {
-            const name = stem + (index ? "-" + index : "") + ".png",
+            const name = stem + (index ? "-" + index : "") + extension,
               path = join(downloads, name);
             let handle;
             try {

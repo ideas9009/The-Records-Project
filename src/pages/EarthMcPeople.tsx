@@ -1,3 +1,10 @@
+import PlayersPdfExport from "../components/PlayersPdfExport";
+import {
+  earthMcPageSizes,
+  readEarthMcPageSize,
+  rememberEarthMcPageSize,
+  type EarthMcPageSize,
+} from "../lib/earthmc-page-size";
 import PageCapture from "../components/PageCapture";
 import EarthMcDetailTables from "../components/EarthMcDetailTables";
 import EarthMcProfileSummary from "../components/EarthMcProfileSummary";
@@ -99,6 +106,9 @@ export default function EarthMcPeople({
     [detailLoading, setDetailLoading] = useState(false),
     [detailError, setDetailError] = useState(""),
     [detailAttempt, setDetailAttempt] = useState(0);
+  const [pageSize, setPageSize] = useState<EarthMcPageSize>(() =>
+    readEarthMcPageSize(localStorage),
+  );
   const [precise, setPrecise] = useState(false);
   const captureTarget = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -183,7 +193,8 @@ export default function EarthMcPeople({
       ),
     [list, search],
   );
-  const pages = Math.max(1, Math.ceil(filtered.length / 60)),
+  const limit = typeof pageSize === "number" ? pageSize : 20;
+  const pages = Math.max(1, Math.ceil(filtered.length / limit)),
     current = Math.min(page, pages - 1);
   if (playerId)
     return (
@@ -346,6 +357,11 @@ export default function EarthMcPeople({
             title="EarthMC-people"
             disabled={loading || !directory}
           />
+          <PlayersPdfExport
+            players={directory?.players || []}
+            filtered={filtered}
+            disabled={loading || !directory}
+          />
         </div>
       </header>
       <div className="citizens-toolbar">
@@ -379,6 +395,28 @@ export default function EarthMcPeople({
             ))}
           </select>
         </label>
+        <label className="earthmc-nation-filter">
+          <span>Show</span>
+          <select
+            aria-label="Players per page"
+            value={pageSize}
+            onChange={(event) => {
+              const value =
+                event.target.value === "full"
+                  ? "full"
+                  : (Number(event.target.value) as EarthMcPageSize);
+              rememberEarthMcPageSize(localStorage, value);
+              setPage(0);
+              setPageSize(value);
+            }}
+          >
+            {earthMcPageSizes.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </label>
         {directory?.nations.some(
           (item) => item.name.toLowerCase() === "byzantium",
         ) && (
@@ -395,6 +433,7 @@ export default function EarthMcPeople({
           </button>
         )}
       </div>
+
       {loading && <LoadingStatus>Loading EarthMC people...</LoadingStatus>}
       {error && (
         <section className="card">
@@ -411,26 +450,28 @@ export default function EarthMcPeople({
             {pages}
           </p>
           <div className="citizens-grid">
-            {filtered.slice(current * 60, (current + 1) * 60).map((person) => (
-              <button
-                className="card citizen-card"
-                key={person.uuid}
-                onClick={() => onOpen(person.uuid)}
-                aria-label={"View EarthMC player " + person.name}
-              >
-                <MinecraftFace
-                  username={person.name}
-                  uuid={person.uuid}
-                  className="citizen-avatar"
-                />
-                <div className="citizen-card-info">
-                  <h2>{person.name}</h2>
-                </div>
-                <span className="material-symbol" aria-hidden="true">
-                  arrow_forward
-                </span>
-              </button>
-            ))}
+            {filtered
+              .slice(current * limit, (current + 1) * limit)
+              .map((person) => (
+                <button
+                  className="card citizen-card"
+                  key={person.uuid}
+                  onClick={() => onOpen(person.uuid)}
+                  aria-label={"View EarthMC player " + person.name}
+                >
+                  <MinecraftFace
+                    username={person.name}
+                    uuid={person.uuid}
+                    className="citizen-avatar"
+                  />
+                  <div className="citizen-card-info">
+                    <h2>{person.name}</h2>
+                  </div>
+                  <span className="material-symbol" aria-hidden="true">
+                    arrow_forward
+                  </span>
+                </button>
+              ))}
           </div>
           {!filtered.length && (
             <section className="card citizens-empty">

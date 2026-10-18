@@ -11,6 +11,13 @@ export function captureSize(width: number, height: number) {
   };
 }
 export async function capturePage(node: HTMLElement) {
+  if (
+    node.querySelectorAll(".citizen-card").length > 1000 ||
+    node.scrollHeight > 30000
+  )
+    throw Error(
+      "This page is too large for a screenshot. Use Export PDF instead.",
+    );
   const { toCanvas, getFontEmbedCSS } = await import("html-to-image");
   await document.fonts.ready;
   const previousExport = node.getAttribute("data-exporting");

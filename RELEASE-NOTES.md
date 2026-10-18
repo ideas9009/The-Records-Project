@@ -77,6 +77,10 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 - Connected browser-preview screenshot actions to a local Windows helper so copied images reach the system clipboard and saved PNGs are written to Downloads with verified success feedback. No cloud upload is involved.
 
+- Added EarthMC directory page sizes of 20, 40, 50, 75, 100, 500 and 1000. Choices are remembered locally; unsupported saved values reset to 20.
+
+- Replaced the memory-heavy Full directory view with Export PDF: a plain two-column directory of usernames and small faces, processed in a background worker with four image requests at a time, progress and cancellation. Users can export all public players or their current search/nation results. Screenshot capture rejects oversized directories.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.
@@ -119,3 +123,10 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Discord linking, Discord confirmation delivery and notification delivery are not implemented.
 - Profile customization is planned for a future phase.
 - Final Windows installer, update delivery and release acceptance testing remain ahead. This is not a published release.
+
+## Player directory PDF export
+
+- Export all EarthMC usernames and faces, or current search results, as a plain two-column PDF.
+- PDF processing continues while navigating the app, with a flat progress section and Cancel control at the bottom. Completed PDFs save to Downloads.
+- Process small face batches in a background worker instead of capturing the entire directory. Unavailable faces are counted without dropping usernames.
+- Replaced Full display with PDF export and blocked oversized page screenshots to avoid excessive memory usage.

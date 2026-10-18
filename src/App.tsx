@@ -1,3 +1,4 @@
+import {PdfExportBar} from "./components/PlayersPdfExport";
 import MinecraftFace from "./components/MinecraftFace";
 import EarthMcPeople from "./pages/EarthMcPeople";
 import MicrosoftLinkRecommendation from "./components/MicrosoftLinkRecommendation";
@@ -121,7 +122,7 @@ export default function App() {
        <div className="notifications-heading"><h2 id="notifications-heading">Notifications</h2><button aria-label="Close notifications" onClick={()=>setNotifications(false)}><Symbol name="close"/></button></div>
        <p>Notifications will return when this section is rebuilt.</p>
      </section>}
-     <footer className="app-footer"><span>The Records Project</span><span>Nostra · 2 | Phase 1</span></footer>
+     <PdfExportBar/><footer className="app-footer"><span>The Records Project</span><span>Nostra · 2 | Phase 1</span></footer>
    </div>
  </div>;
 }
