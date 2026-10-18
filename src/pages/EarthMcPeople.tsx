@@ -254,7 +254,9 @@ export default function EarthMcPeople({
                   <section
                     className={
                       "card " +
-                      (key === "perms" ? "earthmc-permissions-card" : "")
+                      (["perms", "stats", "status", "timestamps"].includes(key)
+                        ? "earthmc-wide-detail-card"
+                        : "")
                     }
                     key={key}
                   >
@@ -269,6 +271,33 @@ export default function EarthMcPeople({
                           <EarthMcValue value={item} field={field} />
                         )}
                       />
+                    ) : key === "discord" ? (
+                      typeof value === "string" && /^\d{15,22}$/.test(value) ? (
+                        <div className="earthmc-discord-info">
+                          <div>
+                            <span className="citizens-muted">
+                              Discord user ID
+                            </span>
+                            <p>{value}</p>
+                          </div>
+                          <a
+                            href={"https://discord.com/users/" + value}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="earthmc-discord-link"
+                          >
+                            Open Discord profile
+                            <span
+                              className="material-symbol"
+                              aria-hidden="true"
+                            >
+                              open_in_new
+                            </span>
+                          </a>
+                        </div>
+                      ) : (
+                        <EarthMcValue value={value} field={key} />
+                      )
                     ) : (
                       <EarthMcValue value={value} field={key} />
                     )}

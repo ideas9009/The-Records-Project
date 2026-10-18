@@ -71,6 +71,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 - Clarified precise player information with labeled permission tables (Friends, Town members, Allies, Outsiders), separate plot flags, and compact Statistics, Status and date/time tables.
 
+- Made detailed player tables full-width with consistent cell styling, removing uneven grid gaps and unnecessary horizontal table scrolling. Discord identifiers are labeled as user IDs with a link to open the Discord profile.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.
