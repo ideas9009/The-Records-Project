@@ -251,7 +251,13 @@ export default function EarthMcPeople({
                 aria-label="Precise player information"
               >
                 {Object.entries(detail.player).map(([key, value]) => (
-                  <section className="card" key={key}>
+                  <section
+                    className={
+                      "card " +
+                      (key === "perms" ? "earthmc-permissions-card" : "")
+                    }
+                    key={key}
+                  >
                     <h2>{label(key)}</h2>
                     {["perms", "stats", "status", "timestamps"].includes(
                       key,

@@ -209,3 +209,6 @@
 .earthmc-table-state.unknown {
   color: var(--muted);
 }
+.earthmc-permissions-card {
+  grid-column: 1 / -1;
+}
