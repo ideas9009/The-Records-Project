@@ -1,3 +1,4 @@
+import CitizenEarthMc from "../components/CitizenEarthMc";
 import { useEffect, useRef, useState } from "react";
 import { watchResource } from "../lib/api";
 import { type Citizen, filterCitizens } from "../lib/citizens";
@@ -166,7 +167,7 @@ export default function Citizens({
           </section>
           <div className="citizen-profile-grid">
             <section className="card">
-              <h2>Profile</h2>
+              <h2>TRP Profile</h2>
               <dl className="citizen-facts">
                 <div>
                   <dt>Minecraft Username</dt>
@@ -205,6 +206,9 @@ export default function Citizens({
               )}
             </section>
           </div>
+          {!PREVIEW_MODE && (
+            <CitizenEarthMc key={citizen.uid} uid={citizen.uid} />
+          )}
         </>
       ) : (
         !citizenId &&

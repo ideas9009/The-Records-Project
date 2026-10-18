@@ -28,6 +28,7 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(/^\/api\/news\/[^/]+\/archive$/.test(path)&&req.method==='POST')result=await service.newsArchive(profile,path.split('/')[3],body);
  else if(/^\/api\/news\/[^/]+$/.test(path)&&req.method==='GET')result=await service.newsGet(profile,path.split('/')[3]);
  else if(/^\/api\/news\/[^/]+$/.test(path)&&req.method==='PUT')result=await service.newsSave(profile,body,path.split('/')[3]);
+ else if(req.method==='GET'&&/^\/api\/citizens\/[^/]+\/earthmc$/.test(path))result=await service.citizenEarthMc(profile,path.split('/')[3]);
  else if(req.method==='GET'&&path==='/api/citizens')result=await service.citizens(profile);
  else if(req.method==='GET'&&/^\/api\/citizens\/[^/]+$/.test(path))result=await service.citizen(profile,path.split('/')[3]);
  else if(req.method==='GET'&&path==='/api/admin/rank-reviews')result=await service.rankReviews(profile);

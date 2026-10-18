@@ -232,3 +232,30 @@
     width: 100%;
   }
 }
+
+.citizen-earthmc {
+  margin-top: 22px;
+}
+.earthmc-profile-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.earthmc-profile-heading h2 {
+  margin: 0;
+}
+.earthmc-profile-heading button {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+}
+.earthmc-facts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  margin-bottom: 24px;
+}
+.earthmc-about {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+}

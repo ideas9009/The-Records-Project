@@ -1,7 +1,9 @@
+import { createEarthMcProfile } from "./earthmc-profile.mjs";
 import { ApiError, rolesOf } from "./security.mjs";
 const base = "nations/byzantium";
 // This projection is independent of the administrative account directory.
-export function createCitizens(store) {
+export function createCitizens(store, options = {}) {
+  const lookupEarthMc = createEarthMcProfile(options);
   const listAll = (path, filter = null) =>
     store.listAll
       ? store.listAll(path, filter)
@@ -51,7 +53,9 @@ export function createCitizens(store) {
           .filter(
             (town) =>
               town.mayorUid === user.uid ||
-              (user.minecraftVerified===true&&!!town.earthmcUuid&&user.earthmcTownUuid===town.earthmcUuid) ||
+              (user.minecraftVerified === true &&
+                !!town.earthmcUuid &&
+                user.earthmcTownUuid === town.earthmcUuid) ||
               members.get(town.id)?.includes(user.username.toLowerCase()),
           )
           .map((town) => ({
@@ -72,5 +76,12 @@ export function createCitizens(store) {
     if (!user) throw new ApiError(404, "Citizen not found.");
     return user;
   }
-  return { citizens: directory, citizen };
+  return {
+    citizens: directory,
+    citizen,
+    citizenEarthMc: async (profile, uid) => {
+      const user = await citizen(profile, uid);
+      return lookupEarthMc(user.username);
+    },
+  };
 }
