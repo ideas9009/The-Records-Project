@@ -110,7 +110,7 @@ export default function Login() {
           mode={mode}
           onActiveChange={setMicrosoftActive}
         />
-        <p className="login-note">Nostra · 2 | Beta 1</p>
+        <p className="login-note">Nostra · 2 | Phase 1</p>
       </section>
     </div>
   );

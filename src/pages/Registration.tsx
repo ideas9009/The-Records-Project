@@ -88,6 +88,11 @@ export function RegistrationProfile() {
           <MicrosoftVerification mode="link" />
         </section>
       )}
+      <section className="card">
+        <h2>Profile customization</h2>
+        <span className="badge">Coming soon</span>
+        <p>Profile customization will be available in a future phase.</p>
+      </section>
       <ExpandingConfirmation
         anchor={logoutAnchor}
         title="Log out?"

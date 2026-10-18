@@ -19,7 +19,7 @@ export default function About() {
           <image href="/trp-logo.png" width="2000" height="2000" />
         </svg>
         <div>
-          <h2>Nostra · 2 | Beta 1</h2>
+          <h2>Nostra · 2 | Phase 1</h2>
           <p>Built for the EarthMC community.</p>
         </div>
         <span className="badge">In development</span>
@@ -27,7 +27,7 @@ export default function About() {
       <section className="card">
         <h2>Updates</h2>
         <p>
-          Beta 1 is in development. Update delivery will be added before
+          Phase 1 is in development. Update delivery will be added before
           release.
         </p>
       </section>
