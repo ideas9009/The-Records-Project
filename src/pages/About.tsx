@@ -38,6 +38,7 @@ export default function About() {
       <section className="card">
         <h2>Credits</h2>
         <p>The Records Project · Sumeitideas</p>
+        <p>Minecraft avatars by MCHeads</p>
         <p>Material Symbols by Google · EarthMC map by EarthMC</p>
       </section>
     </div>

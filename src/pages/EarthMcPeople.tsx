@@ -1,3 +1,4 @@
+import MinecraftFace from "../components/MinecraftFace";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../lib/api";
 import { LoadingStatus } from "../components/Loading";
@@ -185,11 +186,21 @@ export default function EarthMcPeople({
           EarthMC people
         </button>
         <header className="page-header">
-          <h1 ref={heading} tabIndex={-1}>
-            {typeof detail?.player.name === "string"
-              ? detail.player.name
-              : "EarthMC Player"}
-          </h1>
+          <div className="minecraft-identity">
+            {typeof detail?.player.name === "string" && (
+              <MinecraftFace
+                username={detail.player.name}
+                uuid={playerId}
+                className="profile-face"
+                eager
+              />
+            )}
+            <h1 ref={heading} tabIndex={-1}>
+              {typeof detail?.player.name === "string"
+                ? detail.player.name
+                : "EarthMC Player"}
+            </h1>
+          </div>
           <button
             disabled={detailLoading}
             onClick={() => setDetailAttempt((value) => value + 1)}
@@ -315,9 +326,11 @@ export default function EarthMcPeople({
                 onClick={() => onOpen(person.uuid)}
                 aria-label={"View EarthMC player " + person.name}
               >
-                <span className="citizen-avatar" aria-hidden="true">
-                  {person.name.slice(0, 2).toUpperCase()}
-                </span>
+                <MinecraftFace
+                  username={person.name}
+                  uuid={person.uuid}
+                  className="citizen-avatar"
+                />
                 <div className="citizen-card-info">
                   <h2>{person.name}</h2>
                 </div>

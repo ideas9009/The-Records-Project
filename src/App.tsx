@@ -1,3 +1,4 @@
+import MinecraftFace from "./components/MinecraftFace";
 import EarthMcPeople from "./pages/EarthMcPeople";
 import MicrosoftLinkRecommendation from "./components/MicrosoftLinkRecommendation";
 import Citizens from "./pages/Citizens";
@@ -95,7 +96,7 @@ export default function App() {
        <button className="sidebar-utility" aria-label="About" title="About" aria-current={page==="about"?"page":undefined} onClick={()=>go("about")}><Symbol name="info"/><span>About</span></button>
      </div>
      <button className="sidebar-user" aria-label={account.username+" — My Profile"} title={account.username} onClick={()=>go("profile")}>
-       <span className="user-symbol">{account.username.slice(0,2).toUpperCase()}</span>
+       <MinecraftFace username={account.username} className="user-symbol" eager/>
        <span className="sidebar-user-name"><strong>{account.username}</strong><small>{PREVIEW_MODE?"Preview":account.status==="pending"?"Pending approval":roleLabels(account)}</small></span>
        <Symbol name="north_east" className="sidebar-user-arrow"/>
      </button>

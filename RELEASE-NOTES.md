@@ -63,6 +63,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Added View people on EarthMC: a separate public player directory with username search, nation filters, a Byzantium shortcut and paginated results.
 - EarthMC player pages display every field returned by the public API, including ranks, timestamps, friends and permissions, independently of TRP records. API opt-outs are respected.
 
+- Replaced initials with Minecraft face avatars in citizen cards, EarthMC player lists and details, My Profile and the sidebar. Images load on demand with an initials fallback when unavailable.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.

@@ -1,3 +1,4 @@
+import MinecraftFace from "../components/MinecraftFace";
 import CitizenEarthMc from "../components/CitizenEarthMc";
 import { useEffect, useRef, useState } from "react";
 import { watchResource } from "../lib/api";
@@ -162,12 +163,11 @@ export default function Citizens({
       {citizen ? (
         <>
           <section className="card citizen-profile">
-            <span
+            <MinecraftFace
+              username={citizen.username}
               className="citizen-avatar citizen-avatar-large"
-              aria-hidden="true"
-            >
-              {citizen.username.slice(0, 2).toUpperCase()}
-            </span>
+              eager
+            />
             <div>
               <h2>{citizen.username}</h2>
               <RoleBadges roles={citizen.roles} />
@@ -230,9 +230,10 @@ export default function Citizens({
                   onClick={() => onOpen(person.uid)}
                   aria-label={"View " + person.username}
                 >
-                  <span className="citizen-avatar" aria-hidden="true">
-                    {person.username.slice(0, 2).toUpperCase()}
-                  </span>
+                  <MinecraftFace
+                    username={person.username}
+                    className="citizen-avatar"
+                  />
                   <div className="citizen-card-info">
                     <h2>{person.username}</h2>
                     <p>

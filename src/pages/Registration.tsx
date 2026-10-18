@@ -1,3 +1,4 @@
+import MinecraftFace from "../components/MinecraftFace";
 import MicrosoftVerification from "../components/MicrosoftVerification";
 import { roleLabels } from "../lib/access";
 import Administration from "./Administration";
@@ -49,7 +50,14 @@ export function RegistrationProfile() {
         </button>
       </header>
       <section className="card">
-        <h2>{account.username}</h2>
+        <div className="minecraft-identity">
+          <MinecraftFace
+            username={account.username}
+            className="profile-face"
+            eager
+          />
+          <h2>{account.username}</h2>
+        </div>
         <p className="login-note">Account ID: {account.uid}</p>
         {account.townRegistrationPending && (
           <p className="microsoft-warning">
