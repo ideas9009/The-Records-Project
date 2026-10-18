@@ -21,7 +21,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost https: data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://api.earthmc.net https://api.cloudinary.com https://api.github.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://the-records-project-api.onrender.com; frame-src https://earthmc.net https://map.earthmc.net; object-src 'none'; base-uri 'self'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost https: data: blob:; font-src 'self' data:; connect-src 'self' https://mc-heads.net ipc: http://ipc.localhost https://api.earthmc.net https://api.cloudinary.com https://api.github.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://the-records-project-api.onrender.com; frame-src https://earthmc.net https://map.earthmc.net; object-src 'none'; base-uri 'self'"
     }
   },
   "bundle": {

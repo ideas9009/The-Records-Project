@@ -15,3 +15,7 @@ tauri-plugin-notification = "2"
 
 fs2 = "0.4"
 tempfile = "3"
+
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"

@@ -1,3 +1,4 @@
+import PageCapture from "../components/PageCapture";
 import EarthMcDetailTables from "../components/EarthMcDetailTables";
 import EarthMcProfileSummary from "../components/EarthMcProfileSummary";
 import MinecraftFace from "../components/MinecraftFace";
@@ -99,6 +100,7 @@ export default function EarthMcPeople({
     [detailError, setDetailError] = useState(""),
     [detailAttempt, setDetailAttempt] = useState(0);
   const [precise, setPrecise] = useState(false);
+  const captureTarget = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
@@ -185,7 +187,7 @@ export default function EarthMcPeople({
     current = Math.min(page, pages - 1);
   if (playerId)
     return (
-      <div className="citizens-page earthmc-people">
+      <div className="citizens-page earthmc-people" ref={captureTarget}>
         <button className="citizens-back" onClick={onBack}>
           <span className="material-symbol" aria-hidden="true">
             arrow_back
@@ -209,12 +211,23 @@ export default function EarthMcPeople({
                 : "EarthMC Player"}
             </h1>
           </div>
-          <button
-            disabled={detailLoading}
-            onClick={() => setDetailAttempt((value) => value + 1)}
-          >
-            Refresh
-          </button>
+          <div className="page-header-actions" data-capture-exclude>
+            <button
+              disabled={detailLoading}
+              onClick={() => setDetailAttempt((value) => value + 1)}
+            >
+              Refresh
+            </button>
+            <PageCapture
+              target={captureTarget}
+              title={
+                typeof detail?.player.name === "string"
+                  ? detail.player.name
+                  : "EarthMC-player"
+              }
+              disabled={detailLoading || !detail}
+            />
+          </div>
         </header>
         {detailLoading && (
           <LoadingStatus>Loading EarthMC player...</LoadingStatus>
@@ -310,7 +323,7 @@ export default function EarthMcPeople({
       </div>
     );
   return (
-    <div className="citizens-page earthmc-people">
+    <div className="citizens-page earthmc-people" ref={captureTarget}>
       <button className="citizens-back" onClick={onCitizens}>
         <span className="material-symbol" aria-hidden="true">
           arrow_back
@@ -321,12 +334,19 @@ export default function EarthMcPeople({
         <h1 ref={heading} tabIndex={-1}>
           People on EarthMC
         </h1>
-        <button
-          disabled={loading}
-          onClick={() => setAttempt((value) => value + 1)}
-        >
-          Refresh
-        </button>
+        <div className="page-header-actions" data-capture-exclude>
+          <button
+            disabled={loading}
+            onClick={() => setAttempt((value) => value + 1)}
+          >
+            Refresh
+          </button>
+          <PageCapture
+            target={captureTarget}
+            title="EarthMC-people"
+            disabled={loading || !directory}
+          />
+        </div>
       </header>
       <div className="citizens-toolbar">
         <label className="citizens-search">

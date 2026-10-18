@@ -1,0 +1,60 @@
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.page-capture {
+  position: relative;
+}
+.page-capture > button,
+.page-capture-options button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-capture-options {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 180px;
+  padding: 8px;
+  background: #29292f;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px #0005;
+  display: grid;
+  gap: 4px;
+}
+.page-capture-options button {
+  width: 100%;
+  justify-content: flex-start;
+}
+.capture-message,
+.capture-error {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 29;
+  min-width: 180px;
+  max-width: 300px;
+  padding: 10px 14px;
+  background: #29292f;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 12px;
+}
+.capture-error {
+  color: #ffb4bf;
+  margin: 0;
+}
+.capture-message {
+  color: #8ee0bf;
+}
+
+[data-exporting] .earthmc-table-scroll {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}

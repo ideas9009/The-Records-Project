@@ -1,12 +1,13 @@
+import { localCapture } from "./scripts/local-capture";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), localCapture()],
   clearScreen: false,
   server: {
     port: 1420,
     strictPort: true,
-    proxy: {"/api": {target:"http://127.0.0.1:8787",changeOrigin:true}},
+    proxy: { "/api": { target: "http://127.0.0.1:8787", changeOrigin: true } },
     watch: { ignored: ["**/src-tauri/**", "**/.local-data/**"] },
   },
   envPrefix: ["VITE_", "TAURI_"],

@@ -73,6 +73,10 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 - Made detailed player tables full-width with consistent cell styling, removing uneven grid gaps and unnecessary horizontal table scrolling. Discord identifiers are labeled as user IDs with a link to open the Discord profile.
 
+- Added Screenshot beside Refresh in EarthMC pages, with Copy image and Save image options for full page-content PNGs, excluding the sidebar and capture controls. The Windows app uses native clipboard and Save As support.
+
+- Connected browser-preview screenshot actions to a local Windows helper so copied images reach the system clipboard and saved PNGs are written to Downloads with verified success feedback. No cloud upload is involved.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.

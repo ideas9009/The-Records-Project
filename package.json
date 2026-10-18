@@ -17,8 +17,12 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "^2.5.0",
+    "@tauri-apps/plugin-dialog": "^2.8.3",
+    "@tauri-apps/plugin-fs": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2",
     "firebase": "^13.0.0",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.468",
     "react": "^19",
     "react-dom": "^19",
