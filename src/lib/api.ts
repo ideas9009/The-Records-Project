@@ -127,17 +127,21 @@ async function request<T>(path: string, options: Options): Promise<T> {
       !get &&
       (path.startsWith("/api/news") ||
         path.startsWith("/api/towns") ||
-        path.startsWith("/api/admin/test-town"))
+        path.startsWith("/api/admin/test-town") ||
+        path === "/api/auth/microsoft/finish")
     )
       await invalidateCache(
-        path.startsWith("/api/admin") ? "/api/towns" : path,
+        path.startsWith("/api/admin") || path === "/api/auth/microsoft/finish"
+          ? "/api/towns"
+          : path,
       ).catch(() => {});
     if (
       !get &&
       (path.startsWith("/api/admin/users/") ||
         path.startsWith("/api/admin/registrations/") ||
         path.startsWith("/api/admin/rank-reviews/") ||
-        path === "/api/towns")
+        path === "/api/towns" ||
+        path === "/api/auth/microsoft/finish")
     )
       await invalidateCache("/api/citizens").catch(() => {});
     if (get && cacheAllowed(path)) {

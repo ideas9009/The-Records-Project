@@ -1,3 +1,4 @@
+import MicrosoftLinkRecommendation from "./components/MicrosoftLinkRecommendation";
 import Citizens from "./pages/Citizens";
 import {roleLabels} from "./lib/access";
 import {SmartSyncManager} from "./components/SmartSync";
@@ -101,6 +102,7 @@ export default function App() {
    </div>
    <div className="workspace-body">
      <main className={page === "map" ? "map-page" : undefined}>
+       {page!=="profile"&&page!=="map"&&<MicrosoftLinkRecommendation onLink={()=>go("profile")}/>}
        {page === "map" ? <div className="map-loading-stage">{mapLoading&&<div className="map-loading-status"><LoadingStatus>Loading map…</LoadingStatus></div>}<iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" onLoad={()=>setMapLoading(false)} allowFullScreen/></div> : page === "news" || page.startsWith("news:") ? <News page={page} go={go}/> : page === "citizens" || page.startsWith("citizen:") ? <Citizens citizenId={page.startsWith("citizen:")?page.slice(8):undefined} onOpen={id=>go("citizen:"+id)} onBack={()=>go("citizens")} onTown={id=>go("town:"+id)}/> : page === "towns" ? <TownRegistry search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile/> : page === "admin" ? <RegistrationRequests/> : page === "settings" ? <Settings/> : page === "about" ? <About/> : <>
        <div className="breadcrumb">Workspace <span>/</span> {title}</div>
        <header className="page-header"><div><div className="eyebrow">THE RECORDS PROJECT</div><h1>{title}</h1><p>A fresh workspace for Nostra-2.</p></div><span className="badge">To be rebuilt</span></header>

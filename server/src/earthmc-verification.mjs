@@ -121,6 +121,7 @@ export async function earthMcConfirmation(minecraft, { fetcher = fetch } = {}) {
   const townId = normalUuid(player.town?.uuid),
     town = townId ? await query("towns", townId) : null;
   if (
+    !normalUuid(player.nation?.uuid) ||
     !town ||
     normalUuid(town.nation?.uuid) !== normalUuid(player.nation?.uuid)
   )

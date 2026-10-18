@@ -14,4 +14,5 @@ const origins=(process.env.ALLOWED_ORIGINS||'http://127.0.0.1:1420,http://localh
 const api=createApi(createService(store,{sampleTown}),{origins,trustRenderProxy:!!process.env.RENDER});
 api.requestTimeout=30000;api.headersTimeout=10000;
 api.listen(Number(process.env.PORT)||8787,'0.0.0.0',()=>console.log('The Records Project API is ready.'));
+const cleanup=async()=>{try{const expired=await store.expired('server_oauth',Date.now());await Promise.all(expired.map(item=>store.remove('server_oauth/'+item.id)))}catch{console.warn('Expired verification cleanup will retry.')}};void cleanup();const cleanupTimer=setInterval(()=>void cleanup(),10*60000);cleanupTimer.unref();
 process.on('SIGTERM',()=>api.close(()=>process.exit(0)));

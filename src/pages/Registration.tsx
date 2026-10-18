@@ -1,3 +1,4 @@
+import MicrosoftVerification from "../components/MicrosoftVerification";
 import { roleLabels } from "../lib/access";
 import Administration from "./Administration";
 import { Spinner } from "../components/Loading";
@@ -50,6 +51,13 @@ export function RegistrationProfile() {
       <section className="card">
         <h2>{account.username}</h2>
         <p className="login-note">Account ID: {account.uid}</p>
+        {account.townRegistrationPending && (
+          <p className="microsoft-warning">
+            <strong>Your town is awaiting registration</strong>
+            {account.earthmcTownName} will be linked when its verified mayor
+            registers.
+          </p>
+        )}
         <h3>Access status</h3>
         <ol className="registration-progress">
           <li>Registration submitted</li>
@@ -70,6 +78,16 @@ export function RegistrationProfile() {
           <p>Roles: {roleLabels(account)}</p>
         )}
       </section>
+      {account.minecraftVerified ? (
+        <section className="card">
+          <h2>Microsoft account</h2>
+          <p>Linked to your verified Minecraft account.</p>
+        </section>
+      ) : (
+        <section className="card">
+          <MicrosoftVerification mode="link" />
+        </section>
+      )}
       <ExpandingConfirmation
         anchor={logoutAnchor}
         title="Log out?"

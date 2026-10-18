@@ -16,6 +16,9 @@ export type Account = {
   roles?: Role[];
   status: "pending" | "approved" | "rejected" | "suspended";
   createdAt: string;
+  minecraftVerified?: boolean;
+  earthmcTownName?: string;
+  townRegistrationPending?: boolean;
   approvedBy?: string;
   approvedAt?: string;
 };

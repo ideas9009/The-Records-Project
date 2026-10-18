@@ -1,4 +1,5 @@
 export function firestoreStore(db){const ref=path=>db.doc(path);return {
+ expired:async(path,deadline)=>{const result=await db.collection(path).where('expiresAt','<=',deadline).limit(100).get();return result.docs.map(snap=>({id:snap.id}))},
  get:async path=>{const snap=await ref(path).get();return snap.exists?snap.data():null},
  set:(path,data)=>ref(path).set(data),remove:path=>ref(path).delete(),
  listAll:async(path,filter=null)=>{let query=db.collection(path);if(filter)query=query.where(filter[0],'==',filter[1]);const items=[];let cursor;for(;;){const page=await (cursor?query.startAfter(cursor):query).limit(200).get();items.push(...page.docs.map(snap=>({...snap.data(),id:snap.id})));if(page.size<200)return items;cursor=page.docs.at(-1)}},
