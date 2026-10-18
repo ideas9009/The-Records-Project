@@ -1,150 +1,104 @@
-# Nostra · 2 | Beta 1
+# Nostra · 2 | Phase 1
 
 **Status:** Unreleased development draft  
-**Last updated:** 17 October 2026
+**Last updated:** 18 October 2026
 
-These are fresh release notes for Nostra-2. Notes from previous versions are not carried forward. This file will be updated as features are completed.
+Phase 1 of the planned three-phase transition from Flutter to React. These notes cover the current rebuild; release notes from previous versions are not carried forward.
 
-## Completed so far
+## Foundation and navigation
 
-### New foundation
-
-- Rebuilt the Windows app foundation with React, TypeScript, Tauri and Rust.
-- Archived the previous feature pages and supporting source to make room for a fresh rebuild.
-- Kept the shared visual shell, fonts and bundled wallpaper collection.
-- Added the supplied book logo and the new version label: **Nostra · 2 | Beta 1**.
-
-### Redesigned sidebar
-
-- Added a translucent sidebar that expands on hover and retracts when the pointer leaves.
-- Made expansion overlap the current page so the page and map keep their width.
-- Added colored pill buttons and locally bundled Google Material Symbols.
-- Inverted the selected button's fill and icon/text colors.
-- Added button extensions beyond the sidebar edge.
-- Hidden the scrollbar while preserving scrolling, with gradual fades at the list edges.
-- Updated hover targeting during scrolling so it follows the button beneath the pointer.
-- Added vertical **Byzantium** text in the collapsed sidebar.
-- Refined logo sizing, image padding, header spacing and icon alignment.
+- Rebuilt the Windows app with React, TypeScript, Tauri and Rust. Archived the previous feature pages for the fresh rebuild.
+- Added the supplied book logo and the version label **Nostra · 2 | Phase 1** across the footer, sign-in and About pages.
+- Redesigned the translucent sidebar to expand on hover and overlap the page without resizing its content.
+- Added colored pill buttons, inverted selection colors, locally bundled Material Symbols, scrolling fades and improved icon alignment.
+- Added vertical Byzantium text when collapsed. Notifications and About appear at the bottom when expanded.
 - Removed Wallet, Discord Chat, Live EarthMC, Desktop Widgets, Mayor Toolkit and Analytics from navigation.
-- Removed the top development-status strip and moved Notifications above the profile button.
+- Renamed Nation Affairs to News, Job Board to Task Board, Shop Showcase to Shop Search, and Companies & Orders to Companies.
 
-### EarthMC Map
+## Accounts and security
 
-- Added an embedded EarthMC map at https://earthmc.net/map.
-- Made the map fill its page without placeholder headings or cards.
-- Verified that the map loads in the browser preview.
+- Added TRP Minecraft username/password registration, sign-in and sign-out through the Render API in Oregon.
+- Store account data in Firestore through the server. Passwords use salted scrypt hashes in a private collection; the app does not receive password hashes or Firebase Admin credentials.
+- Added revocable sessions, rate limits and server-enforced permissions. Direct Firestore client access is denied.
+- New manual registrations have limited access until approved. My Profile displays registration progress and assigned roles.
+- Added Settings > Account with password changes requiring the current password and confirmation of the new password. A successful change signs out other sessions while keeping the current session active.
+- Added Microsoft account linking in Account settings. Discord linking is marked Coming soon.
+- Added a My Profile notice that profile customization will arrive in a future phase.
 
-### Settings and About
+## Microsoft account verification
 
-- Added an Appearance section with the bundled 40-image wallpaper gallery and a no-wallpaper option.
-- Added an interface scale slider from 20% to 180% in 10% increments, applied immediately and saved across restarts.
-- Added Potato Mode: solid grey surfaces, no backdrop blur or tint effects, reduced animation, and wallpaper hidden while preserving the selection.
-- Added Windows behaviour controls for launching with Windows, starting minimized and closing to the tray. The browser preview explains that these require the desktop app.
-- Added a separate About page with version information, fresh release notes and credits.
-- Placed About beside Notifications at the bottom of the expanded sidebar; both hide when it retracts.
+- Prepared Microsoft registration, optional sign-in and explicit linking for existing TRP accounts.
+- Prepared Minecraft Java ownership checks, EarthMC membership confirmation, password setup and verified town linking.
+- Confirmation includes the Minecraft username, avatar, EarthMC ranks, town, nation and available balances. Unregistered-town residents receive a notice and can be linked when their verified mayor registers the town.
+- Added the optional Recommended: Link with Microsoft prompt for existing unlinked accounts, shown when the provider becomes available.
+- Submitted the Minecraft AppID review request. Microsoft registration, sign-in and linking remain disabled pending approval; live provider verification is still outstanding.
 
-### Town Registry
+## Administration and roles
 
-- Added searchable town cards showing Records Project residents, EarthMC residents and claimed chunks.
-- Compact cards open a dedicated town details page showing the mayor and registered residents, with a return button to the registry.
-- Added compact statistics on the left and a right-side town image with a fading edge; the test town uses a bundled wallpaper.
-- Included one clearly marked local test town with sample counts. Live EarthMC/Firebase town integration is not active yet.
+- Added multiple simultaneous roles: Operator, Leader, Prime Minister, Admin, Minister, Deputy, Mayor, Army and Citizen.
+- Prime Minister has Leader permissions. Army has Citizen-level access without additional permissions.
+- Added registration reviews, user moderation, role management and an activity log.
+- Only Operator, Leader and Prime Minister can manage roles. Admins cannot edit roles, including higher-ranked or multi-role accounts. Only an Operator can change Operator access.
+- Added server checks against current permissions and tests for forged role-change requests and revoked management access.
+- Added an EarthMC rank-review queue for ambiguous roles. Displaying an EarthMC rank on a public profile does not grant TRP permissions.
 
-- Renamed the residents section to “Residents in The Records Project” and removed repeated nation labels.
-- Added a town gallery with mayor image selection, thumbnails and larger previews. Images are compressed and saved locally; shared Firebase storage is pending.
+## Town Registry
 
-### Local sign-in and registration
+- Added searchable compact town cards with TRP resident counts, EarthMC resident counts and claimed chunks.
+- Town cards open dedicated details pages with a mayor, resident list and full-width layout.
+- Added a town image on the right of each card with a fading edge and compact statistics on the left.
+- Added Register Town for Operator, Leader, Prime Minister, Admin and Minister, with Town Name and a registered-user mayor selector.
+- Added mayor-managed galleries with compressed images, thumbnails and larger previews, stored through the API in Firestore.
+- Retained a clearly marked test town with sample statistics. Town statistics are not yet automatically synchronized from EarthMC.
 
-- Added local Minecraft username/password accounts with salted password hashes and sign-out.
-- New registrations have limited access until approved by an Operator, Admin or Leader.
-- Pending profiles display registration progress; Administration lists requests for approval.
-- Replaced Nation Affairs with News immediately below Overview.
-- Local development access controls are not a production security boundary; server-side authorization is required before shared deployment.
+## Citizens
 
-### Firebase connection
+- Added a searchable directory, role filters, multi-role badges, public profiles and registered-town affiliations.
+- Public profiles show approved TRP members without exposing credentials or administrative account metadata.
+- Added a separate EarthMC Profile section, using the registered TRP username with EarthMC API v4.
+- Display available town, nation, EarthMC ranks, title, balance, online status, join dates and last-online time.
+- EarthMC data loads independently from the TRP profile, with loading feedback, a refresh button and an updated time. Short server caching reduces repeated requests.
+- Handle missing or private EarthMC profiles and service failures without blocking TRP profile viewing. Username lookup does not verify ownership or change TRP roles.
 
-- Selected the-records-project-plus using the supplied web configuration.
-- Replaced active local login with Firebase Authentication and UID-based Firestore profiles.
-- Connected town summaries, restricted details, gallery images, approval requests and appearance preferences to Firestore.
-- Added pending-member and reviewer rules; publishing and live verification remain required.
-- Retained local JSON as backup only, with no automatic upload or fallback.
-- Updated the registration note about possible Discord confirmation; Discord delivery remains disconnected.
+## News and meetings
 
-## Development status
+- Added a searchable full-width feed and dedicated article pages.
+- Approved Operator, Leader, Prime Minister, Admin, Minister and Deputy accounts can publish news.
+- Added optional thumbnails and subtitles, standard/Discord-style Markdown, editing and complete article or meeting previews.
+- Added private drafts, scheduled publication using the server clock and recoverable archiving. Drafts and scheduled news are restricted to publishers.
+- Added a server-enforced 10-second Undo after immediate publication, returning the post to a draft.
+- Added meeting posts with editable Google Meet links, Join Meeting and an icon-only copy button.
+- Added confirmations that expand from the initiating button for discarding changes and logging out.
 
-- EarthMC Map, Town Registry, Settings and About are implemented in the fresh rebuild; the other main sections remain placeholders.
-- Firebase username/password sign-in is active in code. Initial cloud account creation and trusted Operator setup require the project owner.
-- Firebase is the active backend in code; rules deployment and live authenticated verification are pending.
-- Notifications currently opens a placeholder panel; notification delivery is not implemented.
-- This is not a published release. Final installer, updater and release acceptance testing remain ahead.
-### Sign-in paused
+## Settings and appearance
 
-- Restored immediate access to the Sumeitideas UI preview.
-- Firebase account screens and protected cloud operations are paused; configured project and rules are preserved.
-- Preview towns use the bundled test fixture, appearance changes save on this device, and gallery uploads/registration approvals remain paused.
+- Added a bundled 40-image wallpaper gallery and a no-wallpaper option.
+- Wallpaper, interface scale and Potato Mode are saved on the device and persist across sign-in and sign-out.
+- Added an interface-scale slider from 20% to 180% in 10% increments, with keyboard controls and Reset. Dragging applies the scale on release.
+- Fixed shell dimensions and responsive layouts at supported scales, including the footer and confirmation overlays.
+- Added Potato Mode with solid grey surfaces and reduced visual effects while preserving wallpaper selection.
+- Added Windows controls for launch at sign-in, start minimized and close to tray. These require the desktop app.
+- Added About with version information, these release notes and credits.
 
-### Firestore without email sign-in
+## SmartSync - Beta
 
-- Restored Firestore as the active backend, using persistent anonymous Firebase sessions with no email/password screen.
-- New devices remain pending until a trusted reviewer approves them; the initial development Operator is assigned through the Firebase console.
-- Updated Firestore rules and setup steps for Anonymous rather than Email/Password. Live verification requires provider activation and rules publication.
+- Added optional device-local caching, off by default, for Town Registry, published News, Citizens and supported visited details.
+- Saved content appears while the app refreshes it in the background. Private account, authentication, administration, draft and scheduled-news requests are excluded.
+- Added frequently used page selection, 1/5/15/30-minute intervals, Sync now, sync status, storage usage and Clear saved data.
+- Background syncing pauses while hidden and resumes when visible or reconnected.
+- Separated caches by server, account and permission scope, with a 50 MB limit and 24-hour expiry. Disabling SmartSync clears saved data.
+- Writes and sign-in require a connection. Offline viewing in an already verified session pauses after 15 minutes without account verification.
 
-- Added Log out at the top right of My Profile, with an anonymous-account confirmation and a logged-out screen. Logout suppresses automatic anonymous reconnection until Continue is selected.
+## EarthMC Map and loading feedback
 
-### Render-backed app accounts
+- Embedded the EarthMC map at https://earthmc.net/map to fill its page.
+- Added loading feedback for server requests, navigation, asynchronous actions, the map and Windows preferences.
+- Aligned sidebar loading indicators and standardized data-page loading placement.
 
-- Added a Render-ready Node server and single server-side Firebase Admin connection.
-- Restored app username/password registration and login, with salted scrypt password hashes in a server-private Firestore collection.
-- Added revocable sessions, persistent rate limits and server-enforced permissions for approvals, towns, gallery uploads and preferences.
-- Removed Firebase client authentication from the active app and prepared direct-client-deny Firestore rules.
-- Added deployment instructions for ideas9009/The-Records-Project; live deployment still requires the Render service and private Firebase credential.
+## Still in development
 
-- Deployed the Render API in Oregon and connected the app to its HTTPS endpoint.
-- Published server-only Firestore rules and verified live account, town and session operations.
-
-- Renamed Job Board to Task Board in the sidebar and page heading.
-
-- Renamed Shop Showcase to Shop Search and Companies & Orders to Companies.
-
-- Made wallpaper, interface scale and Potato Mode device-local. Sign-in, sign-out and account refresh no longer overwrite appearance settings. Disabled the old cloud preference endpoint; existing cloud preference records are preserved but ignored.
-
-### News
-
-- Added a searchable news feed and dedicated article pages.
-- Added Publish News for approved Operators, Admins, the Leader and Ministers, with permissions enforced by the server. Ministers do not receive registration-review access.
-- Added optional compressed thumbnails and subtitles, Discord/standard Markdown, and article preview.
-- Added drafts, editing, recoverable archiving and scheduled publication using the server clock. Scheduled articles appear on the next feed refresh after their publication time.
-- News articles are stored in Firestore through the Render API; drafts and future publications are restricted to publishers.
-
-- Changed News to full-width rows with direct Edit controls for publishers.
-- Added a server-enforced 10-second Undo after immediate publication, returning the post to a private draft.
-- Added meeting posts with editable Google Meet links, Join Meeting and an icon-only copy button. Publishing and draft/schedule visibility remain restricted to approved Operators, Admins, the Leader and Ministers.
-
-- Replaced News navigation browser confirmations with the app’s styled discard dialog, with Keep editing and Discard changes actions.
-- Expanded News Preview to show the full article/meeting using the published article layout, including thumbnail, heading, subtitle, author, date, formatted text and meeting controls. Preview preserves editor changes and does not publish content.
-
-- Added loading spinners to server requests, active navigation, data views and asynchronous actions, including sign-in, registration, news publishing, gallery uploads and approvals.
-- Added a map-loading indicator and feedback while Windows preferences are loading or saving.
-- Changed discard and logout confirmations to expand from their initiating button and overlay nearby content, keeping the rest of the page visible.
-
-### SmartSync · Beta
-
-- Added an optional device-local offline cache, off by default, for Town Registry, published News and visited public article/town details and galleries. Saved responses appear before the network refresh completes.
-- Added background page selection for Town Registry and News, configurable 1/5/15/30-minute intervals, Sync now, last-synced time, storage usage and Clear saved data.
-- Background syncing pauses while hidden and resumes when the app becomes visible or reconnects.
-- Separated caches by server, account and permission scope; excluded sign-in, profiles, administrative requests, drafts and schedules. Cache is bounded to 50 MB and 24 hours. Disabling SmartSync clears saved data.
-- Kept online sign-in and server-only writes. Offline viewing in an already verified session pauses after 15 minutes without account verification. Logout and permission changes clear the previous cache scope.
-- Aligned Town Registry and News loading messages directly below their search toolbar.
-
-- Fixed interface scaling so the shell fills the window at every supported scale instead of shrinking or overflowing horizontally.
-- Added workspace-based responsive layouts for Settings, News and town details at larger scales; preserved the footer and constrained overlays to the viewport.
-- Interface-scale dragging now previews the value and applies it on release, preventing the slider from moving beneath the pointer mid-drag. Keyboard adjustments and Reset remain available.
-
-- Added multiple roles, Prime Minister and Deputy roles, administration registration reviews, user moderation, role management and an activity log.
-- Added Register Town with a user directory for selecting the mayor.
-
-- Added the Citizens directory with search, role filters, public profiles, town affiliations and optional SmartSync support.
-
-- Added Army with Citizen-level permissions and an Administration rank review queue. Prepared EarthMC confirmation validation and Microsoft application setup instructions; Microsoft sign-in is not enabled yet.
-
-- Prepared Microsoft registration, optional sign-in and explicit existing-account linking, with profile confirmation, password setup, verified town linking and rank reviews. Provider remains disabled pending Minecraft API approval and configuration.
+- Overview, Task Board, Shop Search, Companies and Expansion Packs remain to be rebuilt.
+- Microsoft integration awaits Minecraft API approval and end-to-end provider testing.
+- Discord linking, Discord confirmation delivery and notification delivery are not implemented.
+- Profile customization is planned for a future phase.
+- Final Windows installer, update delivery and release acceptance testing remain ahead. This is not a published release.
