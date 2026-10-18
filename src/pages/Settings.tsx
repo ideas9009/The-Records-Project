@@ -1,3 +1,4 @@
+import AccountSettings from "../components/AccountSettings";
 import SmartSyncSettingsPanel from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
 import { useEffect, useState } from "react";
@@ -134,6 +135,7 @@ export default function Settings() {
         >
           {[
             ["appearance", "Appearance", "wallpaper"],
+            ["account", "Account", "manage_accounts"],
             ["smartsync", "SmartSync", "sync"],
             ["windows", "Windows behaviour", "desktop_windows"],
           ].map(([id, label, icon]) => (
@@ -166,7 +168,9 @@ export default function Settings() {
               {error}
             </p>
           )}
-          {tab === "smartsync" ? (
+          {tab === "account" ? (
+            <AccountSettings />
+          ) : tab === "smartsync" ? (
             <SmartSyncSettingsPanel />
           ) : tab === "appearance" ? (
             <>

@@ -1,0 +1,41 @@
+.account-settings {
+  display: grid;
+  gap: 20px;
+}
+.account-password-form {
+  display: grid;
+  gap: 16px;
+  max-width: 480px;
+  margin-top: 24px;
+}
+.account-password-form label {
+  display: grid;
+  gap: 8px;
+}
+.account-password-form input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.3);
+  color: inherit;
+  font: inherit;
+}
+.account-password-form input:focus-visible {
+  outline: 2px solid #bca7ff;
+  outline-offset: 2px;
+}
+.account-password-form small {
+  color: var(--muted, #b5b5bf);
+}
+.account-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.account-settings button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
