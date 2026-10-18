@@ -178,3 +178,57 @@ test("Prime Minister reviews registrations; Deputy publishes but cannot review",
   });
   assert.ok(article.id);
 });
+
+for (const protectedRole of [
+  "operator",
+  "leader",
+  "prime_minister",
+  "admin",
+  "minister",
+  "deputy",
+  "mayor",
+]) {
+  test(
+    "Admin cannot rewrite or remove " +
+      protectedRole +
+      " access on a multi-role account",
+    async () => {
+      const f = await fixture(["admin", "mayor", "citizen"]);
+      const target = {
+        ...f.target,
+        status: "approved",
+        roles: ["citizen", protectedRole, "army"],
+      };
+      await f.store.set("users/target", target);
+      for (const body of [
+        { roles: ["citizen"] },
+        { roles: ["citizen", "admin"] },
+        { roles: [...target.roles, "minister"] },
+        { roles: ["citizen"], status: "approved" },
+      ]) {
+        await assert.rejects(
+          f.service.updateUser(f.actor, "target", body),
+          (e) => e.status === 403,
+        );
+        assert.deepEqual(await f.store.get("users/target"), target);
+        assert.equal((await f.store.list(base + "/audit")).length, 0);
+      }
+    },
+  );
+}
+test("current actor permissions override a previously loaded management profile", async () => {
+  const f = await fixture(["leader"]);
+  await f.store.set("users/actor", { ...f.actor, roles: ["admin", "mayor"] });
+  const target = {
+    ...f.target,
+    status: "approved",
+    roles: ["prime_minister", "mayor"],
+  };
+  await f.store.set("users/target", target);
+  await assert.rejects(
+    f.service.updateUser(f.actor, "target", { roles: ["citizen"] }),
+    (e) => e.status === 403,
+  );
+  assert.deepEqual(await f.store.get("users/target"), target);
+  assert.equal((await f.store.list(base + "/audit")).length, 0);
+});
