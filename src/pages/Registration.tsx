@@ -54,6 +54,7 @@ export function RegistrationProfile() {
           <MinecraftFace
             username={account.username}
             className="profile-face"
+            variant="body"
             eager
           />
           <h2>{account.username}</h2>

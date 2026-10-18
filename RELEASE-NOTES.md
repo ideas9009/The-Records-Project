@@ -65,6 +65,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 - Replaced initials with Minecraft face avatars in citizen cards, EarthMC player lists and details, My Profile and the sidebar. Images load on demand with an initials fallback when unavailable.
 
+- Face icons now show the full square face without rounded cropping. Opened TRP and EarthMC profiles, and My Profile, display a 3D character render.
+
 ## News and meetings
 
 - Added a searchable full-width feed and dedicated article pages.

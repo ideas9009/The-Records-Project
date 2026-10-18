@@ -5,11 +5,13 @@ export default function MinecraftFace({
   uuid,
   className = "",
   eager = false,
+  variant = "face",
 }: {
   username: string;
   uuid?: string;
   className?: string;
   eager?: boolean;
+  variant?: "face" | "body";
 }) {
   const identifier =
     uuid &&
@@ -21,16 +23,32 @@ export default function MinecraftFace({
         ? username
         : null;
   const src = identifier
-    ? "https://mc-heads.net/avatar/" + encodeURIComponent(identifier) + "/96"
+    ? "https://mc-heads.net/" +
+      (variant === "body" ? "body/" : "avatar/") +
+      encodeURIComponent(identifier) +
+      (variant === "body" ? "/220" : "/96")
     : null;
   const [failed, setFailed] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<string | null>(null);
   return (
     <span
-      className={"minecraft-face " + className}
+      className={
+        "minecraft-face " +
+        (variant === "body" ? "minecraft-body " : "") +
+        className
+      }
       role="img"
-      aria-label={username + " Minecraft face"}
+      aria-label={
+        username +
+        (variant === "body" ? " 3D Minecraft character" : " Minecraft face")
+      }
     >
-      <span aria-hidden="true">{username.slice(0, 2).toUpperCase()}</span>
+      <span
+        aria-hidden="true"
+        style={{ visibility: loaded === src ? "hidden" : "visible" }}
+      >
+        {username.slice(0, 2).toUpperCase()}
+      </span>
       {src && failed !== src && (
         <img
           key={src}
@@ -39,7 +57,11 @@ export default function MinecraftFace({
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={() => setFailed(src)}
+          onLoad={() => setLoaded(src)}
+          onError={() => {
+            setLoaded(null);
+            setFailed(src);
+          }}
         />
       )}
     </span>

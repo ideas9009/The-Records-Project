@@ -166,6 +166,7 @@ export default function Citizens({
             <MinecraftFace
               username={citizen.username}
               className="citizen-avatar citizen-avatar-large"
+              variant="body"
               eager
             />
             <div>

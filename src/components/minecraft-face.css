@@ -37,3 +37,34 @@
   height: 72px;
   border-radius: 18px;
 }
+
+.minecraft-face,
+.minecraft-face.citizen-avatar,
+.rebuild-shell .hover-sidebar .minecraft-face.user-symbol {
+  border-radius: 0;
+  border: 0;
+  padding: 0;
+}
+.minecraft-face img {
+  border-radius: 0;
+}
+.minecraft-face.minecraft-body {
+  width: 140px;
+  height: 220px;
+  flex: 0 0 140px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+.minecraft-face.minecraft-body img {
+  object-fit: contain;
+  image-rendering: auto;
+}
+@container (max-width:450px) {
+  .minecraft-face.minecraft-body {
+    width: 100px;
+    height: 180px;
+    flex-basis: 100px;
+  }
+}

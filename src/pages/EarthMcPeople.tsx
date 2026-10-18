@@ -192,6 +192,7 @@ export default function EarthMcPeople({
                 username={detail.player.name}
                 uuid={playerId}
                 className="profile-face"
+                variant="body"
                 eager
               />
             )}
