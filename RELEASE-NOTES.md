@@ -144,3 +144,5 @@ These are fresh release notes for Nostra-2. Notes from previous versions are not
 - Added Register Town with a user directory for selecting the mayor.
 
 - Added the Citizens directory with search, role filters, public profiles, town affiliations and optional SmartSync support.
+
+- Added Army with Citizen-level permissions and an Administration rank review queue. Prepared EarthMC confirmation validation and Microsoft application setup instructions; Microsoft sign-in is not enabled yet.

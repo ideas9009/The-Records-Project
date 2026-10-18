@@ -102,7 +102,7 @@ export function createAdministration(store, { now = Date.now } = {}) {
           throw new ApiError(403, "Only an Operator can moderate an Operator.");
         if (
           !hasRole(actor, management) &&
-          rolesOf(target).some((role) => role !== "citizen")
+          rolesOf(target).some((role) => !["citizen","army"].includes(role))
         )
           throw new ApiError(
             403,

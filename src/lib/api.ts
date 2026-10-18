@@ -136,6 +136,7 @@ async function request<T>(path: string, options: Options): Promise<T> {
       !get &&
       (path.startsWith("/api/admin/users/") ||
         path.startsWith("/api/admin/registrations/") ||
+        path.startsWith("/api/admin/rank-reviews/") ||
         path === "/api/towns")
     )
       await invalidateCache("/api/citizens").catch(() => {});

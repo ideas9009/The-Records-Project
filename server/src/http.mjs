@@ -22,6 +22,8 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(/^\/api\/news\/[^/]+$/.test(path)&&req.method==='PUT')result=await service.newsSave(profile,body,path.split('/')[3]);
  else if(req.method==='GET'&&path==='/api/citizens')result=await service.citizens(profile);
  else if(req.method==='GET'&&/^\/api\/citizens\/[^/]+$/.test(path))result=await service.citizen(profile,path.split('/')[3]);
+ else if(req.method==='GET'&&path==='/api/admin/rank-reviews')result=await service.rankReviews(profile);
+ else if(req.method==='POST'&&/^\/api\/admin\/rank-reviews\/[^/]+\/resolve$/.test(path))result=await service.resolveRankReview(profile,path.split('/')[4],body);
  else if(req.method==='GET'&&path==='/api/admin/users')result=await service.adminUsers(profile);
  else if(req.method==='GET'&&path==='/api/admin/activity')result=await service.activity(profile);
  else if(req.method==='PUT'&&/^\/api\/admin\/users\/[^/]+$/.test(path))result=await service.updateUser(profile,path.split('/')[4],body);

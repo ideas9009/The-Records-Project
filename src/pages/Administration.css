@@ -68,3 +68,34 @@
   border: 1px solid #ffffff25;
   border-radius: 12px;
 }
+
+.rank-review {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rank-review-fields {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0;
+}
+.rank-review-fields label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.rank-review-fields small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 5px;
+}
+.rank-review-fields select {
+  background: #25252b;
+  color: #fff;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  max-width: 100%;
+}

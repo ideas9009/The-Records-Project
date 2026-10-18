@@ -36,3 +36,11 @@ describe("multiple roles", () => {
     expect(canReview({ ...old, role: "operator" })).toBe(true);
   });
 });
+
+it("Army has Citizen-level access without administrative or publishing privileges", () => {
+  const army = account(["army"]);
+  expect(canReview(army)).toBe(false);
+  expect(canManageRoles(army)).toBe(false);
+  expect(canRegisterTown(army)).toBe(false);
+  expect(canPublishNews(army)).toBe(false);
+});

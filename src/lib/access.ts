@@ -6,6 +6,7 @@ export const roleNames = {
   minister: "Minister",
   deputy: "Deputy",
   mayor: "Mayor",
+  army: "Army",
   citizen: "Citizen",
 } as const;
 export type Role = keyof typeof roleNames;

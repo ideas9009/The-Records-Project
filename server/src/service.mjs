@@ -1,3 +1,4 @@
+import {createRankReviews} from './rank-reviews.mjs';
 import {createCitizens} from './citizens.mjs';
 import {createAdministration} from './administration.mjs';
 import {createNews} from './news.mjs';
@@ -16,7 +17,7 @@ export function createService(store,{now=Date.now,sampleTown}={}){
  async function town(profile,id){approved(profile);safeId(id);const [summary,details]=await Promise.all([store.get(base+'/towns/'+id),store.get(base+'/town_details/'+id)]);if(!summary||!details)throw new ApiError(404,'Town not found.');return {...summary,...details,id}}
  async function photos(profile,id){approved(profile);safeId(id);return store.list(base+'/town_details/'+id+'/photos',null,12)}
  async function addPhotos(profile,id,body){approved(profile);safeId(id);await rate('photos:'+profile.uid,24);if(!Array.isArray(body.photos)||!body.photos.length||body.photos.length>12||body.photos.some(photo=>!validPhoto(photo.src)))throw new ApiError(400,'Choose up to 12 valid JPEG images.');const path=base+'/town_details/'+id;await store.transaction(async tx=>{const actor=await tx.get('users/'+profile.uid),details=await tx.get(path);approved(actor);if(!details||details.mayorUid!==profile.uid)throw new ApiError(403,'Only the town mayor can add images.');const slots=await Promise.all(Array.from({length:12},(_,slot)=>tx.get(path+'/photos/'+slot)));const available=slots.flatMap((photo,index)=>photo?[]:[index]);if(body.photos.length>available.length)throw new ApiError(409,'A town gallery can contain up to 12 images.');body.photos.forEach((photo,index)=>{const slot=String(available[index]);tx.set(path+'/photos/'+slot,{id:slot,src:photo.src,uploadedBy:profile.uid,createdAt:new Date(now()).toISOString()})})});return photos(profile,id)}
- return {...createCitizens(store),...createAdministration(store,{now}),...createNews(store,{now}),register,login,authenticate,approve,seed,town,photos,addPhotos,
+ return {...createRankReviews(store,{now}),...createCitizens(store),...createAdministration(store,{now}),...createNews(store,{now}),register,login,authenticate,approve,seed,town,photos,addPhotos,
   me:async profile=>({account:publicProfile(profile)}),
   logout:async token=>{await store.remove('server_sessions/'+digest(token));return {ok:true}},
   towns:()=>store.list(base+'/towns'),

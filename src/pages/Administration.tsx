@@ -1,3 +1,4 @@
+import RankReviews from "./RankReviews";
 import { useEffect, useState } from "react";
 import { apiRequest, watchResource } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
@@ -39,6 +40,7 @@ export default function Administration() {
       label: string;
     } | null>(null);
   useEffect(() => {
+    if (tab === "ranks") return;
     setLoading(true);
     setError("");
     return watchResource<Account[] | Audit[]>(
@@ -99,6 +101,7 @@ export default function Administration() {
           ["registrations", "Registrations"],
           ["users", "People & Permissions"],
           ["activity", "Activity Log"],
+          ["ranks", "Rank Review"],
         ].map(([id, label]) => (
           <button
             key={id}
@@ -113,7 +116,7 @@ export default function Administration() {
         ))}
       </nav>
       {error && !confirmation && <p role="alert">{error}</p>}
-      {tab !== "activity" && (
+      {tab !== "activity" && tab !== "ranks" && (
         <input
           className="admin-search"
           aria-label="Search users"
@@ -122,8 +125,12 @@ export default function Administration() {
           onChange={(e) => setQuery(e.target.value)}
         />
       )}
-      {loading && <LoadingStatus>Loading administration…</LoadingStatus>}
-      {tab === "activity" ? (
+      {loading && tab !== "ranks" && (
+        <LoadingStatus>Loading administration…</LoadingStatus>
+      )}
+      {tab === "ranks" ? (
+        <RankReviews />
+      ) : tab === "activity" ? (
         <section className="card">
           <h2>Activity Log</h2>
           {logs.map((log) => (
@@ -202,8 +209,8 @@ export default function Administration() {
                       (hasRole(account, ["operator"]) ||
                         (!accountRoles(user).includes("operator") &&
                           (canManageRoles(account) ||
-                            accountRoles(user).every(
-                              (role) => role === "citizen",
+                            accountRoles(user).every((role) =>
+                              ["citizen", "army"].includes(role),
                             )))) && (
                         <button
                           onClick={(e) =>

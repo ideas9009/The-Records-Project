@@ -11,7 +11,7 @@ async function withCapacity(fn){if(working>=2)await new Promise(resolve=>queue.p
 async function key(value,salt){return withCapacity(()=>derive(value,salt,64,{N:32768,r:8,p:3,maxmem:64*1024*1024}))}
 export async function hashPassword(value){const salt=randomBytes(16).toString('hex');return {algorithm:'scrypt-32768-8-3-v1',salt,hash:(await key(password(value),salt)).toString('hex')}}
 export async function verifyPassword(value,record){const valid=record?.algorithm==='scrypt-32768-8-3-v1'&&/^[0-9a-f]{32}$/.test(record.salt)&&/^[0-9a-f]{128}$/.test(record.hash);const actual=await key(typeof value==='string'?value:'',valid?record.salt:'0'.repeat(32));return !!valid&&timingSafeEqual(actual,Buffer.from(record.hash,'hex'))}
-export const ROLES=['operator','leader','prime_minister','admin','minister','deputy','mayor','citizen'];
+export const ROLES=['operator','leader','prime_minister','admin','minister','deputy','mayor','army','citizen'];
 export const rolesOf=profile=>Array.isArray(profile?.roles)&&profile.roles.length?profile.roles.filter(role=>ROLES.includes(role)):[profile?.role==='member'?'citizen':profile?.role].filter(role=>ROLES.includes(role));
 export const hasRole=(profile,roles)=>profile?.status==='approved'&&rolesOf(profile).some(role=>roles.includes(role));
 export function publicProfile(profile){return Object.fromEntries(['uid','username','role','roles','status','createdAt','approvedBy','approvedAt'].filter(field=>profile[field]!==undefined).map(field=>[field,profile[field]]))}
