@@ -348,7 +348,7 @@ export default function EarthMcPeople({
             >
               Next
             </button>
-          </nav>
+          </div>
         </>
       )}
       <p className="citizens-muted">
