@@ -120,7 +120,7 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## Task Board
 
-- Moved page navigation between the heading and publish action, with a draggable segmented slider and keyboard support.
+- Moved page navigation between the heading and publish action, with a draggable segmented slider and keyboard support. Reserved action space keeps the slider anchored across all three pages.
 
 - Added Tasks and Material Requests pages, with search, status filters, My listings, My work and an archive. Available remains a placeholder pending its specification.
 - Approved members of any role can publish tasks with a description, optional deadline and reward in EarthMC Gold. Publishers choose approval of applicants or direct joining.

@@ -349,7 +349,7 @@
 
 .task-board .board-topbar {
   display: grid;
-  grid-template-columns: auto minmax(280px, 420px) auto;
+  grid-template-columns: max-content minmax(280px, 420px) 190px;
   gap: 20px;
   align-items: center;
 }
@@ -357,7 +357,7 @@
   white-space: nowrap;
 }
 .board-publish-slot {
-  min-width: 150px;
+  min-width: 0;
   display: flex;
   justify-content: flex-end;
 }
