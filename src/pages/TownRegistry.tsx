@@ -29,14 +29,14 @@ export function TownStatistics({ town }: { town: Town }) {
           <TownIcon name="public" />
           EarthMC residents
         </dt>
-        <dd>{town.earthmcResidents?.toLocaleString() ?? "�"}</dd>
+        <dd>{town.earthmcResidents?.toLocaleString() ?? "-"}</dd>
       </div>
       <div>
         <dt>
           <TownIcon name="grid_view" />
           Claimed chunks
         </dt>
-        <dd>{town.claimedChunks?.toLocaleString() ?? "�"}</dd>
+        <dd>{town.claimedChunks?.toLocaleString() ?? "-"}</dd>
       </div>
     </dl>
   );
