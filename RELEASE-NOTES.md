@@ -132,11 +132,16 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## Task Board
 
+- Added Available listings with a description, expected EarthMC Gold range, Daily/Weekly/Monthly pay periods, search and pay-period filtering. Members can edit or pause their own listing.
+- Hire opens a private request composer and a persistent hiring conversation. The hiring inbox tracks unread messages, and in-app notices link to new conversations.
+- Built hiring messages on the existing Render API and Firestore, without a third-party chat provider. Only the two participants can read or send; suspended accounts are blocked, messages are rate-limited, and retry identifiers prevent duplicate sends.
+- Added paged message history, visible-page polling, loading feedback and unsaved-draft confirmations. Available summaries support SmartSync; private conversations are excluded from offline storage.
+
 - Added compact editor headers with a back button on the left and title on the right. Task and Material Request forms confirm unsaved changes before returning, cancelling or navigating through the sidebar.
 
 - Moved page navigation between the heading and publish action, with a draggable segmented slider and keyboard support. Reserved action space keeps the slider anchored across all three pages.
 
-- Added Tasks and Material Requests pages, with search, status filters, My listings, My work and an archive. Available remains a placeholder pending its specification.
+- Added Tasks and Material Requests pages, with search, status filters, My listings, My work and an archive. Added Available for advertising skills and expected pay.
 - Approved members of any role can publish tasks with a description, optional deadline and reward in EarthMC Gold. Publishers choose approval of applicants or direct joining.
 - A confirmed worker submits a completion screenshot, the publisher reviews or requests changes, and only that worker can confirm payment received. Completed listings are automatically archived.
 - Material requests support quantity lists, total budgets, direct provision and private price offers/counteroffers. Accepting a price assigns the supplier and locks the agreed amount; delivery review and payment confirmation complete the request.

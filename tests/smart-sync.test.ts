@@ -300,3 +300,25 @@ it("background sync fetches and saves the selected Task Board list", async () =>
   expect(vi.mocked(fetch).mock.calls[0][0]).toBe("/api/task-board");
   expect((await cachedData<any[]>("/api/task-board"))?.data[0].id).toBe("task");
 });
+
+it("caches public Available listings but never private hiring data or personal listing settings", async () => {
+  await saveSmartSyncSettings({
+    enabled: true,
+    pages: ["task-board"],
+    interval: 5,
+  });
+  expect(cacheAllowed("/api/availability")).toBe(true);
+  for (const path of [
+    "/api/availability/mine",
+    "/api/hiring/inbox",
+    "/api/hiring/private",
+    "/api/hiring/private?before=10",
+  ])
+    expect(cacheAllowed(path)).toBe(false);
+  await saveCachedData("/api/availability", [{ id: "worker" }], cacheEpoch());
+  vi.mocked(fetch).mockResolvedValue(
+    new Response('{"id":"worker"}', { status: 200 }),
+  );
+  await apiRequest("/api/availability/mine", { method: "PUT", body: {} });
+  expect(await cachedData("/api/availability")).toBeNull();
+});

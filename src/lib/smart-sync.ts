@@ -113,6 +113,7 @@ export function cacheAllowed(path: string) {
     return true;
   if (identity.status !== "approved") return false;
   return (
+    path === "/api/availability" ||
     path === "/api/task-board" ||
     path === "/api/news" ||
     /^\/api\/towns\/[A-Za-z0-9_-]+(?:\/photos)?$/.test(path) ||
@@ -251,15 +252,17 @@ export async function invalidateCache(path: string) {
   const scope = cacheScope();
   if (!scope) return;
   epoch++;
-  const group = path.startsWith("/api/task-board")
-    ? "/api/task-board"
-    : path.startsWith("/api/news")
-      ? "/api/news"
-      : path.startsWith("/api/citizens")
-        ? "/api/citizens"
-        : path.startsWith("/api/towns")
-          ? "/api/towns"
-          : path;
+  const group = path.startsWith("/api/availability")
+    ? "/api/availability"
+    : path.startsWith("/api/task-board")
+      ? "/api/task-board"
+      : path.startsWith("/api/news")
+        ? "/api/news"
+        : path.startsWith("/api/citizens")
+          ? "/api/citizens"
+          : path.startsWith("/api/towns")
+            ? "/api/towns"
+            : path;
   for (const key of states.keys())
     if (key.startsWith(group)) states.delete(key);
   const all = await entries();

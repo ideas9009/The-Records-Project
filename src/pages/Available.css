@@ -1,0 +1,28 @@
+.availability-feed { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr)); gap:20px; }
+.availability-card { display:flex; flex-direction:column; align-items:flex-start; gap:18px; }
+.availability-person { display:flex; align-items:center; gap:14px; min-width:0; }
+.availability-person h2 { margin:0 0 6px; overflow-wrap:anywhere; }
+.availability-person p { margin:0; color:var(--muted); font-size:13px; }
+.availability-description { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
+.availability-card>button { margin-top:auto; }
+.availability-pay { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.task-board .availability-toggle { display:flex; align-items:center; gap:12px; }
+.availability-toggle input { width:18px; height:18px; }
+.hiring-notice { display:flex; width:100%; align-items:center; gap:12px; text-align:left; margin-bottom:22px; padding:16px 20px; }
+.hiring-notice>.material-symbol:last-child { margin-left:auto; }
+.hiring-inbox-row { display:flex; width:100%; align-items:flex-start; gap:18px; text-align:left; }
+.hiring-inbox-row>div { flex:1; min-width:0; }
+.hiring-inbox-row h2 { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.hiring-inbox-row p { overflow-wrap:anywhere; }
+.hiring-inbox-row time,.hiring-message time { color:var(--muted); font-size:11px; }
+.hiring-context p:last-child { color:var(--muted); font-size:13px; }
+.hiring-messages { max-height:55vh; min-height:220px; overflow-y:auto; overscroll-behavior:contain; }
+.hiring-messages [role="log"] { display:flex; flex-direction:column; gap:16px; }
+.hiring-message { align-self:flex-start; width:fit-content; max-width:85%; padding:14px 18px; border:1px solid var(--line); background:var(--soft); border-radius:16px; }
+.hiring-message.mine { align-self:flex-end; background:#ffbf5815; border-color:#ffbf5840; }
+.hiring-message p { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; }
+.hiring-message strong { font-size:13px; }
+.hiring-composer { display:flex; gap:16px; align-items:flex-end; }
+.hiring-composer label { flex:1; min-width:0; display:grid; gap:10px; }
+.hiring-composer textarea { width:100%; resize:vertical; }
+@media(max-width:650px) { .availability-pay { grid-template-columns:1fr; } .hiring-composer { flex-direction:column; align-items:stretch; } .hiring-message { max-width:95%; } }

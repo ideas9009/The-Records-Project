@@ -1,3 +1,9 @@
+import Available, {
+  AvailabilityEditor,
+  HirePerson,
+  HiringInboxPage,
+  HiringChat,
+} from "./Available";
 import { SyncStatus } from "../components/SmartSync";
 import BoardPageSlider from "../components/BoardPageSlider";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -71,6 +77,12 @@ export default function TaskBoard({ page, go }: { page: string; go: Go }) {
         <p>Registration approval is required.</p>
       </section>
     );
+  if (page === "jobs:availability:edit") return <AvailabilityEditor go={go} />;
+  if (page === "jobs:inbox") return <HiringInboxPage go={go} />;
+  if (page.startsWith("jobs:hire:"))
+    return <HirePerson key={page} id={page.slice(10)} go={go} />;
+  if (page.startsWith("jobs:chat:"))
+    return <HiringChat key={page} id={page.slice(10)} go={go} />;
   if (page.startsWith("jobs:item:"))
     return <BoardDetails key={page} id={page.slice(10)} go={go} />;
   if (page.startsWith("jobs:new:"))
@@ -93,7 +105,15 @@ export default function TaskBoard({ page, go }: { page: string; go: Go }) {
         <h1>Task Board</h1>
         <BoardPageSlider selected={tab} go={go} />
         <div className="board-publish-slot">
-          {tab !== "available" && (
+          {tab === "available" ? (
+            <button
+              className="board-primary"
+              onClick={() => go("jobs:availability:edit")}
+            >
+              <Icon name="add" />
+              My availability
+            </button>
+          ) : (
             <button
               className="board-primary"
               onClick={() => go("jobs:new:" + tab)}
@@ -105,11 +125,7 @@ export default function TaskBoard({ page, go }: { page: string; go: Go }) {
         </div>
       </header>
       {tab === "available" ? (
-        <section className="card board-empty">
-          <Icon name="pending" />
-          <h2>Available</h2>
-          <p>This section is not available yet.</p>
-        </section>
+        <Available go={go} />
       ) : (
         <BoardFeed key={tab} kind={tab} go={go} />
       )}

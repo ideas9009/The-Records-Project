@@ -21,6 +21,15 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='POST'&&path==='/api/auth/password')result=await service.changePassword(profile,token,body);
  else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
  else if(req.method==='PUT'&&path==='/api/preferences')throw new ApiError(410,'Appearance preferences are stored on this device.');
+ else if(req.method==='GET'&&path==='/api/availability')result=await service.availabilityList(profile);
+ else if(req.method==='GET'&&path==='/api/availability/mine')result=await service.availabilityMine(profile);
+ else if(req.method==='GET'&&/^\/api\/availability\/[^/]+$/.test(path))result=await service.availabilityGet(profile,path.split('/')[3]);
+ else if(req.method==='PUT'&&path==='/api/availability/mine')result=await service.availabilitySave(profile,body);
+ else if(req.method==='POST'&&/^\/api\/availability\/[^/]+\/hire$/.test(path))result=await service.hireStart(profile,path.split('/')[3],body);
+ else if(req.method==='GET'&&path==='/api/hiring/inbox')result=await service.hiringInbox(profile);
+ else if(req.method==='GET'&&/^\/api\/hiring\/[^/]+$/.test(path)){const before=new URL(req.url,'http://api.local').searchParams.get('before');result=await service.hiringGet(profile,path.split('/')[3],before===null?undefined:Number(before));}
+ else if(req.method==='POST'&&/^\/api\/hiring\/[^/]+\/messages$/.test(path))result=await service.hiringSend(profile,path.split('/')[3],body);
+ else if(req.method==='POST'&&/^\/api\/hiring\/[^/]+\/read$/.test(path))result=await service.hiringRead(profile,path.split('/')[3],body);
  else if(req.method==='GET'&&path==='/api/task-board')result=await service.boardList(profile);
  else if(req.method==='POST'&&path==='/api/task-board')result=await service.boardCreate(profile,body);
  else if(/^\/api\/task-board\/[^/]+$/.test(path)&&req.method==='GET')result=await service.boardGet(profile,path.split('/')[3]);

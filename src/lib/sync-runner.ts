@@ -28,6 +28,11 @@ export function syncSelectedPages() {
         ? [item, { page: item.page, path: "/api/towns/stats" }]
         : [item],
     )
+    .flatMap((item) =>
+      item.page === "task-board"
+        ? [item, { page: item.page, path: "/api/availability" }]
+        : [item],
+    )
     .filter((item) => cacheAllowed(item.path));
   if (!paths.length) return Promise.resolve();
   update({ running: true, error: "" });

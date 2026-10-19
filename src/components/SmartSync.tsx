@@ -156,7 +156,7 @@ export default function SmartSyncSettingsPanel() {
                 {page === "towns"
                   ? "Town Registry"
                   : page === "task-board"
-                    ? "Task Board (Tasks and Material Requests)"
+                    ? "Task Board (Tasks, Materials and Available)"
                     : page === "citizens"
                       ? "Citizens"
                       : "News"}
@@ -224,9 +224,10 @@ export default function SmartSyncSettingsPanel() {
         <p className="smart-sync-note">
           Saved copies expire after 24 hours. Sign-in checks stay online.
           Offline viewing pauses after 15 minutes without account verification.
-          Task Board saves listing summaries; private offers, proof images and
-          actions require a connection. Drafts and administration are excluded.
-          Background syncing pauses when the app is hidden.
+          Task Board saves listing summaries, including Available; hiring
+          conversations, private offers, proof images and actions require a
+          connection. Drafts and administration are excluded. Background syncing
+          pauses when the app is hidden.
         </p>
       </section>
       {(error || run.error) && <p role="alert">{error || run.error}</p>}
