@@ -28,7 +28,7 @@ export function RegistrationProfile() {
     return (
       <>
         <header className="page-header">
-          <h1>My Profile</h1>
+          <div><h1>My Profile</h1><p>Coming soon in future phases</p></div>
         </header>
         <section className="card">
           <h2>Sumeitideas</h2>
@@ -39,7 +39,7 @@ export function RegistrationProfile() {
   return (
     <>
       <header className="page-header">
-        <h1>My Profile</h1>
+        <div><h1>My Profile</h1><p>Coming soon in future phases</p></div>
         <button
           onClick={(event) => {
             setLogoutError("");
@@ -98,9 +98,8 @@ export function RegistrationProfile() {
         </section>
       )}
       <section className="card">
-        <h2>Profile customization</h2>
-        <span className="badge">Coming soon</span>
-        <p>Profile customization will be available in a future phase.</p>
+        <h2>Coming soon in future phases</h2>
+        <p>The full My Profile experience and profile customization are planned for future updates.</p>
       </section>
       <ExpandingConfirmation
         anchor={logoutAnchor}

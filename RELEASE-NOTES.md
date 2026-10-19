@@ -137,7 +137,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## Still in development
 
-- Overview, Shop Search, Companies and Expansion Packs remain to be rebuilt.
+- Overview and Shop Search remain to be rebuilt.
+- Marked Companies, Expansion Packs and the full My Profile experience as **Coming soon in future phases**. Existing account status, Microsoft linking and sign-out remain available.
 - Microsoft integration awaits Minecraft API approval and end-to-end provider testing.
 - Discord linking, Discord confirmation delivery and notification delivery are not implemented.
 - Profile customization is planned for a future phase.

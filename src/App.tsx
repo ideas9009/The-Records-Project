@@ -69,6 +69,7 @@ export default function App() {
  useEffect(()=>{setPage("home");setTownSearch("");setNotifications(false);setHovered(null)},[account?.username]);
  const page=canAccessPage(account,requestedPage)?requestedPage:"home";
  useEffect(()=>{if(page==="map")setMapLoading(true)},[page]);
+ const deferredPage = page === "companies" || page === "expansions";
  const title = navigation.find(([id])=>id===page)?.[1] || (page==="about" ? "About" : "Overview");
  const go=(id:string)=>{if(!canAccessPage(account,id))return;const proceed=()=>{setPage(id);setNotifications(false);document.querySelector("main")?.scrollTo(0,0)};if(!window.dispatchEvent(new CustomEvent("records-navigate",{cancelable:true,detail:{proceed,anchor:document.activeElement instanceof HTMLElement?document.activeElement.closest("button"):null}})))return;proceed()};
  if(loading||error)return <ConnectionStatus/>;
@@ -109,12 +110,12 @@ export default function App() {
        {page!=="profile"&&page!=="map"&&<MicrosoftLinkRecommendation onLink={()=>go("profile")}/>}
        {page === "map" ? <div className="map-loading-stage">{mapLoading&&<div className="map-loading-status"><LoadingStatus>Loading map…</LoadingStatus></div>}<iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" onLoad={()=>setMapLoading(false)} allowFullScreen/></div> : page === "jobs" || page.startsWith("jobs:") ? <TaskBoard page={page} go={go}/> : page === "news" || page.startsWith("news:") ? <News page={page} go={go}/> : page.startsWith("earthmc-") ? <EarthMcPeople playerId={page.startsWith("earthmc-player:")?page.slice(15):undefined} onOpen={id=>go("earthmc-player:"+id)} onBack={()=>go("earthmc-people")} onCitizens={()=>go("citizens")}/> : page === "citizens" || page.startsWith("citizen:") ? <Citizens onEarthMc={()=>go("earthmc-people")} citizenId={(page.startsWith("citizen:") || page.startsWith("earthmc-"))?page.slice(8):undefined} onOpen={id=>go("citizen:"+id)} onBack={()=>go("citizens")} onTown={id=>go("town:"+id)}/> : page === "towns" ? <TownRegistry search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile/> : page === "admin" ? <RegistrationRequests/> : page === "settings" ? <Settings/> : page === "about" ? <About/> : <>
        <div className="breadcrumb">Workspace <span>/</span> {title}</div>
-       <header className="page-header"><div><div className="eyebrow">THE RECORDS PROJECT</div><h1>{title}</h1><p>A fresh workspace for Nostra-2.</p></div><span className="badge">To be rebuilt</span></header>
+       <header className="page-header"><div><div className="eyebrow">THE RECORDS PROJECT</div><h1>{title}</h1><p>{deferredPage ? "Planned for a future phase of Nostra-2." : "A fresh workspace for Nostra-2."}</p></div><span className="badge">{deferredPage ? "Coming soon" : "To be rebuilt"}</span></header>
        <section className="card rebuild-placeholder">
          <div className="empty">
            <Symbol name="layers"/>
-           <h2>Ready for a fresh start</h2>
-           <p>This section is empty and ready to be designed.</p>
+           <h2>{deferredPage ? "Coming soon in future phases" : "Ready for a fresh start"}</h2>
+           <p>{deferredPage ? "This section is planned for a future update." : "This section is empty and ready to be designed."}</p>
          </div>
        </section>
        </>}
