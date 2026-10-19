@@ -1,3 +1,12 @@
+.shop-search {
+  --board-accent: #8ee0bf;
+  --board-accent-ink: #1e5143;
+  --board-accent-text: #8ee0bf;
+  --board-accent-hover: #8ee0bf77;
+  --board-accent-border: #8ee0bf44;
+  --board-accent-fill: #8ee0bf26;
+}
+.shop-search .shop-mine input { accent-color: var(--board-accent); }
 .shop-search .board-heading {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) minmax(240px, 360px) minmax(
@@ -31,8 +40,8 @@
 .shop-tag {
   display: inline-block;
   padding: 6px 10px;
-  background: #ffbf5818;
-  border: 1px solid #ffbf5840;
+  background: #8ee0bf18;
+  border: 1px solid #8ee0bf40;
   border-radius: 10px;
   font-size: 12px;
 }

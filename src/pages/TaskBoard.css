@@ -34,9 +34,9 @@
   min-width: 0;
 }
 .task-board .board-primary {
-  background: #ffbf58;
-  color: #392502;
-  border-color: #ffbf58;
+  background: var(--board-accent, #ffbf58);
+  color: var(--board-accent-ink, #392502);
+  border-color: var(--board-accent, #ffbf58);
   font-weight: 700;
 }
 .board-toolbar {
@@ -78,7 +78,7 @@
   transition: border-color 0.15s;
 }
 .board-listing:hover {
-  border-color: #ffbf5877;
+  border-color: var(--board-accent-hover, #ffbf5877);
 }
 .board-listing-title {
   display: flex;
@@ -115,7 +115,7 @@
   margin-left: auto;
 }
 .board-gold {
-  color: #ffcf83;
+  color: var(--board-accent-text, #ffcf83);
   white-space: nowrap;
 }
 .board-status {
@@ -136,7 +136,7 @@
 }
 .status-submitted,
 .status-awaiting_payment {
-  color: #ffcf83;
+  color: var(--board-accent-text, #ffcf83);
 }
 .board-empty {
   display: grid;
@@ -200,7 +200,7 @@
 .board-radio input {
   width: 16px;
   height: 16px;
-  accent-color: #ffbf58;
+  accent-color: var(--board-accent, #ffbf58);
 }
 .board-actions {
   display: flex;
@@ -231,7 +231,7 @@
   overflow-wrap: anywhere;
 }
 .board-reward {
-  color: #ffcf83;
+  color: var(--board-accent-text, #ffcf83);
   font-size: 27px;
 }
 .board-detail-grid {
@@ -277,7 +277,7 @@
   border-radius: 10px;
 }
 .board-materials strong {
-  color: #ffcf83;
+  color: var(--board-accent-text, #ffcf83);
   margin-right: 6px;
 }
 .board-steps {
@@ -394,11 +394,11 @@
   cursor: inherit;
 }
 .task-board .board-page-slider > button[aria-checked="true"] {
-  color: #ffcf83;
+  color: var(--board-accent-text, #ffcf83);
   font-weight: 600;
 }
 .task-board .board-page-slider > button:focus-visible {
-  outline: 2px solid #ffcf83;
+  outline: 2px solid var(--board-accent-text, #ffcf83);
   outline-offset: -3px;
 }
 .board-page-slider-thumb {
@@ -409,9 +409,9 @@
   left: 4px;
   width: calc((100% - 8px) / var(--slider-count, 3));
   border-radius: 999px;
-  border: 1px solid #ffbf5844;
+  border: 1px solid var(--board-accent-border, #ffbf5844);
   box-sizing: border-box;
-  background: #ffbf5826;
+  background: var(--board-accent-fill, #ffbf5826);
   transform: translateX(calc(var(--slider-position) * 100%));
   transition: transform 0.18s ease;
   pointer-events: none;
