@@ -118,9 +118,18 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Added loading feedback for server requests, navigation, asynchronous actions, the map and Windows preferences.
 - Aligned sidebar loading indicators and standardized data-page loading placement.
 
+## Task Board
+
+- Added Tasks and Material Requests pages, with search, status filters, My listings, My work and an archive. Available remains a placeholder pending its specification.
+- Approved members of any role can publish tasks with a description, optional deadline and reward in EarthMC Gold. Publishers choose approval of applicants or direct joining.
+- A confirmed worker submits a completion screenshot, the publisher reviews or requests changes, and only that worker can confirm payment received. Completed listings are automatically archived.
+- Material requests support quantity lists, total budgets, direct provision and private price offers/counteroffers. Accepting a price assigns the supplier and locks the agreed amount; delivery review and payment confirmation complete the request.
+- Stored listings, applications, offers and compressed proof images in Firestore through authenticated server routes. Server transactions prevent double claiming and enforce publisher/worker ownership at every step.
+- Added loading states and confirmations anchored to the action button. Gold and materials are exchanged in EarthMC; the app does not transfer or hold funds.
+
 ## Still in development
 
-- Overview, Task Board, Shop Search, Companies and Expansion Packs remain to be rebuilt.
+- Overview, Shop Search, Companies and Expansion Packs remain to be rebuilt.
 - Microsoft integration awaits Minecraft API approval and end-to-end provider testing.
 - Discord linking, Discord confirmation delivery and notification delivery are not implemented.
 - Profile customization is planned for a future phase.

@@ -21,6 +21,10 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='POST'&&path==='/api/auth/password')result=await service.changePassword(profile,token,body);
  else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
  else if(req.method==='PUT'&&path==='/api/preferences')throw new ApiError(410,'Appearance preferences are stored on this device.');
+ else if(req.method==='GET'&&path==='/api/task-board')result=await service.boardList(profile);
+ else if(req.method==='POST'&&path==='/api/task-board')result=await service.boardCreate(profile,body);
+ else if(/^\/api\/task-board\/[^/]+$/.test(path)&&req.method==='GET')result=await service.boardGet(profile,path.split('/')[3]);
+ else if(/^\/api\/task-board\/[^/]+\/actions$/.test(path)&&req.method==='POST')result=await service.boardAct(profile,path.split('/')[3],body);
  else if(req.method==='GET'&&path==='/api/news')result=await service.newsList(profile);
  else if(req.method==='GET'&&path==='/api/news/manage')result=await service.newsList(profile,true);
  else if(req.method==='POST'&&path==='/api/news')result=await service.newsSave(profile,body);
