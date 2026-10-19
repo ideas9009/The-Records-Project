@@ -134,3 +134,5 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Replaced Full display with PDF export and blocked oversized page screenshots to avoid excessive memory usage.
 
 - Windows desktop PDF exports use parallel processing workers sized to 80% of available logical CPU threads, limited by the number of sections to export. Face requests stay bounded, results retain directory order, and merging/saving remains in the background. CPU usage depends on download speed and available work; it is not pinned to 80%.
+
+- Fixed packaged Windows PDF worker compatibility by creating processing workers from the page, using classic production worker bundles, and merging in a separate worker. Added startup timeouts and errors identifying processing, merging or saving failures.

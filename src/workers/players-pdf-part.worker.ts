@@ -4,5 +4,7 @@ self.onmessage = async (event: MessageEvent<{ players: PdfPlayer[]; options: { p
     const result = await buildPlayersPdf(event.data.players, progress => self.postMessage({ type: "progress", ...progress }), undefined, event.data.options);
     const bytes = result.bytes.slice().buffer;
     self.postMessage({ type: "done", bytes, missing: result.missing }, { transfer: [bytes] });
-  } catch { self.postMessage({ type: "error", message: "Could not process a PDF section." }); }
+  } catch (error) { self.postMessage({ type: "error", message: "Could not process a PDF section" + (error instanceof Error ? ": " + error.message : ".") }); }
 };
+
+self.postMessage({ type: "ready" });

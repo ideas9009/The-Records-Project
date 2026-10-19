@@ -1,10 +1,12 @@
 import { isTauri, invoke } from "@tauri-apps/api/core";
+import PdfWorker from "../workers/players-pdf.worker?worker";
 import { pdfWorkerCount } from "./pdf-export-config";
 import type { PdfPlayer, PdfProgress } from "./players-pdf";
 import { savePlayersPdf } from "./save-players-pdf";
 type State = { busy: boolean; saving: boolean; progress: PdfProgress | null; message: string };
+type Job = { controller: AbortController; worker: Worker | null };
 let state: State = { busy: false, saving: false, progress: null, message: "" };
-let worker: Worker | null = null;
+let job: Job | null = null;
 const listeners = new Set<() => void>();
 export const pdfExportSnapshot = () => state;
 export const subscribePdfExport = (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
@@ -12,33 +14,63 @@ function update(value: Partial<State>) { state = { ...state, ...value }; listene
 export function dismissPdfExport() { if (!state.busy) update({ message: "" }); }
 export function cancelPdfExport() {
   if (state.saving) return;
-  worker?.terminate(); worker = null;
+  job?.controller.abort(); job?.worker?.terminate(); job = null;
   update({ busy: false, saving: false, progress: null, message: "PDF export cancelled" });
+}
+function runWorker(current: Job, input: { players?: PdfPlayer[]; parts?: ArrayBuffer[] }, transfer: Transferable[] = []) {
+  return new Promise<{ bytes: Uint8Array; pages: number; missing: number }>((resolve, reject) => {
+    if (current.controller.signal.aborted) { reject(new DOMException("Export cancelled", "AbortError")); return; }
+    const task = new PdfWorker(); current.worker = task;
+    const timer = setTimeout(() => finish(Error("The PDF worker could not start. Please restart the app and try again.")), 15000);
+    const abort = () => finish(new DOMException("Export cancelled", "AbortError"));
+    function finish(error?: Error, result?: { bytes: Uint8Array; pages: number; missing: number }) {
+      clearTimeout(timer); current.controller.signal.removeEventListener("abort", abort); task.terminate();
+      if (current.worker === task) current.worker = null;
+      if (error) reject(error); else resolve(result!);
+    }
+    current.controller.signal.addEventListener("abort", abort, { once: true });
+    task.onmessage = event => {
+      if (job !== current || current.controller.signal.aborted) return;
+      clearTimeout(timer);
+      const data = event.data;
+      if (data.type === "ready") return;
+      if (data.type === "progress") { update({ progress: data }); return; }
+      if (data.type === "error") finish(Error(data.message));
+      else finish(undefined, { bytes: new Uint8Array(data.bytes), pages: data.pages, missing: data.missing });
+    };
+    task.onerror = event => finish(Error("Could not start the PDF worker" + (event.message ? ": " + event.message : ".")));
+    try { task.postMessage(input, transfer); } catch (error) { finish(error instanceof Error ? error : Error("Could not start PDF export.")); }
+  });
 }
 export function startPdfExport(players: PdfPlayer[]) {
   if (state.busy || !players.length) return;
+  const current: Job = { controller: new AbortController(), worker: null }; job = current;
   update({ busy: true, saving: false, message: "", progress: { completed: 0, total: players.length, missing: 0, phase: "faces" } });
-  try {
-    const task = new Worker(new URL("../workers/players-pdf.worker.ts", import.meta.url), { type: "module" });
-    worker = task;
-    task.onmessage = async event => {
-      if (worker !== task) return;
-      const data = event.data;
-      if (data.type === "progress") { update({ progress: data }); return; }
-      task.terminate(); worker = null;
-      if (data.type === "error") { update({ busy: false, progress: null, message: data.message }); return; }
+  void (async () => {
+    try {
+      let result;
+      if (isTauri()) {
+        const threads = await invoke<number>("export_cpu_threads").catch(() => navigator.hardwareConcurrency || 1);
+        if (job !== current) return;
+        const { buildParallelPlayersPdf } = await import("./pdf-export-parallel");
+        if (job !== current) return;
+        result = await buildParallelPlayersPdf(players, pdfWorkerCount(threads, players.length), progress => { if (job === current) update({ progress }); }, {
+          signal: current.controller.signal,
+          merge: async parts => {
+            const buffers = parts.map(part => part.buffer as ArrayBuffer);
+            parts.length = 0;
+            return runWorker(current, { parts: buffers }, buffers);
+          },
+        });
+      } else result = await runWorker(current, { players });
+      if (job !== current) return;
       update({ saving: true });
-      try {
-        const saved = await savePlayersPdf(data.bytes);
-        update({ message: saved + (data.missing ? ". Faces unavailable: " + data.missing : "") });
-      } catch (error) { update({ message: error instanceof Error ? error.message : "Could not save the PDF." }); }
-      finally { update({ busy: false, saving: false, progress: null }); }
-    };
-    task.onerror = () => { if (worker !== task) return; task.terminate(); worker = null; update({ busy: false, progress: null, message: "PDF export stopped. Please try a smaller selection." }); };
-    if (isTauri()) {
-      void invoke<number>("export_cpu_threads").catch(() => navigator.hardwareConcurrency || 1).then(threads => {
-        if (worker === task) task.postMessage({ players, workers: pdfWorkerCount(threads, players.length) });
-      });
-    } else task.postMessage({ players, workers: 1 });
-  } catch (error) { worker?.terminate(); worker = null; update({ busy: false, progress: null, message: error instanceof Error ? error.message : "Could not start PDF export." }); }
+      const saved = await savePlayersPdf(result.bytes.buffer as ArrayBuffer);
+      update({ message: saved + (result.missing ? ". Faces unavailable: " + result.missing : "") });
+    } catch (error) {
+      if (job === current) update({ message: error instanceof Error ? error.message : "Could not export the PDF." });
+    } finally {
+      if (job === current) { job = null; update({ busy: false, saving: false, progress: null }); }
+    }
+  })();
 }

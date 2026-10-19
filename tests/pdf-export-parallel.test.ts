@@ -1,7 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import { buildPlayersPdf, type PdfPlayer, type PdfProgress } from "../src/lib/players-pdf";
-import { buildParallelPlayersPdf, mergePlayerPdfs } from "../src/lib/pdf-export-parallel";
+import { buildParallelPlayersPdf } from "../src/lib/pdf-export-parallel";
+import { mergePlayerPdfs } from "../src/lib/pdf-export-merge";
 import { pdfWorkerCount } from "../src/lib/pdf-export-config";
 import { mkdir, writeFile } from "node:fs/promises";
 afterEach(() => vi.unstubAllGlobals());
@@ -48,4 +49,25 @@ it("processes multiple sections concurrently with accurate progress and one orde
  expect(values.at(-1)).toMatchObject({ completed: 320, total: 320, phase: "saving" });
  expect(values.every((value, index) => !index || value.completed >= values[index - 1].completed)).toBe(true);
  await mkdir("tmp/pdfs", { recursive: true }); await writeFile("tmp/pdfs/parallel-directory-qa.pdf", result.bytes);
+});
+
+it("cancels every page-owned worker without merging or saving partial output", async () => {
+ const workers: IdleWorker[] = [];
+ class IdleWorker {
+   onmessage: ((event: { data: unknown }) => void) | null = null;
+   onerror: (() => void) | null = null;
+   terminate = vi.fn(); postMessage = vi.fn();
+   constructor() { workers.push(this); }
+ }
+ vi.stubGlobal("Worker", IdleWorker);
+ const controller = new AbortController(), merge = vi.fn();
+ const players = Array.from({ length: 300 }, (_, i) => ({ name: "Player" + i, uuid: String(i) }));
+ const pending = buildParallelPlayersPdf(players, 2, () => {}, { signal: controller.signal, merge });
+ controller.abort();
+ await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+ expect(workers).toHaveLength(2); expect(workers.every(worker => worker.terminate.mock.calls.length === 1)).toBe(true);
+ expect(merge).not.toHaveBeenCalled();
+ const calls = workers[0].postMessage.mock.calls.length;
+ workers[0].onmessage!({ data: { type: "done", bytes: new ArrayBuffer(0), missing: 0 } });
+ expect(workers[0].postMessage).toHaveBeenCalledTimes(calls);
 });
