@@ -19,20 +19,8 @@ export default function About() {
           <img src="/branding/byzantine-republic.svg" alt="The Byzantine Republic" width="360" height="73" />
         </div>
       </section>
-      <section className="card about-brand">
-        <svg
-          viewBox="296 381 1408 1239"
-          aria-hidden="true"
-          width="48"
-          height="48"
-        >
-          <image href="/trp-logo.png" width="2000" height="2000" />
-        </svg>
-        <div>
-          <h2>Nostra · 2 | Phase 1</h2>
-          <p>Built for the EarthMC community.</p>
-        </div>
-        <span className="badge">In development</span>
+      <section className="card about-version" aria-label="App version">
+        <h2>Nostra &middot; 2 | Phase 1</h2>
       </section>
       <section className="card">
         <h2>Updates</h2>

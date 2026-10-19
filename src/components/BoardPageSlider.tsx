@@ -5,7 +5,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from "react";
-const pages = [
+const boardPages = [
   { label: "Tasks", route: "jobs", key: "task" },
   { label: "Material Requests", route: "jobs:materials", key: "materials" },
   { label: "Available", route: "jobs:available", key: "available" },
@@ -14,16 +14,24 @@ export function boardSliderPosition(
   clientX: number,
   left: number,
   width: number,
+  count = 3,
 ) {
   if (width <= 0) return 0;
-  return Math.max(0, Math.min(2, ((clientX - left) / width) * 3 - 0.5));
+  return Math.max(
+    0,
+    Math.min(count - 1, ((clientX - left) / width) * count - 0.5),
+  );
 }
 export default function BoardPageSlider({
   selected,
   go,
+  pages = boardPages,
+  label = "Task Board pages",
 }: {
   selected: string;
   go: (page: string) => void;
+  pages?: readonly { label: string; route: string; key: string }[];
+  label?: string;
 }) {
   const active = Math.max(
     0,
@@ -38,7 +46,12 @@ export default function BoardPageSlider({
   }
   function at(event: PointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
-    return boardSliderPosition(event.clientX, rect.left, rect.width);
+    return boardSliderPosition(
+      event.clientX,
+      rect.left,
+      rect.width,
+      pages.length,
+    );
   }
   function down(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || pointer.current !== null) return;
@@ -80,9 +93,14 @@ export default function BoardPageSlider({
       ref={root}
       className="board-page-slider"
       role="radiogroup"
-      aria-label="Task Board pages"
+      aria-label={label}
       data-dragging={position !== null ? "true" : undefined}
-      style={{ "--slider-position": position ?? active } as CSSProperties}
+      style={
+        {
+          "--slider-position": position ?? active,
+          "--slider-count": pages.length,
+        } as CSSProperties
+      }
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}

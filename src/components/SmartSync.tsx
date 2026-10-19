@@ -222,7 +222,7 @@ export default function SmartSyncSettingsPanel() {
         <p className="smart-sync-note">
           Saved copies expire after 24 hours. Sign-in checks stay online.
           Offline viewing pauses after 15 minutes without account verification.
-          Task Board saves listing summaries, including Available; hiring
+          Shop Search saves shops and bulk listings. Task Board saves listing summaries, including Available; hiring
           conversations, private offers, proof images and actions require a
           connection. Drafts and administration are excluded. Background syncing
           pauses when the app is hidden.

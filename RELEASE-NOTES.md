@@ -149,9 +149,18 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Stored listings, applications, offers and compressed proof images in Firestore through authenticated server routes. Server transactions prevent double claiming and enforce publisher/worker ownership at every step.
 - Added loading states and confirmations anchored to the action button. Gold and materials are exchanged in EarthMC; the app does not transfer or hold funds.
 
+## Shop Search
+
+- Added Shops and Bulk with a draggable page slider, item and town search, shop-type filtering, and My listings.
+- Members can publish and edit their shops or bulk sales, including items, town, directions and optional bulk asking prices in EarthMC Gold.
+- Copy Minecraft town-spawn commands and a prepared interest mail to bulk sellers.
+- Owners can close shops, mark bulk sales as sold, and reopen listings. Unsaved forms show an expanding confirmation.
+- Added Shop Search to optional SmartSync background coverage.
+- Simplified the About version card beneath the project management branding.
+
 ## Still in development
 
-- Overview and Shop Search remain to be rebuilt.
+- Overview remains to be rebuilt.
 - Marked Companies, Expansion Packs and the full My Profile experience as **Coming soon in future phases**. Existing account status, Microsoft linking and sign-out remain available.
 - Microsoft integration awaits Minecraft API approval and end-to-end provider testing.
 - Discord linking, Discord confirmation delivery and the general notification centre are not implemented. Hiring conversations have their own unread inbox and in-app notices.

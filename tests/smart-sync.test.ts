@@ -292,8 +292,8 @@ it("background sync fetches and saves the selected Task Board list", async () =>
     pages: ["task-board"],
     interval: 5,
   });
-  vi.mocked(fetch).mockImplementation(async () =>
-    new Response('[{"id":"task","kind":"task"}]', { status: 200 })
+  vi.mocked(fetch).mockImplementation(
+    async () => new Response('[{"id":"task","kind":"task"}]', { status: 200 }),
   );
   const { syncSelectedPages } = await import("../src/lib/sync-runner");
   await syncSelectedPages();
@@ -361,4 +361,22 @@ it("reports each failed background page once even when several of its requests f
   expect(syncRunStatus().error).toBe(
     "Unable to sync Town Registry and Task Board.",
   );
+});
+
+it("saves Shop Search with scoped details and invalidates the complete listing group", async () => {
+  enable();
+  expect(cacheAllowed("/api/shop-search")).toBe(true);
+  expect(cacheAllowed("/api/shop-search/listing-1")).toBe(true);
+  await saveCachedData("/api/shop-search", [{ id: "listing-1" }], cacheEpoch());
+  await saveCachedData(
+    "/api/shop-search/listing-1",
+    { id: "listing-1" },
+    cacheEpoch(),
+  );
+  await invalidateCache("/api/shop-search/listing-1/status");
+  expect(await cachedData("/api/shop-search")).toBe(null);
+  expect(await cachedData("/api/shop-search/listing-1")).toBe(null);
+  setSyncIdentity({ uid: "pending-shop", role: "citizen", status: "pending" });
+  expect(cacheAllowed("/api/shop-search")).toBe(true);
+  expect(cacheAllowed("/api/shop-search/listing-1")).toBe(false);
 });

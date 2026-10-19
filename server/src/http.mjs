@@ -21,6 +21,11 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='POST'&&path==='/api/auth/password')result=await service.changePassword(profile,token,body);
  else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
  else if(req.method==='PUT'&&path==='/api/preferences')throw new ApiError(410,'Appearance preferences are stored on this device.');
+ else if(req.method==='GET'&&path==='/api/shop-search')result=await service.shopSearchList(profile);
+ else if(req.method==='POST'&&path==='/api/shop-search')result=await service.shopSearchSave(profile,body);
+ else if(req.method==='GET'&&/^\/api\/shop-search\/[^/]+$/.test(path))result=await service.shopSearchGet(profile,path.split('/')[3]);
+ else if(req.method==='PUT'&&/^\/api\/shop-search\/[^/]+$/.test(path))result=await service.shopSearchSave(profile,body,path.split('/')[3]);
+ else if(req.method==='POST'&&/^\/api\/shop-search\/[^/]+\/status$/.test(path))result=await service.shopSearchStatus(profile,path.split('/')[3],body);
  else if(req.method==='GET'&&path==='/api/availability')result=await service.availabilityList(profile);
  else if(req.method==='GET'&&path==='/api/availability/mine')result=await service.availabilityMine(profile);
  else if(req.method==='GET'&&/^\/api\/availability\/[^/]+$/.test(path))result=await service.availabilityGet(profile,path.split('/')[3]);

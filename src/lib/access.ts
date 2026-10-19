@@ -60,6 +60,7 @@ const pendingPages = [
   "towns",
   "citizens",
   "shops",
+  "shops:bulk",
   "companies",
   "settings",
   "map",

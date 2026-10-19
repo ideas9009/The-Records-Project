@@ -26,6 +26,13 @@ export const smartSyncPages = [
       "Tasks, Material Requests and Available listings. Private hiring chats stay online.",
     paths: ["/api/task-board", "/api/availability"],
   },
+  {
+    id: "shops",
+    label: "Shop Search",
+    description:
+      "Shops, available items and bulk sales. Publishing requires a connection.",
+    paths: ["/api/shop-search"],
+  },
 ] as const;
 export type SmartSyncSettings = {
   enabled: boolean;
@@ -140,8 +147,14 @@ export function cacheAllowed(path: string) {
     (path === "/api/citizens" || /^\/api\/citizens\/[A-Za-z0-9_-]+$/.test(path))
   )
     return true;
+  if (
+    path === "/api/shop-search" &&
+    ["pending", "approved"].includes(identity.status)
+  )
+    return true;
   if (identity.status !== "approved") return false;
   return (
+    /^\/api\/shop-search\/[A-Za-z0-9_-]+$/.test(path) ||
     path === "/api/availability" ||
     path === "/api/task-board" ||
     path === "/api/news" ||
@@ -281,17 +294,19 @@ export async function invalidateCache(path: string) {
   const scope = cacheScope();
   if (!scope) return;
   epoch++;
-  const group = path.startsWith("/api/availability")
-    ? "/api/availability"
-    : path.startsWith("/api/task-board")
-      ? "/api/task-board"
-      : path.startsWith("/api/news")
-        ? "/api/news"
-        : path.startsWith("/api/citizens")
-          ? "/api/citizens"
-          : path.startsWith("/api/towns")
-            ? "/api/towns"
-            : path;
+  const group = path.startsWith("/api/shop-search")
+    ? "/api/shop-search"
+    : path.startsWith("/api/availability")
+      ? "/api/availability"
+      : path.startsWith("/api/task-board")
+        ? "/api/task-board"
+        : path.startsWith("/api/news")
+          ? "/api/news"
+          : path.startsWith("/api/citizens")
+            ? "/api/citizens"
+            : path.startsWith("/api/towns")
+              ? "/api/towns"
+              : path;
   for (const key of states.keys())
     if (key.startsWith(group)) states.delete(key);
   const all = await entries();

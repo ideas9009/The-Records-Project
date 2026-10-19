@@ -367,7 +367,7 @@
 .board-page-slider {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--slider-count, 3), minmax(0, 1fr));
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -407,7 +407,7 @@
   top: 4px;
   bottom: 4px;
   left: 4px;
-  width: calc((100% - 8px) / 3);
+  width: calc((100% - 8px) / var(--slider-count, 3));
   border-radius: 999px;
   border: 1px solid #ffbf5844;
   box-sizing: border-box;
