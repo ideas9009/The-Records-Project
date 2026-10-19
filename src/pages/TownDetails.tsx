@@ -113,6 +113,13 @@ export default function TownDetails({
                 </div>
               </dl>
               <TownStatistics town={town} />
+              {!town.testData && (
+                <p className="town-gallery-storage">
+                  {town.earthmcResidents === null
+                    ? "EarthMC counts are loading or temporarily unavailable."
+                    : "Population and claimed chunks supplied by EarthMC API v4."}
+                </p>
+              )}
             </section>
             <section className="card">
               <h2>Residents in The Records Project</h2>

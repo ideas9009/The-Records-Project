@@ -50,6 +50,9 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## Town Registry
 
+- Load EarthMC population and claimed chunks from API v4, with batched cached lookups and explicit unavailable values. Test Town is excluded.
+- Town editors can upload a compressed cover and add or remove registered TRP residents; assigned mayors remain residents. A manually managed TRP list is preserved without changing EarthMC membership or account roles.
+
 - Added town editing for assigned mayors and authorized administrators. Admins cannot edit towns belonging to any Admin, Operator, Leader or Prime Minister; mayor reassignment is limited to authorized administrators. Name, capital and concurrent-edit checks run on the server.
 
 - Added town types (Capital, Settlement, Village, Small Town, Major Town and City), with a server-enforced single capital. Towns can have multiple mayors, and mayors can manage multiple towns; all assigned mayors can upload gallery images and appear as mayors in Citizens. Existing single-mayor records remain supported.
@@ -58,7 +61,7 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Added a town image on the right of each card with a fading edge and compact statistics on the left.
 - Added Register Town for Operator, Leader, Prime Minister, Admin and Minister, with Town Name and a registered-user mayor selector.
 - Added mayor-managed galleries with compressed images, thumbnails and larger previews, stored through the API in Firestore.
-- Retained a clearly marked test town with sample statistics. Town statistics are not yet automatically synchronized from EarthMC.
+- Retained a clearly marked test town with sample statistics. Live statistics exclude the test town.
 
 ## Citizens
 

@@ -1,4 +1,4 @@
-import { ApiError, hasRole, rolesOf } from "./security.mjs";
+import { ApiError, hasRole, rolesOf, validPhoto } from "./security.mjs";
 import { isTownMayor } from "./town-membership.mjs";
 import { randomUUID } from "node:crypto";
 const base = "nations/byzantium";
@@ -119,6 +119,30 @@ export function createTownEdit(store, { now = Date.now } = {}) {
           403,
           "Admins cannot assign Admins or higher ranks as town mayors.",
         );
+      if (
+        body.image !== undefined &&
+        body.image !== town.image &&
+        !validPhoto(body.image)
+      )
+        throw new ApiError(400, "Choose a valid compressed cover image.");
+      let selectedResidents;
+      if (body.residentUids !== undefined) {
+        if (
+          !Array.isArray(body.residentUids) ||
+          body.residentUids.length > 500 ||
+          new Set(body.residentUids).size !== body.residentUids.length ||
+          body.residentUids.some(
+            (uid) =>
+              typeof uid !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(uid),
+          )
+        )
+          throw new ApiError(400, "Choose up to 500 registered residents.");
+        selectedResidents = await Promise.all(
+          body.residentUids.map((uid) => tx.get("users/" + uid)),
+        );
+        if (selectedResidents.some((user) => !valid(user)))
+          throw new ApiError(400, "Select registered residents.");
+      }
       const claim = await tx.get(base + "/town_names/" + keyOf(name)),
         capital = await tx.get(base + "/town_settings/capital");
       if (claim && claim.id !== id)
@@ -138,7 +162,12 @@ export function createTownEdit(store, { now = Date.now } = {}) {
           mayorNames,
         };
       const residents = [
-        ...new Set([...(details.registeredResidents || []), ...mayorNames]),
+        ...new Set([
+          ...(selectedResidents
+            ? selectedResidents.map((user) => user.username)
+            : details.registeredResidents || []),
+          ...mayorNames,
+        ]),
       ];
       if (keyOf(town.name) !== keyOf(name))
         tx.remove(base + "/town_names/" + keyOf(town.name));
@@ -151,6 +180,8 @@ export function createTownEdit(store, { now = Date.now } = {}) {
         name,
         type: body.type,
         ...leadership,
+        ...(body.image !== undefined ? { image: body.image } : {}),
+        ...(selectedResidents ? { residentsManaged: true } : {}),
         recordsResidents: residents.length,
         version: (town.version || 0) + 1,
         updatedAt: stamp,
@@ -159,6 +190,7 @@ export function createTownEdit(store, { now = Date.now } = {}) {
         ...details,
         ...leadership,
         registeredResidents: residents,
+        ...(selectedResidents ? { residentsManaged: true } : {}),
       });
       if (changedMayors)
         mayors.forEach((mayor, index) =>

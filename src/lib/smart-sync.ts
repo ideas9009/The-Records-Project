@@ -105,7 +105,7 @@ export const cacheEpoch = () => epoch;
 export function cacheAllowed(path: string) {
   if (!identity || !smartSyncSettings().enabled) return false;
   if (path === "/api/towns/mayor-options") return false;
-  if (path === "/api/towns") return true;
+  if (path === "/api/towns" || path === "/api/towns/stats") return true;
   if (
     (identity.status === "approved" || identity.status === "pending") &&
     (path === "/api/citizens" || /^\/api\/citizens\/[A-Za-z0-9_-]+$/.test(path))

@@ -23,6 +23,11 @@ export function syncSelectedPages() {
       page,
       path: "/api/" + page,
     }))
+    .flatMap((item) =>
+      item.page === "towns"
+        ? [item, { page: item.page, path: "/api/towns/stats" }]
+        : [item],
+    )
     .filter((item) => cacheAllowed(item.path));
   if (!paths.length) return Promise.resolve();
   update({ running: true, error: "" });

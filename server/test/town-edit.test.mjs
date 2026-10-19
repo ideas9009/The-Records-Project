@@ -70,3 +70,27 @@ test("HTTP edit routes enforce ownership on forged writes",async t=>{
  await f.store.set("server_sessions/"+digest(token),{uid:"owner",expiresAt:Date.now()+60000});
  assert.equal((await fetch(url,{method:"PUT",headers,body:JSON.stringify({name:"Good",type:"city",version:0})})).status,200);
 });
+
+
+test("mayors update covers and TRP residents without changing EarthMC counts or privileges",async()=>{
+ const f=await fixture();
+ const image="data:image/jpeg;base64,/9j/AA==";
+ await f.service.updateTown(f.mayor,f.id,{name:"Original",type:"settlement",version:0,image,residentUids:["other"]});
+ const saved=await f.service.town(f.mayor,f.id);
+ assert.equal(saved.image,image);assert.deepEqual(saved.registeredResidents,["other","owner"]);assert.equal(saved.recordsResidents,2);assert.equal(saved.residentsManaged,true);assert.equal(saved.earthmcResidents,0);
+ assert.deepEqual((await f.store.get("users/other")).roles,["mayor"]);
+ assert.ok((await f.service.citizen(f.mayor,"other")).towns.some(town=>town.id===f.id));
+ await f.service.updateTown(f.mayor,f.id,{name:"Original",type:"settlement",version:1,residentUids:[]});
+ assert.deepEqual((await f.service.town(f.mayor,f.id)).registeredResidents,["owner"]);
+ assert.ok(!(await f.service.citizen(f.mayor,"other")).towns.some(town=>town.id===f.id));
+ for(const body of [{image:"https://example.com/image.jpg"},{residentUids:["missing"]},{residentUids:["other","other"]}]) await assert.rejects(f.service.updateTown(f.mayor,f.id,{name:"Original",type:"city",version:2,...body}),e=>e.status===400);
+});
+
+test("manually removed residents are not re-added by automatic verified EarthMC membership",async()=>{
+ const f=await fixture();
+ const town=await f.store.get(base+"/towns/"+f.id);await f.store.set(base+"/towns/"+f.id,{...town,earthmcUuid:"linked-town"});
+ await f.store.set("users/other",{...f.other,minecraftVerified:true,earthmcTownUuid:"linked-town"});
+ await f.service.updateTown(f.mayor,f.id,{name:"Original",type:"settlement",version:0,residentUids:[]});
+ assert.deepEqual((await f.service.town(f.mayor,f.id)).registeredResidents,["owner"]);
+ assert.equal((await f.service.citizen(f.mayor,"other")).towns.length,0);
+});

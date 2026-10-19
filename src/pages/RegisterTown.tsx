@@ -1,3 +1,4 @@
+import { prepareTownPhoto } from "../lib/town-gallery";
 import ExpandingConfirmation from "../components/ExpandingConfirmation";
 import type { Town } from "../lib/cloud-towns";
 import { townTypes } from "../lib/cloud-towns";
@@ -24,6 +25,11 @@ export default function RegisterTown({
       town?.mayorUids || (town?.mayorUid ? [town.mayorUid] : []),
     ),
     [type, setType] = useState(town?.type || "settlement"),
+    [image, setImage] = useState(town?.image || ""),
+    [residentNames, setResidentNames] = useState<string[]>(
+      town?.registeredResidents || [],
+    ),
+    [processing, setProcessing] = useState(false),
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -34,12 +40,15 @@ export default function RegisterTown({
     !!town &&
     (name !== town.name ||
       type !== (town.type || "settlement") ||
+      image !== town.image ||
+      JSON.stringify(residentNames) !==
+        JSON.stringify(town.registeredResidents) ||
       JSON.stringify(mayors) !==
         JSON.stringify(town.mayorUids || [town.mayorUid]));
   const current = useRef({ dirty, busy });
-  current.current = { dirty, busy };
+  current.current = { dirty, busy: busy || processing };
   const leave = (anchor: HTMLElement, proceed: () => void) => {
-    if (busy) return;
+    if (busy || processing) return;
     if (!dirty) {
       proceed();
       return;
@@ -69,12 +78,10 @@ export default function RegisterTown({
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
   useEffect(() => {
-    if (!canManageMayors) {
-      setLoading(false);
-      return;
-    }
     let active = true;
-    apiRequest<typeof users>("/api/towns/mayor-options")
+    apiRequest<typeof users>(
+      canManageMayors ? "/api/towns/mayor-options" : "/api/citizens",
+    )
       .then((items) => {
         if (active) setUsers(items);
       })
@@ -93,6 +100,23 @@ export default function RegisterTown({
     setBusy(true);
     setError("");
     try {
+      const residentUids =
+        town &&
+        JSON.stringify(residentNames) !==
+          JSON.stringify(town.registeredResidents)
+          ? residentNames.map((name) => {
+              const user = users.find(
+                (user) => user.username.toLowerCase() === name.toLowerCase(),
+              );
+              if (!user)
+                throw Error(
+                  "Remove unavailable resident " +
+                    name +
+                    " before saving the changed resident list.",
+                );
+              return user.uid;
+            })
+          : undefined;
       const result = await apiRequest<{ id: string }>(
         town ? "/api/towns/" + town.id : "/api/towns",
         {
@@ -101,7 +125,13 @@ export default function RegisterTown({
             name,
             type,
             ...(canManageMayors ? { mayorUids: mayors } : {}),
-            ...(town ? { version: town.version || 0 } : {}),
+            ...(town
+              ? {
+                  version: town.version || 0,
+                  image,
+                  ...(residentUids ? { residentUids } : {}),
+                }
+              : {}),
           },
         },
       );
@@ -213,11 +243,104 @@ export default function RegisterTown({
           assignments are managed by authorized administrators.
         </p>
       )}
+      {town && (
+        <>
+          <label>
+            Town cover image
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={busy || processing}
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                setProcessing(true);
+                setError("");
+                try {
+                  setImage(await prepareTownPhoto(file));
+                } catch (reason) {
+                  setError(
+                    reason instanceof Error
+                      ? reason.message
+                      : "Could not open image.",
+                  );
+                } finally {
+                  setProcessing(false);
+                }
+              }}
+            />
+          </label>
+          {processing && <LoadingStatus>Preparing cover image�</LoadingStatus>}
+          <img
+            className="town-cover-preview"
+            src={image}
+            alt="Town cover preview"
+          />
+          <label>
+            Residents in The Records Project
+            <select
+              aria-label="Add a town resident"
+              value=""
+              disabled={loading || busy || residentNames.length >= 500}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value) setResidentNames((current) => [...current, value]);
+              }}
+            >
+              <option value="">Select a registered user to add</option>
+              {users.map((user) => (
+                <option
+                  key={user.uid}
+                  value={user.username}
+                  disabled={residentNames.some(
+                    (name) =>
+                      name.toLowerCase() === user.username.toLowerCase(),
+                  )}
+                >
+                  {user.username}
+                </option>
+              ))}
+            </select>
+          </label>
+          <ul className="town-residents">
+            {residentNames.map((name) => (
+              <li key={name}>
+                {name}
+                <button
+                  type="button"
+                  disabled={
+                    busy ||
+                    mayors.some(
+                      (uid) =>
+                        users
+                          .find((user) => user.uid === uid)
+                          ?.username.toLowerCase() === name.toLowerCase(),
+                    )
+                  }
+                  aria-label={"Remove resident " + name}
+                  onClick={() =>
+                    setResidentNames((current) =>
+                      current.filter((value) => value !== name),
+                    )
+                  }
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="login-note">
+            Mayors stay on the resident list. Editing this list manages TRP
+            membership only. EarthMC population and claimed chunks are supplied
+            automatically by EarthMC.
+          </p>
+        </>
+      )}
       {error && <p role="alert">{error}</p>}
       <div className="admin-actions">
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || processing}
           onClick={(event) => leave(event.currentTarget, onCancel)}
         >
           Cancel
@@ -225,6 +348,7 @@ export default function RegisterTown({
         <button
           disabled={
             busy ||
+            processing ||
             loading ||
             (canManageMayors && (!users.length || !mayors.length))
           }

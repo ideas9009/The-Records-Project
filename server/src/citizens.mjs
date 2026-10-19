@@ -54,7 +54,8 @@ export function createCitizens(store, options = {}) {
           .filter(
             (town) =>
               isTownMayor(town, user.uid) ||
-              (user.minecraftVerified === true &&
+              (!town.residentsManaged &&
+                user.minecraftVerified === true &&
                 !!town.earthmcUuid &&
                 user.earthmcTownUuid === town.earthmcUuid) ||
               members.get(town.id)?.includes(user.username.toLowerCase()),

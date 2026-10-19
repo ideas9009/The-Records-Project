@@ -14,7 +14,7 @@ export async function withVerifiedResidents(store, towns) {
     ? store.listAll("nations/byzantium/town_details")
     : store.list("nations/byzantium/town_details", null, 10000));
   return towns.map((town) => {
-    if (!town.earthmcUuid) return town;
+    if (!town.earthmcUuid || town.residentsManaged) return town;
     const previous =
       details.find((item) => item.id === town.id)?.registeredResidents ||
       town.registeredResidents ||
