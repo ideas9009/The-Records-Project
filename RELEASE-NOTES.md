@@ -7,6 +7,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## Foundation and navigation
 
+- Removed the large tinted workspace frame to keep the wallpaper clear. Inner cards use a lighter tint and their own blur; Potato Mode retains solid surfaces without blur.
+
 - Aligned the sidebar logo, nation label, navigation icons and profile image on one center line. Reduced the sidebar profile image from 44px to 32px.
 
 - Disabled the default page context menu in the website and Windows app.

@@ -6,6 +6,7 @@ import "./styles.css";
 import "./legacy.css";
 import "./sidebar.css";
 import "./settings.css";
+import "./surfaces.css";
 import { applyAppearance } from "./lib/appearance";
 import { restoreWallpaper } from "./lib/wallpaper";
 document.addEventListener("contextmenu", (event) => event.preventDefault(), { capture: true });

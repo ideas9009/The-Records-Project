@@ -281,7 +281,6 @@
   animation: none !important;
 }
 :root[data-potato="true"] .rebuild-shell .hover-sidebar,
-:root[data-potato="true"] .rebuild-shell .workspace-body,
 :root[data-potato="true"] .card,
 :root[data-potato="true"] .notifications-panel {
   background: #38383b !important;

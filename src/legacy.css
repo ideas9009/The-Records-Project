@@ -161,9 +161,9 @@ nav [data-nav="settings"] {
   color: #7eb0ff;
 }
 .workspace-body {
-  background: var(--canvas);
-  border-radius: 20px;
-  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 0;
+  border: 0;
   overflow: hidden;
 }
 .workspace-body main {
@@ -504,13 +504,6 @@ dialog::backdrop {
 }
 :root[data-wallpaper="true"] .sidebar {
   background: rgba(26, 26, 26, 0.4);
-}
-:root[data-wallpaper="true"] .workspace-body {
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(5px);
-}
-:root[data-wallpaper="true"][data-theme="light"] .workspace-body {
-  background: rgba(255, 255, 255, 0.72);
 }
 :root[data-wallpaper="true"][data-theme="light"] .sidebar {
   background: rgba(255, 255, 255, 0.55);

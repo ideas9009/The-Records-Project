@@ -1,0 +1,40 @@
+/* Keep the wallpaper clear between surfaces, including behind the footer. */
+.rebuild-shell .workspace-body {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-wallpaper="true"]:not([data-potato="true"]) .rebuild-shell .workspace-body {
+  --surface: rgba(21, 21, 21, 0.48);
+}
+
+:root[data-wallpaper="true"][data-theme="light"]:not([data-potato="true"]) .rebuild-shell .workspace-body {
+  --surface: rgba(255, 255, 255, 0.58);
+}
+
+:root[data-wallpaper="true"][data-theme="neon"]:not([data-potato="true"]) .rebuild-shell .workspace-body {
+  --surface: rgba(20, 16, 32, 0.48);
+}
+
+.rebuild-shell .workspace-body :is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search) {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Text outside cards stays readable without adding another wallpaper overlay. */
+:root[data-wallpaper="true"]:not([data-potato="true"]) .rebuild-shell :is(.page-header, .breadcrumb, .app-footer) {
+  text-shadow: 0 1px 4px #000c;
+}
+
+:root[data-wallpaper="true"][data-theme="light"] .rebuild-shell :is(.page-header, .breadcrumb, .app-footer) {
+  text-shadow: 0 1px 4px #fffc;
+}
+
+.rebuild-shell .app-footer {
+  background: transparent;
+  border-top: 0;
+}
