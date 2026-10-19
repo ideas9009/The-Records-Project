@@ -111,7 +111,7 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Fixed shell dimensions and responsive layouts at supported scales, including the footer and confirmation overlays.
 - Added Potato Mode with solid grey surfaces and reduced visual effects while preserving wallpaper selection.
 - Added Windows controls for launch at sign-in, start minimized and close to tray. These require the desktop app.
-- Added About with version information, these release notes and credits.
+- Added About with version information, these release notes and credits, plus a management section displaying the TRP logo and The Byzantine Republic artwork.
 
 ## SmartSync - Beta
 

@@ -9,6 +9,16 @@ export default function About() {
           <p>The Records Project</p>
         </div>
       </header>
+      <section className="card about-management" aria-label="Project management">
+        <div className="about-management-brand">
+          <svg viewBox="296 381 1408 1239" aria-hidden="true" width="48" height="48"><image href="/trp-logo.png" width="2000" height="2000" /></svg>
+          <h2>The Records Project</h2>
+        </div>
+        <div className="about-management-credit">
+          <span>managed by</span>
+          <img src="/branding/byzantine-republic.svg" alt="The Byzantine Republic" width="360" height="73" />
+        </div>
+      </section>
       <section className="card about-brand">
         <svg
           viewBox="296 381 1408 1239"

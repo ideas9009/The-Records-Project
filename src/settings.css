@@ -358,3 +358,12 @@
 .rebuild-shell .notifications-panel { max-width:calc(100% - 40px); }
 .rebuild-shell .town-photo-dialog { max-width:calc(90vw / var(--ui-scale,1)); max-height:calc(90dvh / var(--ui-scale,1)); }
 .rebuild-shell .town-photo-dialog>img { max-width:calc(85vw / var(--ui-scale,1)); max-height:calc(85dvh / var(--ui-scale,1)); }
+
+.about-management { display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+.about-management-brand { display:flex; align-items:center; gap:18px; }
+.about-management-brand svg { flex:0 0 48px; }
+.about-management h2 { margin:0; font-size:21px; }
+.about-management-credit { display:flex; align-items:center; gap:18px; flex-wrap:wrap; max-width:100%; }
+.about-management-credit span { color:var(--muted); font-size:13px; white-space:nowrap; }
+.about-management-credit img { width:clamp(220px,28vw,360px); max-width:100%; height:auto; object-fit:contain; }
+@media(max-width:600px) { .about-management-credit { width:100%; } .about-management-credit img { width:min(100%,300px); } }
