@@ -2,6 +2,10 @@ param([string]$DartPath = "dart")
 $ErrorActionPreference="Stop"
 Push-Location "$PSScriptRoot/.."
 try {
+ node scripts/prepare-app-icons.mjs
+ if ($LASTEXITCODE -ne 0) { throw "App icon preparation failed" }
+ npm run tauri -- icon src-tauri/app-icon.png
+ if ($LASTEXITCODE -ne 0) { throw "Native icon generation failed" }
  New-Item -ItemType Directory -Force -Path src-tauri/resources/updater | Out-Null
  & $DartPath pub get --directory updater
  if ($LASTEXITCODE -ne 0) { throw "Dart dependency setup failed" }
