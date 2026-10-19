@@ -1,11 +1,13 @@
 # Nostra · 2 | Phase 1
 
 **Status:** Unreleased development draft  
-**Last updated:** 18 October 2026
+**Last updated:** 19 October 2026
 
 Phase 1 of the planned three-phase transition from Flutter to React. These notes cover the current rebuild; release notes from previous versions are not carried forward.
 
 ## Foundation and navigation
+
+- Disabled the default page context menu in the website and Windows app.
 
 - Rebuilt the Windows app with React, TypeScript, Tauri and Rust. Archived the previous feature pages for the fresh rebuild.
 - Added the supplied book logo and the version label **Nostra · 2 | Phase 1** across the footer, sign-in and About pages.

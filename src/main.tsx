@@ -8,6 +8,7 @@ import "./sidebar.css";
 import "./settings.css";
 import { applyAppearance } from "./lib/appearance";
 import { restoreWallpaper } from "./lib/wallpaper";
+document.addEventListener("contextmenu", (event) => event.preventDefault(), { capture: true });
 applyAppearance();
 void restoreWallpaper().catch(console.error);
 window.addEventListener("storage", (e) => {
