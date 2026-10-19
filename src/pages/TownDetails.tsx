@@ -45,16 +45,16 @@ export default function TownDetails({
   return (
     <div className="town-detail-page">
       <div className="town-page-actions">
-        {!editing && access.canEdit && (
-          <button onClick={() => setEditing(true)}>
-            <TownIcon name="edit" />
-            Edit Town
-          </button>
-        )}
         {!editing && (
           <button className="town-back" onClick={onBack}>
             <TownIcon name="arrow_back" />
             Town Registry
+          </button>
+        )}
+        {!editing && access.canEdit && (
+          <button className="town-edit" onClick={() => setEditing(true)}>
+            <TownIcon name="edit" />
+            Edit Town
           </button>
         )}
       </div>

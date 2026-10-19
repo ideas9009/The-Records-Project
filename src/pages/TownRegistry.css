@@ -70,3 +70,5 @@
 
 .town-page-actions { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
 .town-page-actions .town-back { margin:0; }
+
+.town-page-actions .town-edit { margin-left:auto; }
