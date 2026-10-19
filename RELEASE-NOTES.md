@@ -158,6 +158,14 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Added Shop Search to optional SmartSync background coverage.
 - Simplified the About version card beneath the project management branding.
 
+## Windows installation and updates
+
+- Package Nostra-2 as a Windows MSI. Nostra-1 users uninstall the Flutter version before installing Nostra-2.
+- Check GitHub releases automatically on launch and when internet access returns. Available updates replace the sidebar branding with an expanding update prompt and download progress.
+- Added a compiled Dart/Dio helper with signed release metadata and streaming MSI verification before installation.
+- About includes manual update checks and reinstallation of the current published version. Installation remains a separate Install and restart action.
+- Installer and version-to-version update testing remain pending before general release.
+
 ## Still in development
 
 - Overview remains to be rebuilt.

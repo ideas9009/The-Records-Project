@@ -1,16 +1,23 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod database;
+mod updater;
 use database::{database_commit, database_path, database_read};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use updater::{
+    desktop_update_check, desktop_update_download, desktop_update_install, desktop_update_status,
+    DesktopUpdater,
+};
 struct Preferences {
     background: AtomicBool,
 }
 #[tauri::command]
 fn export_cpu_threads() -> usize {
-    std::thread::available_parallelism().map(|value| value.get()).unwrap_or(1)
+    std::thread::available_parallelism()
+        .map(|value| value.get())
+        .unwrap_or(1)
 }
 
 #[tauri::command]
@@ -72,8 +79,10 @@ struct WindowsPreferences {
 #[tauri::command]
 fn get_windows_preferences(app: tauri::AppHandle) -> Result<WindowsPreferences, String> {
     use winreg::{enums::*, RegKey};
-    let startup_command = match RegKey::predef(HKEY_CURRENT_USER)
-        .open_subkey_with_flags("Software\\Microsoft\\Windows\\CurrentVersion\\Run", KEY_READ) {
+    let startup_command = match RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        KEY_READ,
+    ) {
         Ok(key) => match key.get_value::<String, _>("TheRecordsProjectNostra2") {
             Ok(value) => value,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
@@ -85,7 +94,10 @@ fn get_windows_preferences(app: tauri::AppHandle) -> Result<WindowsPreferences, 
     Ok(WindowsPreferences {
         startup: !startup_command.is_empty(),
         minimized: startup_command.contains(" --minimized"),
-        background: app.state::<Preferences>().background.load(Ordering::Relaxed),
+        background: app
+            .state::<Preferences>()
+            .background
+            .load(Ordering::Relaxed),
     })
 }
 
@@ -212,6 +224,7 @@ fn notify_vote_party(app: tauri::AppHandle, remaining: u32) -> Result<(), String
 }
 fn main() {
     tauri::Builder::default()
+        .manage(DesktopUpdater::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
@@ -221,6 +234,10 @@ fn main() {
             background: AtomicBool::new(false),
         })
         .invoke_handler(tauri::generate_handler![
+            desktop_update_status,
+            desktop_update_check,
+            desktop_update_download,
+            desktop_update_install,
             export_cpu_threads,
             database_read,
             database_commit,

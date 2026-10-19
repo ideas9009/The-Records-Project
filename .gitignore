@@ -22,3 +22,7 @@ windows-build/
 /migration-reference/
 /wallpapers/
 /src-tauri/gen/
+
+/updater/.dart_tool/
+/src-tauri/resources/updater/*.exe
+*.pem

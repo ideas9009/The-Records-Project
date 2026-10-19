@@ -1,3 +1,5 @@
+import {SidebarUpdater} from "./components/DesktopUpdater";
+import {startDesktopUpdates,useDesktopUpdate,showUpdatePrompt} from "./lib/desktop-updates";
 import ShopSearch from "./pages/ShopSearch";
 import { HiringNotice } from "./pages/Available";
 import TaskBoard from "./pages/TaskBoard";
@@ -43,6 +45,10 @@ function Symbol({name, className = ""}: {name: string; className?: string}) {
 
 export default function App() {
  const {account,loading,error}=useAuth();
+ const desktopUpdate=useDesktopUpdate();
+ const [updateOpen,setUpdateOpen]=useState(false);
+ useEffect(startDesktopUpdates,[]);
+ useEffect(()=>{if(!showUpdatePrompt(desktopUpdate))setUpdateOpen(false)},[desktopUpdate.stage]);
  const pendingRequests=usePendingRequests();
  const [requestedPage,setPage] = useState<string>("home");
  const [townSearch,setTownSearch] = useState("");
@@ -78,16 +84,17 @@ export default function App() {
  if(!account)return <Login/>;
  return <div className="app rebuild-shell" data-page={page}>
    <SmartSyncManager/><ServerActivity/><div className="sidebar-slot">
-   <aside className="sidebar hover-sidebar" aria-label="Main sidebar"
+   <aside className="sidebar hover-sidebar" aria-label="Main sidebar" data-update-open={updateOpen&&showUpdatePrompt(desktopUpdate)?"true":undefined}
      onPointerMove={event=>{pointer.current={x:event.clientX,y:event.clientY};refreshHover()}}
      onPointerLeave={()=>{pointer.current=null;setHovered(null)}}>
-     <div className="sidebar-brand">
+     {showUpdatePrompt(desktopUpdate)?<SidebarUpdater open={updateOpen} onToggle={()=>setUpdateOpen(v=>!v)}/>:<div className="sidebar-brand">
        <span className="sidebar-nation">Byzantium</span>
        <svg className="sidebar-logo" viewBox="296 381 1408 1239" aria-hidden="true" width="36" height="36">
          <image href="/trp-logo.png" width="2000" height="2000"/>
        </svg>
        <div className="sidebar-brand-name" aria-label="The Records Project"><span>The</span><span>Records</span><span>Project</span></div>
      </div>
+     }
      <div className="sidebar-scroll">
      <nav aria-label="Workspace" ref={navRef} onScroll={trackScroll}>
        {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="citizens" && (page.startsWith("citizen:") || page.startsWith("earthmc-"))) || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:")) || (id==="jobs" && page.startsWith("jobs:")) || (id==="shops" && page.startsWith("shops:"))?"active":""} aria-label={name} title={name} aria-current={page===id || (id==="citizens" && (page.startsWith("citizen:") || page.startsWith("earthmc-"))) || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:")) || (id==="jobs" && page.startsWith("jobs:")) || (id==="shops" && page.startsWith("shops:"))?"page":undefined}

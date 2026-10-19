@@ -27,7 +27,7 @@
   "bundle": {
     "active": true,
     "targets": [
-      "nsis"
+      "msi"
     ],
     "icon": [
       "icons/icon.ico"
@@ -36,7 +36,14 @@
     "windows": {
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
+      },
+      "wix": {
+        "language": "en-US",
+        "upgradeCode": "65a7d821-576b-4fd7-8c6e-f7d245543187"
       }
+    },
+    "resources": {
+      "resources/updater/trp-updater.exe": "updater/trp-updater.exe"
     }
   }
 }

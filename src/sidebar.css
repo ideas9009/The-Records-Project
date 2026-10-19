@@ -41,7 +41,7 @@
   background: rgba(255,255,255,.72);
   border-color: rgba(0,0,0,.10);
 }
-.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible)) {
+.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) {
   width: var(--open-width);
   min-width: var(--open-width);
 }
@@ -81,13 +81,13 @@
   color: var(--text);
   transition: opacity 130ms ease;
 }
-.hover-sidebar:is(:hover, :has(:focus-visible)) .sidebar-brand {
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .sidebar-brand {
   height: 128px;
   align-items: flex-start;
   padding-left: 15px;
 }
-.hover-sidebar:is(:hover, :has(:focus-visible)) .sidebar-logo { width: 32px; height: 32px; }
-.hover-sidebar:is(:hover, :has(:focus-visible)) .sidebar-brand-name { opacity: 1; transition-delay: 70ms; }
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .sidebar-logo { width: 32px; height: 32px; }
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .sidebar-brand-name { opacity: 1; transition-delay: 70ms; }
 .rebuild-shell .hover-sidebar nav {
   min-height: 0;
   width: 100%;
@@ -143,9 +143,9 @@
   padding-right: 4px;
   transition: opacity 100ms ease;
 }
-.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible)) nav button { width: calc(100% - 14px); }
-.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible)) .nav-label { opacity: 1; transition-delay: 70ms; }
-.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible)) nav button:is([data-hovered="true"], :focus-visible) {
+.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) nav button { width: calc(100% - 14px); }
+.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .nav-label { opacity: 1; transition-delay: 70ms; }
+.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) nav button:is([data-hovered="true"], :focus-visible) {
   width: 100%;
 }
 .rebuild-shell .hover-sidebar nav button:focus-visible { outline: 2px solid var(--pill-fill); outline-offset: 2px; }
@@ -172,8 +172,8 @@
 }
 .sidebar-user-name { opacity: 0; transition: opacity 100ms ease; text-align: left; }
 .sidebar-user-arrow { margin-left: auto; opacity: 0; }
-.hover-sidebar:is(:hover, :has(:focus-visible)) .sidebar-user-name,
-.hover-sidebar:is(:hover, :has(:focus-visible)) .sidebar-user-arrow { opacity: 1; }
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .sidebar-user-name,
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .sidebar-user-arrow { opacity: 1; }
 .rebuild-shell .topbar .material-symbol { font-size: 22px; }
 .rebuild-shell .rebuild-placeholder .material-symbol { font-size: 32px; }
 @media (max-width: 760px) {
@@ -209,10 +209,10 @@
   width: 0;
   height: 0;
 }
-.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible)) nav button {
+.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) nav button {
   width: calc(100% - 10px);
 }
-.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible)) nav button:is([data-hovered="true"], :focus-visible) {
+.rebuild-shell .hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) nav button:is([data-hovered="true"], :focus-visible) {
   width: calc(100% + 34px);
 }
 .sidebar-nation {
@@ -230,7 +230,7 @@
   opacity: .85;
   transition: opacity 120ms ease;
 }
-.hover-sidebar:is(:hover, :has(:focus-visible)) .sidebar-nation {
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .sidebar-nation {
   opacity: 0;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -290,10 +290,10 @@
   opacity: 0;
   transition: opacity 100ms ease;
 }
-.hover-sidebar:is(:hover, :has(:focus-visible)) .sidebar-notifications {
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .sidebar-notifications {
   width: calc(100% - 8px);
 }
-.hover-sidebar:is(:hover, :has(:focus-visible)) .notification-label { opacity: 1; }
+.hover-sidebar:is(:hover, :has(:focus-visible), [data-update-open="true"]) .notification-label { opacity: 1; }
 .rebuild-shell .workspace-body { position: relative; }
 .notifications-panel {
   position: absolute;

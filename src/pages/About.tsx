@@ -1,3 +1,4 @@
+import {AboutUpdater} from "../components/DesktopUpdater";
 import ReactMarkdown from "react-markdown";
 import releaseNotes from "../../RELEASE-NOTES.md?raw";
 export default function About() {
@@ -22,13 +23,7 @@ export default function About() {
       <section className="card about-version" aria-label="App version">
         <h2>Nostra &middot; 2 | Phase 1</h2>
       </section>
-      <section className="card">
-        <h2>Updates</h2>
-        <p>
-          Phase 1 is in development. Update delivery will be added before
-          release.
-        </p>
-      </section>
+      <AboutUpdater/>
       <section className="card release-notes">
         <h2>Release notes</h2>
         <ReactMarkdown>{releaseNotes}</ReactMarkdown>

@@ -9,11 +9,12 @@
     "preview": "vite preview --host 127.0.0.1",
     "tauri": "tauri",
     "desktop": "tauri dev",
-    "package": "tauri build",
+    "package": "powershell -NoProfile -File scripts/build-msi.ps1",
     "test": "vitest run",
     "prepare:wallpapers": "node scripts/prepare-wallpapers.mjs",
     "predev": "npm run prepare:wallpapers",
-    "prebuild": "npm run prepare:wallpapers"
+    "prebuild": "npm run prepare:wallpapers",
+    "package:msi": "powershell -NoProfile -File scripts/build-msi.ps1"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

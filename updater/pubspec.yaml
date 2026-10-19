@@ -1,0 +1,11 @@
+name: trp_updater
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  dio: ^5.4.3
+  crypto: ^3.0.6
+  cryptography: ^2.7.0
+  pub_semver: ^2.1.5
+dev_dependencies:
+  test: ^1.25.0
