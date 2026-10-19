@@ -1,3 +1,4 @@
+import BoardPageSlider from "../components/BoardPageSlider";
 import { useEffect, useState, type FormEvent } from "react";
 import { apiRequest, watchResource } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
@@ -87,33 +88,21 @@ export default function TaskBoard({ page, go }: { page: string; go: Go }) {
         : "task";
   return (
     <div className="task-board">
-      <header className="board-heading">
+      <header className="board-heading board-topbar">
         <h1>Task Board</h1>
-        {tab !== "available" && (
-          <button
-            className="board-primary"
-            onClick={() => go("jobs:new:" + tab)}
-          >
-            <Icon name="add" />
-            {tab === "task" ? "Publish Task" : "Request Materials"}
-          </button>
-        )}
+        <BoardPageSlider selected={tab} go={go} />
+        <div className="board-publish-slot">
+          {tab !== "available" && (
+            <button
+              className="board-primary"
+              onClick={() => go("jobs:new:" + tab)}
+            >
+              <Icon name="add" />
+              {tab === "task" ? "Publish Task" : "Request Materials"}
+            </button>
+          )}
+        </div>
       </header>
-      <nav className="board-tabs" aria-label="Task Board pages">
-        {[
-          ["task", "Tasks", "jobs"],
-          ["materials", "Material Requests", "jobs:materials"],
-          ["available", "Available", "jobs:available"],
-        ].map(([key, label, route]) => (
-          <button
-            key={key}
-            aria-current={tab === key ? "page" : undefined}
-            onClick={() => go(route)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
       {tab === "available" ? (
         <section className="card board-empty">
           <Icon name="pending" />
