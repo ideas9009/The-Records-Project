@@ -1,6 +1,9 @@
 import { SyncStatus } from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
-import { useEffect, useRef } from "react";
+import { apiRequest } from "../lib/api";
+import RegisterTown from "./RegisterTown";
+import { useAuth } from "../lib/auth-context";
+import { useEffect, useRef, useState } from "react";
 import TownGallery from "./TownGallery";
 import { townTypeLabel, useTown } from "../lib/cloud-towns";
 import { TownIcon, TownStatistics } from "./TownRegistry";
@@ -13,19 +16,60 @@ export default function TownDetails({
   townId: string;
   onBack: () => void;
 }) {
-  const { town, loading, error } = useTown(townId);
+  const [revision, setRevision] = useState(0),
+    [editing, setEditing] = useState(false);
+  const [access, setAccess] = useState({
+    canEdit: false,
+    canManageMayors: false,
+  });
+  const { account } = useAuth();
+  const { town, loading, error } = useTown(townId, revision);
+  useEffect(() => {
+    let active = true;
+    setAccess({ canEdit: false, canManageMayors: false });
+    void apiRequest<typeof access>("/api/towns/" + townId + "/edit", {
+      networkOnly: true,
+    })
+      .then((value) => {
+        if (active) setAccess(value);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [townId, revision, account]);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
   }, [townId, town]);
   return (
     <div className="town-detail-page">
-      <button className="town-back" onClick={onBack}>
-        <TownIcon name="arrow_back" />
-        Town Registry
-      </button>
+      <div className="town-page-actions">
+        {!editing && access.canEdit && (
+          <button onClick={() => setEditing(true)}>
+            <TownIcon name="edit" />
+            Edit Town
+          </button>
+        )}
+        {!editing && (
+          <button className="town-back" onClick={onBack}>
+            <TownIcon name="arrow_back" />
+            Town Registry
+          </button>
+        )}
+      </div>
       <SyncStatus path={"/api/towns/" + townId} />
-      {loading ? (
+      {editing && town ? (
+        <RegisterTown
+          town={town}
+          canManageMayors={access.canManageMayors}
+          onCancel={() => setEditing(false)}
+          onCreated={() => {
+            setEditing(false);
+            setRevision((value) => value + 1);
+          }}
+        />
+      ) : loading ? (
         <LoadingStatus>Loading town…</LoadingStatus>
       ) : error ? (
         <p role="alert">{error}</p>

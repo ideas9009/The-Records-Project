@@ -44,6 +44,8 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='GET'&&path==='/api/admin/activity')result=await service.activity(profile);
  else if(req.method==='PUT'&&/^\/api\/admin\/users\/[^/]+$/.test(path))result=await service.updateUser(profile,path.split('/')[4],body);
  else if(req.method==='GET'&&path==='/api/towns/mayor-options')result=await service.mayorOptions(profile);
+ else if(/^\/api\/towns\/[^/]+\/edit$/.test(path)&&req.method==='GET')result=await service.townEditAccess(profile,path.split('/')[3]);
+ else if(/^\/api\/towns\/[^/]+$/.test(path)&&req.method==='PUT')result=await service.updateTown(profile,path.split('/')[3],body);
  else if(req.method==='POST'&&path==='/api/towns')result=await service.registerTown(profile,body);
  else if(req.method==='GET'&&path==='/api/towns')result=await service.towns(profile);
  else if(req.method==='GET'&&path==='/api/admin/registrations')result=await service.requests(profile);

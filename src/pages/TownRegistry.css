@@ -67,3 +67,6 @@
 .town-photo-dialog::backdrop { background:#000b; }
 .town-photo-dialog > img { display:block; max-width:85vw; max-height:85dvh; object-fit:contain; }
 .town-photo-close { position:absolute; top:12px; right:12px; padding:8px; border-radius:50%; background:#202023ee; color:white; }
+
+.town-page-actions { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+.town-page-actions .town-back { margin:0; }

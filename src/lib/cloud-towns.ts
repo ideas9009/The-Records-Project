@@ -7,6 +7,7 @@ export type Town = (typeof sampleTowns)[number] & {
   mayorUids?: string[];
   mayorNames?: string[];
   type?: string;
+  version?: number;
 };
 export function useTowns() {
   const [towns, setTowns] = useState<Town[]>([]),
@@ -36,7 +37,7 @@ export function useTowns() {
   }, []);
   return { towns, loading, error };
 }
-export function useTown(id: string) {
+export function useTown(id: string, revision = 0) {
   const [town, setTown] = useState<Town | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
@@ -62,7 +63,7 @@ export function useTown(id: string) {
         setLoading(false);
       },
     );
-  }, [id]);
+  }, [id, revision]);
   return { town, loading, error };
 }
 export const seedCloudTown = () =>
