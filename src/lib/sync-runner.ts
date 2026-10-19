@@ -35,9 +35,11 @@ export function syncSelectedPages() {
         ? [
             paths[index].page === "towns"
               ? "Town Registry"
-              : paths[index].page === "citizens"
-                ? "Citizens"
-                : "News",
+              : paths[index].page === "task-board"
+                ? "Task Board"
+                : paths[index].page === "citizens"
+                  ? "Citizens"
+                  : "News",
           ]
         : [],
     );

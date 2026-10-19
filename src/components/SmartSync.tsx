@@ -137,28 +137,32 @@ export default function SmartSyncSettingsPanel() {
         <h2>Background pages</h2>
         <p>Keep these pages updated while using other sections.</p>
         <div className="smart-sync-pages">
-          {(["towns", "news", "citizens"] as const).map((page) => (
-            <label key={page}>
-              <input
-                type="checkbox"
-                disabled={!prefs.enabled}
-                checked={prefs.pages.includes(page)}
-                onChange={(event) =>
-                  void change({
-                    ...prefs,
-                    pages: event.target.checked
-                      ? [...prefs.pages, page]
-                      : prefs.pages.filter((item) => item !== page),
-                  })
-                }
-              />
-              {page === "towns"
-                ? "Town Registry"
-                : page === "citizens"
-                  ? "Citizens"
-                  : "News"}
-            </label>
-          ))}
+          {(["towns", "news", "citizens", "task-board"] as const).map(
+            (page) => (
+              <label key={page}>
+                <input
+                  type="checkbox"
+                  disabled={!prefs.enabled}
+                  checked={prefs.pages.includes(page)}
+                  onChange={(event) =>
+                    void change({
+                      ...prefs,
+                      pages: event.target.checked
+                        ? [...prefs.pages, page]
+                        : prefs.pages.filter((item) => item !== page),
+                    })
+                  }
+                />
+                {page === "towns"
+                  ? "Town Registry"
+                  : page === "task-board"
+                    ? "Task Board (Tasks and Material Requests)"
+                    : page === "citizens"
+                      ? "Citizens"
+                      : "News"}
+              </label>
+            ),
+          )}
         </div>
         <label className="smart-sync-interval">
           Sync interval
@@ -220,8 +224,9 @@ export default function SmartSyncSettingsPanel() {
         <p className="smart-sync-note">
           Saved copies expire after 24 hours. Sign-in checks stay online.
           Offline viewing pauses after 15 minutes without account verification.
-          Drafts and administration are excluded. Background syncing pauses when
-          the app is hidden.
+          Task Board saves listing summaries; private offers, proof images and
+          actions require a connection. Drafts and administration are excluded.
+          Background syncing pauses when the app is hidden.
         </p>
       </section>
       {(error || run.error) && <p role="alert">{error || run.error}</p>}

@@ -1,3 +1,4 @@
+import { SyncStatus } from "../components/SmartSync";
 import BoardPageSlider from "../components/BoardPageSlider";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiRequest, watchResource } from "../lib/api";
@@ -215,6 +216,7 @@ function BoardFeed({ kind, go }: { kind: BoardKind; go: Go }) {
           {error}
         </p>
       )}
+      <SyncStatus path="/api/task-board" />
       <div className="board-feed">
         {filtered.map((item) => (
           <button

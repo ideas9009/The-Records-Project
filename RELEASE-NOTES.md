@@ -109,6 +109,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## SmartSync - Beta
 
+- Extended SmartSync to Task Board summaries for Tasks and Material Requests, with optional background syncing and saved-data status. Successful listing changes clear the saved list; private offers, proof images and actions remain online-only.
+
 - Added optional device-local caching, off by default, for Town Registry, published News, Citizens and supported visited details.
 - Saved content appears while the app refreshes it in the background. Private account, authentication, administration, draft and scheduled-news requests are excluded.
 - Added frequently used page selection, 1/5/15/30-minute intervals, Sync now, sync status, storage usage and Clear saved data.
@@ -154,3 +156,4 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Windows desktop PDF exports use parallel processing workers sized to 80% of available logical CPU threads, limited by the number of sections to export. Face requests stay bounded, results retain directory order, and merging/saving remains in the background. CPU usage depends on download speed and available work; it is not pinned to 80%.
 
 - Fixed packaged Windows PDF worker compatibility by creating processing workers from the page, using classic production worker bundles, and merging in a separate worker. Added startup timeouts and errors identifying processing, merging or saving failures.
+

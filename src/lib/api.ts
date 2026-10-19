@@ -125,7 +125,8 @@ async function request<T>(path: string, options: Options): Promise<T> {
       setSyncIdentity(data.account, base);
     if (
       !get &&
-      (path.startsWith("/api/news") ||
+      (path.startsWith("/api/task-board") ||
+        path.startsWith("/api/news") ||
         path.startsWith("/api/towns") ||
         path.startsWith("/api/admin/test-town") ||
         path === "/api/auth/microsoft/finish")

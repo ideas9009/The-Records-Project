@@ -243,3 +243,60 @@ it("supports the public Citizens directory for pending users and background page
   await invalidateCache("/api/citizens/public-user");
   expect(await cachedData("/api/citizens")).toBeNull();
 });
+
+it("saves Task Board summaries for approved users, excluding private details and pending users", async () => {
+  await saveSmartSyncSettings({
+    enabled: true,
+    pages: ["task-board"],
+    interval: 5,
+  });
+  expect(smartSyncSettings().pages).toEqual(["task-board"]);
+  expect(cacheAllowed("/api/task-board")).toBe(true);
+  for (const path of [
+    "/api/task-board/listing",
+    "/api/task-board/listing/actions",
+  ])
+    expect(cacheAllowed(path)).toBe(false);
+  await saveCachedData(
+    "/api/task-board",
+    [
+      { id: "task", kind: "task" },
+      { id: "request", kind: "materials" },
+    ],
+    cacheEpoch(),
+  );
+  expect((await cachedData<unknown[]>("/api/task-board"))?.data).toHaveLength(
+    2,
+  );
+  setSyncIdentity({ uid: "pending-board", role: "member", status: "pending" });
+  expect(cacheAllowed("/api/task-board")).toBe(false);
+  expect(await cachedData("/api/task-board")).toBeNull();
+});
+
+it.each(["/api/task-board", "/api/task-board/task/actions"])(
+  "invalidates Task Board summaries after a successful write to %s",
+  async (path) => {
+    await enable();
+    await saveCachedData("/api/task-board", [{ id: "task" }], cacheEpoch());
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('{"id":"task"}', { status: 200 }),
+    );
+    await apiRequest(path, { method: "POST", body: {} });
+    expect(await cachedData("/api/task-board")).toBeNull();
+  },
+);
+
+it("background sync fetches and saves the selected Task Board list", async () => {
+  await saveSmartSyncSettings({
+    enabled: true,
+    pages: ["task-board"],
+    interval: 5,
+  });
+  vi.mocked(fetch).mockResolvedValue(
+    new Response('[{"id":"task","kind":"task"}]', { status: 200 }),
+  );
+  const { syncSelectedPages } = await import("../src/lib/sync-runner");
+  await syncSelectedPages();
+  expect(vi.mocked(fetch).mock.calls[0][0]).toBe("/api/task-board");
+  expect((await cachedData<any[]>("/api/task-board"))?.data[0].id).toBe("task");
+});
