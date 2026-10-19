@@ -292,12 +292,16 @@ it("background sync fetches and saves the selected Task Board list", async () =>
     pages: ["task-board"],
     interval: 5,
   });
-  vi.mocked(fetch).mockResolvedValue(
-    new Response('[{"id":"task","kind":"task"}]', { status: 200 }),
+  vi.mocked(fetch).mockImplementation(async () =>
+    new Response('[{"id":"task","kind":"task"}]', { status: 200 })
   );
   const { syncSelectedPages } = await import("../src/lib/sync-runner");
   await syncSelectedPages();
-  expect(vi.mocked(fetch).mock.calls[0][0]).toBe("/api/task-board");
+  expect(vi.mocked(fetch).mock.calls.map((call) => call[0])).toEqual([
+    "/api/task-board",
+    "/api/availability",
+  ]);
+  expect(await cachedData("/api/availability")).not.toBeNull();
   expect((await cachedData<any[]>("/api/task-board"))?.data[0].id).toBe("task");
 });
 
@@ -321,4 +325,40 @@ it("caches public Available listings but never private hiring data or personal l
   );
   await apiRequest("/api/availability/mine", { method: "PUT", body: {} });
   expect(await cachedData("/api/availability")).toBeNull();
+});
+
+it("background Town Registry sync refreshes both summaries and EarthMC statistics", async () => {
+  await saveSmartSyncSettings({ enabled: true, pages: ["towns"], interval: 5 });
+  vi.mocked(fetch).mockImplementation(
+    async (input) =>
+      new Response(
+        input === "/api/towns/stats"
+          ? '{"town":{"earthmcResidents":1,"claimedChunks":64}}'
+          : '[{"id":"town","name":"Town"}]',
+        { status: 200 },
+      ),
+  );
+  const { syncSelectedPages } = await import("../src/lib/sync-runner");
+  await syncSelectedPages();
+  expect(vi.mocked(fetch).mock.calls.map((call) => call[0])).toEqual([
+    "/api/towns",
+    "/api/towns/stats",
+  ]);
+  expect(
+    (await cachedData<any>("/api/towns/stats"))?.data.town.claimedChunks,
+  ).toBe(64);
+});
+it("reports each failed background page once even when several of its requests fail", async () => {
+  await saveSmartSyncSettings({
+    enabled: true,
+    pages: ["towns", "task-board"],
+    interval: 5,
+  });
+  vi.mocked(fetch).mockRejectedValue(Error("offline"));
+  const { syncSelectedPages, syncRunStatus } =
+    await import("../src/lib/sync-runner");
+  await syncSelectedPages();
+  expect(syncRunStatus().error).toBe(
+    "Unable to sync Town Registry and Task Board.",
+  );
 });

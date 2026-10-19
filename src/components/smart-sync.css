@@ -75,3 +75,8 @@
   width: 16px;
   height: 16px;
 }
+
+.smart-sync-page-text { display:grid; gap:5px; }
+.smart-sync-page-text strong { font-weight:600; }
+.smart-sync-page-text small { color:var(--muted); font-size:12px; line-height:1.6; }
+.smart-sync-pages input { flex-shrink:0; }

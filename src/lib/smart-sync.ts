@@ -1,6 +1,35 @@
+export const smartSyncPages = [
+  {
+    id: "towns",
+    label: "Town Registry",
+    description:
+      "Town summaries, cover images, resident counts and EarthMC claimed chunks.",
+    paths: ["/api/towns", "/api/towns/stats"],
+  },
+  {
+    id: "news",
+    label: "News",
+    description:
+      "Published news and meeting summaries. Drafts and scheduled posts are excluded.",
+    paths: ["/api/news"],
+  },
+  {
+    id: "citizens",
+    label: "Citizens",
+    description: "The TRP citizen directory, roles and town affiliations.",
+    paths: ["/api/citizens"],
+  },
+  {
+    id: "task-board",
+    label: "Task Board",
+    description:
+      "Tasks, Material Requests and Available listings. Private hiring chats stay online.",
+    paths: ["/api/task-board", "/api/availability"],
+  },
+] as const;
 export type SmartSyncSettings = {
   enabled: boolean;
-  pages: ("towns" | "news" | "citizens" | "task-board")[];
+  pages: (typeof smartSyncPages)[number]["id"][];
   interval: number;
 };
 export type SyncState = {
@@ -57,7 +86,7 @@ export function smartSyncSettings(): SmartSyncSettings {
           enabled: raw.enabled === true,
           pages: Array.isArray(raw.pages)
             ? raw.pages.filter((p: string) =>
-                ["towns", "news", "citizens", "task-board"].includes(p),
+                smartSyncPages.some((page) => page.id === p),
               )
             : defaults.pages,
           interval: [1, 5, 15, 30].includes(raw.interval) ? raw.interval : 5,

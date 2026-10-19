@@ -1,5 +1,5 @@
 import { apiRequest } from "./api";
-import { cacheAllowed, smartSyncSettings } from "./smart-sync";
+import { cacheAllowed, smartSyncPages, smartSyncSettings } from "./smart-sync";
 let status = { running: false, error: "" },
   current: Promise<void> | null = null;
 const listeners = new Set<() => void>();
@@ -19,20 +19,13 @@ export function syncSelectedPages() {
   const settings = smartSyncSettings();
   if (!settings.enabled) return Promise.resolve();
   const paths = settings.pages
-    .map((page) => ({
-      page,
-      path: "/api/" + page,
-    }))
-    .flatMap((item) =>
-      item.page === "towns"
-        ? [item, { page: item.page, path: "/api/towns/stats" }]
-        : [item],
-    )
-    .flatMap((item) =>
-      item.page === "task-board"
-        ? [item, { page: item.page, path: "/api/availability" }]
-        : [item],
-    )
+    .flatMap((page) => {
+      const definition = smartSyncPages.find((item) => item.id === page)!;
+      return definition.paths.map((path) => ({
+        path,
+        label: definition.label,
+      }));
+    })
     .filter((item) => cacheAllowed(item.path));
   if (!paths.length) return Promise.resolve();
   update({ running: true, error: "" });
@@ -40,19 +33,13 @@ export function syncSelectedPages() {
     const results = await Promise.allSettled(
       paths.map((item) => apiRequest(item.path, { networkOnly: true })),
     );
-    const failed = results.flatMap((result, index) =>
-      result.status === "rejected"
-        ? [
-            paths[index].page === "towns"
-              ? "Town Registry"
-              : paths[index].page === "task-board"
-                ? "Task Board"
-                : paths[index].page === "citizens"
-                  ? "Citizens"
-                  : "News",
-          ]
-        : [],
-    );
+    const failed = [
+      ...new Set(
+        results.flatMap((result, index) =>
+          result.status === "rejected" ? [paths[index].label] : [],
+        ),
+      ),
+    ];
     update({
       running: false,
       error: failed.length

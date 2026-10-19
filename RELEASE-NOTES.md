@@ -59,7 +59,7 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Added searchable compact town cards with TRP resident counts, EarthMC resident counts and claimed chunks.
 - Town cards open dedicated details pages with a mayor, resident list and full-width layout.
 - Added a town image on the right of each card with a fading edge and compact statistics on the left.
-- Added Register Town for Operator, Leader, Prime Minister, Admin and Minister, with Town Name and a registered-user mayor selector.
+- Added Register Town for Operator, Leader, Prime Minister, Admin and Minister, with Town Name, town type and multiple registered-user mayor selections.
 - Added mayor-managed galleries with compressed images, thumbnails and larger previews, stored through the API in Firestore.
 - Retained a clearly marked test town with sample statistics. Live statistics exclude the test town.
 
@@ -115,14 +115,15 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## SmartSync - Beta
 
-- Extended SmartSync to Task Board summaries for Tasks and Material Requests, with optional background syncing and saved-data status. Successful listing changes clear the saved list; private offers, proof images and actions remain online-only.
-
-- Added optional device-local caching, off by default, for Town Registry, published News, Citizens and supported visited details.
-- Saved content appears while the app refreshes it in the background. Private account, authentication, administration, draft and scheduled-news requests are excluded.
-- Added frequently used page selection, 1/5/15/30-minute intervals, Sync now, sync status, storage usage and Clear saved data.
-- Background syncing pauses while hidden and resumes when visible or reconnected.
-- Separated caches by server, account and permission scope, with a 50 MB limit and 24-hour expiry. Disabling SmartSync clears saved data.
-- Writes and sign-in require a connection. Offline viewing in an already verified session pauses after 15 minutes without account verification.
+- Added optional device-local caching, off by default. Saved content appears immediately while fresh data loads in the background.
+- Town Registry saves town summaries, cover images and resident counts. Background syncing also refreshes EarthMC population and claimed chunks; Test Town keeps its sample values.
+- Task Board saves summaries for Tasks, Material Requests and Available, including advertised Gold ranges and pay periods.
+- News saves published news and meeting summaries. Citizens saves the TRP directory, roles and town affiliations. Supported details are saved when visited.
+- Settings explains the data covered by each background-page selection. Existing selections and the 1/5/15/30-minute interval preference are preserved.
+- Hiring conversations, inboxes, private offers, proof images, account information, administration, drafts and scheduled news are excluded from offline storage. Sending messages, hiring, editing and other writes require a connection.
+- Added Sync now, saved-data status, storage usage and Clear saved data. Town, resident and listing changes invalidate the relevant saved copies so the next visit fetches fresh data.
+- Background syncing pauses while hidden and resumes when visible or reconnected. Caches are separated by server, account and permission scope, limited to 50 MB and expire after 24 hours. Disabling SmartSync clears saved data.
+- Sign-in checks stay online. Offline viewing in an already verified session pauses after 15 minutes without account verification.
 
 ## EarthMC Map and loading feedback
 
@@ -153,7 +154,7 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Overview and Shop Search remain to be rebuilt.
 - Marked Companies, Expansion Packs and the full My Profile experience as **Coming soon in future phases**. Existing account status, Microsoft linking and sign-out remain available.
 - Microsoft integration awaits Minecraft API approval and end-to-end provider testing.
-- Discord linking, Discord confirmation delivery and notification delivery are not implemented.
+- Discord linking, Discord confirmation delivery and the general notification centre are not implemented. Hiring conversations have their own unread inbox and in-app notices.
 - Profile customization is planned for a future phase.
 - Final Windows installer, update delivery and release acceptance testing remain ahead. This is not a published release.
 

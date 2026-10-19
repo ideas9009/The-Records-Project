@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { useAuth } from "../lib/auth-context";
 import {
   smartSyncSettings,
+  smartSyncPages,
   saveSmartSyncSettings,
   subscribeSync,
   syncRevision,
@@ -137,32 +138,29 @@ export default function SmartSyncSettingsPanel() {
         <h2>Background pages</h2>
         <p>Keep these pages updated while using other sections.</p>
         <div className="smart-sync-pages">
-          {(["towns", "news", "citizens", "task-board"] as const).map(
-            (page) => (
-              <label key={page}>
-                <input
-                  type="checkbox"
-                  disabled={!prefs.enabled}
-                  checked={prefs.pages.includes(page)}
-                  onChange={(event) =>
-                    void change({
-                      ...prefs,
-                      pages: event.target.checked
-                        ? [...prefs.pages, page]
-                        : prefs.pages.filter((item) => item !== page),
-                    })
-                  }
-                />
-                {page === "towns"
-                  ? "Town Registry"
-                  : page === "task-board"
-                    ? "Task Board (Tasks, Materials and Available)"
-                    : page === "citizens"
-                      ? "Citizens"
-                      : "News"}
-              </label>
-            ),
-          )}
+          {smartSyncPages.map(({ id: page, label, description }) => (
+            <label key={page}>
+              <input
+                type="checkbox"
+                aria-label={label}
+                aria-describedby={"sync-page-" + page}
+                disabled={!prefs.enabled}
+                checked={prefs.pages.includes(page)}
+                onChange={(event) =>
+                  void change({
+                    ...prefs,
+                    pages: event.target.checked
+                      ? [...prefs.pages, page]
+                      : prefs.pages.filter((item) => item !== page),
+                  })
+                }
+              />
+              <span className="smart-sync-page-text">
+                <strong>{label}</strong>
+                <small id={"sync-page-" + page}>{description}</small>
+              </span>
+            </label>
+          ))}
         </div>
         <label className="smart-sync-interval">
           Sync interval
