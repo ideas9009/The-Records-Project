@@ -1,3 +1,4 @@
+import { isTownMayor } from "./town-membership.mjs";
 import { randomUUID } from "node:crypto";
 import {
   ApiError,
@@ -301,7 +302,7 @@ export function createMicrosoftAuth(
       if (
         fresh.isMayor &&
         existingTown?.mayorUid &&
-        existingTown.mayorUid !== targetUid
+        !isTownMayor(existingTown, targetUid)
       )
         throw new ApiError(
           409,
@@ -371,6 +372,20 @@ export function createMicrosoftAuth(
           earthmcUuid: fresh.town.uuid,
           mayor: fresh.username,
           mayorUid: targetUid,
+          mayorUids: [
+            ...new Set([
+              ...(existingTown?.mayorUids ||
+                (existingTown?.mayorUid ? [existingTown.mayorUid] : [])),
+              targetUid,
+            ]),
+          ],
+          mayorNames: [
+            ...new Set([
+              ...(existingTown?.mayorNames ||
+                (existingTown?.mayor ? [existingTown.mayor] : [])),
+              fresh.username,
+            ]),
+          ],
           recordsResidents: residents.length,
           earthmcResidents:
             fresh.earthmcResidents ?? existingTown?.earthmcResidents ?? 0,
@@ -384,6 +399,20 @@ export function createMicrosoftAuth(
           ...(details || {}),
           mayor: fresh.username,
           mayorUid: targetUid,
+          mayorUids: [
+            ...new Set([
+              ...(existingTown?.mayorUids ||
+                (existingTown?.mayorUid ? [existingTown.mayorUid] : [])),
+              targetUid,
+            ]),
+          ],
+          mayorNames: [
+            ...new Set([
+              ...(existingTown?.mayorNames ||
+                (existingTown?.mayor ? [existingTown.mayor] : [])),
+              fresh.username,
+            ]),
+          ],
           registeredResidents: residents,
         });
         tx.set(base + "/town_names/" + townKey(fresh.town.name), {

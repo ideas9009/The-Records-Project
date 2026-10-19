@@ -1,3 +1,10 @@
+// Legacy single-mayor records remain valid until they are updated.
+export const isTownMayor = (town, uid) =>
+  !!uid &&
+  !!town &&
+  (town.mayorUid === uid ||
+    (Array.isArray(town.mayorUids) && town.mayorUids.includes(uid)));
+
 export async function withVerifiedResidents(store, towns) {
   if (!towns.some((town) => town.earthmcUuid)) return towns;
   const users = await (store.listAll

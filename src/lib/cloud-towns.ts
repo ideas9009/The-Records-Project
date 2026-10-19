@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { apiRequest, watchResource } from "./api";
 import { PREVIEW_MODE, previewAccount } from "./runtime-mode";
 import sampleTowns from "../data/towns.json";
-export type Town = (typeof sampleTowns)[number] & { mayorUid: string };
+export type Town = (typeof sampleTowns)[number] & {
+  mayorUid: string;
+  mayorUids?: string[];
+  mayorNames?: string[];
+  type?: string;
+};
 export function useTowns() {
   const [towns, setTowns] = useState<Town[]>([]),
     [loading, setLoading] = useState(true),
@@ -62,3 +67,16 @@ export function useTown(id: string) {
 }
 export const seedCloudTown = () =>
   apiRequest("/api/admin/test-town", { method: "POST", body: {} });
+
+export const townTypes = {
+  capital: "Capital",
+  settlement: "Settlement",
+  village: "Village",
+  small_town: "Small Town",
+  major_town: "Major Town",
+  city: "City",
+} as const;
+export const townTypeLabel = (type?: string) =>
+  type && type in townTypes
+    ? townTypes[type as keyof typeof townTypes]
+    : "Not specified";

@@ -102,7 +102,7 @@ export function createAdministration(store, { now = Date.now } = {}) {
           throw new ApiError(403, "Only an Operator can moderate an Operator.");
         if (
           !hasRole(actor, management) &&
-          rolesOf(target).some((role) => !["citizen","army"].includes(role))
+          rolesOf(target).some((role) => !["citizen", "army"].includes(role))
         )
           throw new ApiError(
             403,
@@ -125,35 +125,75 @@ export function createAdministration(store, { now = Date.now } = {}) {
   async function registerTown(profile, body) {
     requireRole(profile, registrars);
     const name =
-        typeof body.name === "string"
-          ? body.name.trim().replace(/\s+/g, " ")
-          : "",
-      mayorUid = body.mayorUid;
+      typeof body.name === "string"
+        ? body.name.trim().replace(/\s+/g, " ")
+        : "";
+    const type = body.type ?? "settlement";
+    const mayorUids = body.mayorUids ?? (body.mayorUid ? [body.mayorUid] : []);
     if (
       !name ||
       name.length > 80 ||
       /[\x00-\x1f/\\]/.test(name) ||
-      typeof mayorUid !== "string" ||
-      !/^[A-Za-z0-9_-]{1,100}$/.test(mayorUid)
+      !Array.isArray(mayorUids) ||
+      !mayorUids.length ||
+      mayorUids.length > 20 ||
+      new Set(mayorUids).size !== mayorUids.length ||
+      mayorUids.some(
+        (uid) => typeof uid !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(uid),
+      )
     )
-      throw new ApiError(400, "Enter a town name and select a mayor.");
+      throw new ApiError(
+        400,
+        "Enter a town name and select between 1 and 20 mayors.",
+      );
+    if (
+      ![
+        "capital",
+        "settlement",
+        "village",
+        "small_town",
+        "major_town",
+        "city",
+      ].includes(type)
+    )
+      throw new ApiError(400, "Select a valid town type.");
     const key = Buffer.from(name.toLowerCase()).toString("base64url"),
       id = randomUUID();
     await store.transaction(async (tx) => {
-      const actor = await tx.get("users/" + profile.uid),
-        mayor = await tx.get("users/" + mayorUid),
-        existing = await tx.get(base + "/town_names/" + key);
+      const actor = await tx.get("users/" + profile.uid);
+      const mayors = await Promise.all(
+        mayorUids.map((uid) => tx.get("users/" + uid)),
+      );
+      const existing = await tx.get(base + "/town_names/" + key);
+      const capital =
+        type === "capital"
+          ? await tx.get(base + "/town_settings/capital")
+          : null;
       requireRole(actor, registrars);
-      if (!valid(mayor)) throw new ApiError(400, "Select a registered user.");
+      if (mayors.some((mayor) => !valid(mayor)))
+        throw new ApiError(400, "Select registered users as mayors.");
       if (existing)
         throw new ApiError(409, "A town with this name is already registered.");
+      if (capital)
+        throw new ApiError(
+          409,
+          capital.name +
+            " is already the capital. Only one capital is allowed.",
+        );
+      const mayorNames = mayors.map((mayor) => mayor.username);
+      const leadership = {
+        mayor: mayorNames[0],
+        mayorUid: mayorUids[0],
+        mayorUids,
+        mayorNames,
+      };
       const town = {
         id,
         name,
+        type,
         nation: "Byzantium",
-        mayor: mayor.username,
-        mayorUid,
-        recordsResidents: 1,
+        ...leadership,
+        recordsResidents: mayors.length,
         earthmcResidents: 0,
         claimedChunks: 0,
         testData: false,
@@ -161,16 +201,21 @@ export function createAdministration(store, { now = Date.now } = {}) {
         createdAt: stamp(),
         createdBy: actor.uid,
       };
+      if (type === "capital")
+        tx.set(base + "/town_settings/capital", { id, name });
       tx.set(base + "/town_names/" + key, { id });
       tx.set(base + "/towns/" + id, town);
       tx.set(base + "/town_details/" + id, {
-        mayor: mayor.username,
-        mayorUid,
-        registeredResidents: [mayor.username],
+        ...leadership,
+        registeredResidents: mayorNames,
       });
-      const roles = [...new Set([...rolesOf(mayor), "mayor"])];
-      tx.set("users/" + mayorUid, { ...mayor, roles });
-      audit(tx, actor, "town.registered", name, { mayor: mayor.username });
+      mayors.forEach((mayor, index) =>
+        tx.set("users/" + mayorUids[index], {
+          ...mayor,
+          roles: [...new Set([...rolesOf(mayor), "mayor"])],
+        }),
+      );
+      audit(tx, actor, "town.registered", name, { type, mayors: mayorNames });
     });
     return { id };
   }

@@ -232,3 +232,92 @@ test("current actor permissions override a previously loaded management profile"
   assert.deepEqual(await f.store.get("users/target"), target);
   assert.equal((await f.store.list(base + "/audit")).length, 0);
 });
+
+test("town types and multi-mayor membership support shared towns and multiple towns per mayor", async () => {
+  const f = await fixture();
+  await f.store.set("users/target", { ...f.target, status: "approved" });
+  const first = await f.service.registerTown(f.actor, {
+    name: "Shared",
+    type: "major_town",
+    mayorUids: ["actor", "target"],
+  });
+  const second = await f.service.registerTown(f.actor, {
+    name: "Another",
+    type: "small_town",
+    mayorUids: ["target"],
+  });
+  const town = await f.service.town(f.actor, first.id);
+  assert.equal(town.type, "major_town");
+  assert.deepEqual(town.mayorUids, ["actor", "target"]);
+  assert.deepEqual(town.mayorNames, ["Actor", "Target"]);
+  assert.deepEqual(town.registeredResidents, ["Actor", "Target"]);
+  assert.equal(town.recordsResidents, 2);
+  const target = await f.store.get("users/target");
+  assert.ok(rolesOf(target).includes("mayor"));
+  const citizen = await f.service.citizen(f.actor, "target");
+  assert.deepEqual(
+    new Set(citizen.towns.map((town) => town.id)),
+    new Set([first.id, second.id]),
+  );
+  assert.ok(citizen.towns.every((town) => town.mayor));
+  const image = "data:image/jpeg;base64,/9j/AA==";
+  await f.service.addPhotos(target, first.id, { photos: [{ src: image }] });
+  await f.service.addPhotos(f.actor, first.id, { photos: [{ src: image }] });
+  assert.equal((await f.service.photos(f.actor, first.id)).length, 2);
+  const outsider = { ...target, uid: "outsider" };
+  await f.store.set("users/outsider", outsider);
+  await assert.rejects(
+    f.service.addPhotos(outsider, first.id, { photos: [{ src: image }] }),
+    (e) => e.status === 403,
+  );
+});
+
+test("only one capital can be registered even with concurrent different names", async () => {
+  const f = await fixture();
+  const results = await Promise.allSettled(
+    ["Capital One", "Capital Two"].map((name) =>
+      f.service.registerTown(f.actor, {
+        name,
+        type: "capital",
+        mayorUids: ["target"],
+      }),
+    ),
+  );
+  assert.equal(
+    results.filter((result) => result.status === "fulfilled").length,
+    1,
+  );
+  assert.equal(
+    results.find((result) => result.status === "rejected").reason.status,
+    409,
+  );
+  assert.equal((await f.store.list(base + "/towns")).length, 1);
+  assert.equal((await f.store.list(base + "/audit")).length, 1);
+  assert.ok(await f.store.get(base + "/town_settings/capital"));
+  await f.service.registerTown(f.actor, {
+    name: "Village",
+    type: "village",
+    mayorUids: ["target"],
+  });
+});
+
+test("invalid types and mayor selections do not partially register a town or change roles", async () => {
+  const f = await fixture();
+  for (const body of [
+    { type: "unknown", mayorUids: ["target"] },
+    { type: "capital", mayorUids: [] },
+    { type: "capital", mayorUids: ["target", "target"] },
+    { type: "capital", mayorUids: ["actor", "missing"] },
+    {
+      type: "capital",
+      mayorUids: Array.from({ length: 21 }, (_, i) => "user" + i),
+    },
+  ])
+    await assert.rejects(
+      f.service.registerTown(f.actor, { name: "Invalid", ...body }),
+      (e) => e.status === 400,
+    );
+  assert.equal((await f.store.list(base + "/towns")).length, 0);
+  assert.equal(await f.store.get(base + "/town_settings/capital"), null);
+  assert.deepEqual(await f.store.get("users/target"), f.target);
+});

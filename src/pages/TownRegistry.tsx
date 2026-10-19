@@ -4,7 +4,7 @@ import { canRegisterTown } from "../lib/access";
 import RegisterTown from "./RegisterTown";
 import { SyncStatus } from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
-import { useTowns, type Town } from "../lib/cloud-towns";
+import { useTowns, townTypeLabel, type Town } from "../lib/cloud-towns";
 import "./TownRegistry.css";
 
 export function TownIcon({ name }: { name: string }) {
@@ -72,6 +72,7 @@ export default function TownRegistry({
       </header>
       {registering && (
         <RegisterTown
+          existingCapital={towns.find((town) => town.type === "capital")?.name}
           onCancel={() => setRegistering(false)}
           onCreated={(id) => {
             setRegistering(false);
@@ -121,6 +122,9 @@ export default function TownRegistry({
                 </span>
                 <div className="town-title">
                   <h2>{town.name}</h2>
+                  {town.type && (
+                    <span className="badge">{townTypeLabel(town.type)}</span>
+                  )}
                 </div>
               </div>
               <TownStatistics town={town} />

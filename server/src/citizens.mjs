@@ -1,3 +1,4 @@
+import { isTownMayor } from "./town-membership.mjs";
 import { createEarthMcProfile } from "./earthmc-profile.mjs";
 import { ApiError, rolesOf } from "./security.mjs";
 const base = "nations/byzantium";
@@ -52,7 +53,7 @@ export function createCitizens(store, options = {}) {
         towns: towns
           .filter(
             (town) =>
-              town.mayorUid === user.uid ||
+              isTownMayor(town, user.uid) ||
               (user.minecraftVerified === true &&
                 !!town.earthmcUuid &&
                 user.earthmcTownUuid === town.earthmcUuid) ||
@@ -61,7 +62,7 @@ export function createCitizens(store, options = {}) {
           .map((town) => ({
             id: town.id,
             name: town.name,
-            mayor: town.mayorUid === user.uid,
+            mayor: isTownMayor(town, user.uid),
           }))
           .sort((a, b) => a.name.localeCompare(b.name)),
       }))

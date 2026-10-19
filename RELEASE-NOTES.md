@@ -50,6 +50,7 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 ## Town Registry
 
+- Added town types (Capital, Settlement, Village, Small Town, Major Town and City), with a server-enforced single capital. Towns can have multiple mayors, and mayors can manage multiple towns; all assigned mayors can upload gallery images and appear as mayors in Citizens. Existing single-mayor records remain supported.
 - Added searchable compact town cards with TRP resident counts, EarthMC resident counts and claimed chunks.
 - Town cards open dedicated details pages with a mayor, resident list and full-width layout.
 - Added a town image on the right of each card with a fading edge and compact statistics on the left.

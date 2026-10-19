@@ -15,7 +15,13 @@ import { TownIcon } from "./TownRegistry";
 export default function TownGallery({
   town,
 }: {
-  town: { id: string; name: string; mayor: string; mayorUid: string };
+  town: {
+    id: string;
+    name: string;
+    mayor: string;
+    mayorUid: string;
+    mayorUids?: string[];
+  };
 }) {
   const [photos, setPhotos] = useState<TownPhoto[]>([]),
     [loading, setLoading] = useState(true),
@@ -27,7 +33,9 @@ export default function TownGallery({
   const { account } = useAuth();
   const isMayor =
     !PREVIEW_MODE &&
-    account?.uid === town.mayorUid &&
+    !!account &&
+    (account.uid === town.mayorUid ||
+      !!town.mayorUids?.includes(account.uid)) &&
     canPerform(account, "upload-town-image");
   useEffect(() => {
     if (PREVIEW_MODE) {

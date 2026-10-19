@@ -2,7 +2,7 @@ import { SyncStatus } from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
 import { useEffect, useRef } from "react";
 import TownGallery from "./TownGallery";
-import { useTown } from "../lib/cloud-towns";
+import { townTypeLabel, useTown } from "../lib/cloud-towns";
 import { TownIcon, TownStatistics } from "./TownRegistry";
 import "./TownRegistry.css";
 
@@ -58,8 +58,14 @@ export default function TownDetails({
               <h2>Town information</h2>
               <dl className="town-facts">
                 <div>
-                  <dt>Mayor</dt>
-                  <dd>{town.mayor}</dd>
+                  <dt>
+                    {(town.mayorNames?.length || 1) > 1 ? "Mayors" : "Mayor"}
+                  </dt>
+                  <dd>{town.mayorNames?.join(", ") || town.mayor}</dd>
+                </div>
+                <div>
+                  <dt>Town type</dt>
+                  <dd>{townTypeLabel(town.type)}</dd>
                 </div>
               </dl>
               <TownStatistics town={town} />
