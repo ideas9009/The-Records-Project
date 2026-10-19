@@ -1,5 +1,5 @@
 import BoardPageSlider from "../components/BoardPageSlider";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiRequest, watchResource } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
 import { Spinner, LoadingStatus } from "../components/Loading";
@@ -286,14 +286,62 @@ function BoardEditor({ kind, go }: { kind: BoardKind; go: Go }) {
     [error, setError] = useState(""),
     [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const back = () => go(kind === "task" ? "jobs" : "jobs:materials");
-  function leave(event: React.MouseEvent<HTMLButtonElement>) {
-    if (title || description || materials || price || deadline)
-      setAnchor(event.currentTarget);
-    else back();
+  const unsaved = useRef(false),
+    saving = useRef(false),
+    pendingNavigation = useRef<null | (() => void)>(null);
+  const dirty = !!(
+    title ||
+    description ||
+    materials ||
+    price ||
+    deadline ||
+    (kind === "task" && !approval)
+  );
+  unsaved.current = dirty;
+  useEffect(() => {
+    const guard = (event: Event) => {
+      if (saving.current) {
+        event.preventDefault();
+        return;
+      }
+      if (!unsaved.current) return;
+      const navigation = event as CustomEvent<{
+        proceed: () => void;
+        anchor?: HTMLElement | null;
+      }>;
+      event.preventDefault();
+      pendingNavigation.current = navigation.detail?.proceed || null;
+      setAnchor(
+        navigation.detail?.anchor ||
+          (document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null),
+      );
+    };
+    window.addEventListener("records-navigate", guard);
+    return () => window.removeEventListener("records-navigate", guard);
+  }, []);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  function keepEditing() {
+    pendingNavigation.current = null;
+    setAnchor(null);
+  }
+  function discard() {
+    const proceed = pendingNavigation.current;
+    pendingNavigation.current = null;
+    unsaved.current = false;
+    setAnchor(null);
+    proceed?.();
   }
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (busy) return;
+    if (saving.current) return;
+    saving.current = true;
     setBusy(true);
     setError("");
     try {
@@ -309,20 +357,25 @@ function BoardEditor({ kind, go }: { kind: BoardKind; go: Go }) {
           approvalRequired: approval,
         },
       });
+      unsaved.current = false;
+      saving.current = false;
       go("jobs:item:" + result.id);
     } catch (reason) {
       setError(errorText(reason));
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   }
   return (
     <div className="task-board">
-      <button className="board-back" disabled={busy} onClick={leave}>
-        <Icon name="arrow_back" />
-        Task Board
-      </button>
-      <h1>{kind === "task" ? "Publish Task" : "Request Materials"}</h1>
+      <header className="board-editor-header">
+        <button className="board-back" disabled={busy} onClick={back}>
+          <Icon name="arrow_back" />
+          Task Board
+        </button>
+        <h1>{kind === "task" ? "Publish Task" : "Request Materials"}</h1>
+      </header>
       <form className="card board-form" onSubmit={submit}>
         <label>
           Title
@@ -416,7 +469,7 @@ function BoardEditor({ kind, go }: { kind: BoardKind; go: Go }) {
             <Icon name="add" />
             {kind === "task" ? "Publish Task" : "Publish Request"}
           </Action>
-          <button type="button" disabled={busy} onClick={leave}>
+          <button type="button" disabled={busy} onClick={back}>
             Cancel
           </button>
         </div>
@@ -425,11 +478,18 @@ function BoardEditor({ kind, go }: { kind: BoardKind; go: Go }) {
         anchor={anchor}
         title="Discard unsaved changes?"
         message="Your listing has not been published."
-        triggerLabel="Task Board"
-        triggerIcon="arrow_back"
+        triggerLabel={
+          anchor?.querySelector(".nav-label")?.textContent ||
+          anchor?.getAttribute("aria-label") ||
+          anchor?.textContent?.replace(/arrow_back|north_east/g, "").trim() ||
+          "Task Board"
+        }
+        triggerIcon={
+          anchor?.querySelector(".material-symbol")?.textContent || "arrow_back"
+        }
         confirmText="Discard changes"
-        onConfirm={back}
-        onCancel={() => setAnchor(null)}
+        onConfirm={discard}
+        onCancel={keepEditing}
       />
     </div>
   );

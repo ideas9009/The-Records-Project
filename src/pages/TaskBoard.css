@@ -440,3 +440,22 @@
     transition: none;
   }
 }
+
+.board-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.task-board .board-editor-header .board-back {
+  width: auto;
+  flex: 0 0 auto;
+}
+.board-editor-header h1 {
+  text-align: right;
+}
+@container (max-width:520px) {
+  .board-editor-header h1 {
+    font-size: 24px;
+  }
+}
