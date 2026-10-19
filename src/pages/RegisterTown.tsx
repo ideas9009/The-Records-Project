@@ -19,7 +19,7 @@ export default function RegisterTown({
   town?: Town;
   canManageMayors?: boolean;
 }) {
-  const [users, setUsers] = useState<{ uid: string; username: string }[]>([]),
+  const [users, setUsers] = useState<{ uid: string; username: string }[]>((town?.mayorUids || (town?.mayorUid ? [town.mayorUid] : [])).map((uid,index) => ({uid,username:town?.mayorNames?.[index] || town?.mayor || uid}))),
     [name, setName] = useState(town?.name || ""),
     [mayors, setMayors] = useState<string[]>(
       town?.mayorUids || (town?.mayorUid ? [town.mayorUid] : []),
