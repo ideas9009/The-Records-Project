@@ -16,6 +16,13 @@ export type Account = {
   roles?: Role[];
   status: "pending" | "approved" | "rejected" | "suspended";
   createdAt: string;
+  registrationMethod?: "manual-emc";
+  registration?: import("./manual-registration").ManualProfile;
+  registrationReady?: boolean;
+  registrationWaiting?: string;
+  emcIdentityReviewed?: boolean;
+  manualReviewedAt?: string;
+
   minecraftVerified?: boolean;
   earthmcTownName?: string;
   townRegistrationPending?: boolean;

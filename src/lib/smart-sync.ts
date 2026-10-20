@@ -1,5 +1,13 @@
 export const smartSyncPages = [
   {
+    id: "overview",
+    label: "Overview",
+    description:
+      "Nation statistics, alliances and town charts, plus registered town and citizen totals. VoteParty stays live.",
+    paths: ["/api/overview", "/api/towns", "/api/towns/stats", "/api/citizens"],
+  },
+
+  {
     id: "towns",
     label: "Town Registry",
     description:
@@ -141,6 +149,11 @@ export const cacheEpoch = () => epoch;
 export function cacheAllowed(path: string) {
   if (!identity || !smartSyncSettings().enabled) return false;
   if (path === "/api/towns/mayor-options") return false;
+  if (
+    path === "/api/overview" &&
+    ["approved", "pending"].includes(identity.status)
+  )
+    return true;
   if (path === "/api/towns" || path === "/api/towns/stats") return true;
   if (
     (identity.status === "approved" || identity.status === "pending") &&

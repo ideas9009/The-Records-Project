@@ -1,9 +1,17 @@
 # Nostra · 2 | Phase 1
 
 **Status:** Unreleased development draft  
-**Last updated:** 19 October 2026
+**Last updated:** 20 October 2026
 
 Phase 1 of the planned three-phase transition from Flutter to React. These notes cover the current rebuild; release notes from previous versions are not carried forward.
+
+## Overview
+
+- Added nation tiles for towns, claimed chunks, residents, King, capital, balance, allies, enemies and nation status, with clearly labeled TRP and EarthMC figures.
+- Added live VoteParty progress using EarthMC's current target and remaining votes.
+- Added EarthMC town population and bank charts that expand across the window, with searchable exact-value tables and keyboard dismissal.
+- Removed the large Overview heading area and chart captions. Refresh is a compact control in the Towns tile.
+- Added Overview to optional SmartSync background syncing. Test towns are excluded from nation comparisons.
 
 ## Foundation and navigation
 
@@ -21,7 +29,14 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Removed Wallet, Discord Chat, Live EarthMC, Desktop Widgets, Mayor Toolkit and Analytics from navigation.
 - Renamed Nation Affairs to News, Job Board to Task Board, Shop Showcase to Shop Search, and Companies & Orders to Companies.
 
+- Added an editor-only News switch to hide Edit buttons across the feed and article pages, remembered per account on this device.
+
 ## Accounts and security
+
+- Added staged manual registration: find an EMC username, confirm its public profile, then choose a TRP password. Missing/private profiles and service outages have separate errors.
+- New manual accounts remain in registration mode until reviewed. Mayor approval registers the town; citizen approval adds membership directly and is blocked until the EMC mayor and town are approved.
+- Added EMC profile details, waiting reasons and recheck controls in registration and Administration. Manual ownership review remains distinct from Microsoft verification.
+
 
 - Added TRP Minecraft username/password registration, sign-in and sign-out through the Render API in Oregon.
 - Store account data in Firestore through the server. Passwords use salted scrypt hashes in a private collection; the app does not receive password hashes or Firebase Admin credentials.

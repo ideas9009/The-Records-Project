@@ -380,3 +380,10 @@ it("saves Shop Search with scoped details and invalidates the complete listing g
   expect(cacheAllowed("/api/shop-search")).toBe(true);
   expect(cacheAllowed("/api/shop-search/listing-1")).toBe(false);
 });
+it("caches Overview snapshots but excludes personal friend lookups", async () => {
+ await enable();
+ expect(cacheAllowed("/api/overview")).toBe(true);
+ expect(cacheAllowed("/api/overview/friends")).toBe(false);
+ await saveCachedData("/api/overview", {nation:{name:"Byzantium"},towns:[]}, cacheEpoch());
+ expect((await cachedData<any>("/api/overview"))?.data.nation.name).toBe("Byzantium");
+});

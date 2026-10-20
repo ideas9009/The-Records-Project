@@ -1,7 +1,8 @@
+import ManualRegistration from "../components/ManualRegistration";
 import MicrosoftVerification from "../components/MicrosoftVerification";
 import { Spinner } from "../components/Loading";
 import { useState, type FormEvent } from "react";
-import { registerCloud, signInCloud, firebaseError } from "../lib/cloud-auth";
+import { signInCloud, firebaseError } from "../lib/cloud-auth";
 import { useAuth } from "../lib/auth-context";
 import "./Login.css";
 export default function Login() {
@@ -9,7 +10,6 @@ export default function Login() {
   const [mode, setMode] = useState<"login" | "register">("login"),
     [username, setUsername] = useState(""),
     [password, setPassword] = useState(""),
-    [confirmation, setConfirmation] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function submit(event: FormEvent) {
@@ -18,9 +18,7 @@ export default function Login() {
     setBusy(true);
     setError("");
     try {
-      await (mode === "login"
-        ? signInCloud(username, password)
-        : registerCloud(username, password, confirmation));
+      await signInCloud(username, password);
     } catch (reason) {
       setError(firebaseError(reason));
     } finally {
@@ -35,58 +33,47 @@ export default function Login() {
         <h2>{mode === "login" ? "Sign in" : "Register"}</h2>
         {!microsoftActive && (
           <>
-            <form onSubmit={(event) => void submit(event)}>
-              <label>
-                Minecraft Username
-                <input
-                  autoComplete="username"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  required
-                  maxLength={16}
-                  spellCheck={false}
-                />
-              </label>
-              <label>
-                Password
-                <input
-                  type="password"
-                  autoComplete={
-                    mode === "login" ? "current-password" : "new-password"
-                  }
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  maxLength={128}
-                />
-              </label>
-              {mode === "register" && (
+            {mode === "register" ? (
+              <ManualRegistration />
+            ) : (
+              <form onSubmit={(event) => void submit(event)}>
                 <label>
-                  Confirm password
+                  Minecraft Username
+                  <input
+                    autoComplete="username"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    required
+                    maxLength={16}
+                    spellCheck={false}
+                  />
+                </label>
+                <label>
+                  Password
                   <input
                     type="password"
-                    autoComplete="new-password"
-                    value={confirmation}
-                    onChange={(event) => setConfirmation(event.target.value)}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
                     required
                     maxLength={128}
                   />
                 </label>
-              )}
-              {error && (
-                <p role="alert" className="login-error">
-                  {error}
-                </p>
-              )}
-              <button type="submit" aria-busy={busy} disabled={busy}>
-                {busy && <Spinner />}
-                {busy
-                  ? "Please wait…"
-                  : mode === "login"
-                    ? "Sign in"
-                    : "Submit registration"}
-              </button>
-            </form>
+                {error && (
+                  <p role="alert" className="login-error">
+                    {error}
+                  </p>
+                )}
+                <button type="submit" aria-busy={busy} disabled={busy}>
+                  {busy && <Spinner />}
+                  {busy
+                    ? "Please wait…"
+                    : mode === "login"
+                      ? "Sign in"
+                      : "Submit registration"}
+                </button>
+              </form>
+            )}
             <button
               className="login-switch"
               disabled={busy}
@@ -94,16 +81,10 @@ export default function Login() {
                 setMode(mode === "login" ? "register" : "login");
                 setError("");
                 setPassword("");
-                setConfirmation("");
               }}
             >
               {mode === "login" ? "Create an account" : "Back to sign in"}
             </button>
-            {mode === "register" && (
-              <p className="login-note">
-                You may get a confirmation notification on your discord
-              </p>
-            )}
           </>
         )}
         <MicrosoftVerification

@@ -1,3 +1,4 @@
+import { RegistrationFacts } from "../components/ManualRegistration";
 import RankReviews from "./RankReviews";
 import { useEffect, useState } from "react";
 import { apiRequest, watchResource } from "../lib/api";
@@ -162,11 +163,58 @@ export default function Administration() {
                 <p>
                   {roleLabels(user)} · {user.status}
                 </p>
+                {user.registrationMethod === "manual-emc" &&
+                  user.registration && (
+                    <details className="manual-review-profile">
+                      <summary>
+                        EMC profile ·{" "}
+                        {user.registration.isMayor ? "Mayor" : "Citizen"} ·{" "}
+                        {user.registration.town.name}
+                      </summary>
+                      <RegistrationFacts profile={user.registration} />
+                      {user.status === "pending" && (
+                        <button
+                          disabled={busy}
+                          onClick={() => {
+                            setBusy(true);
+                            setError("");
+                            void apiRequest("/api/auth/register/recheck", {
+                              method: "POST",
+                              body: { uid: user.uid },
+                            })
+                              .then(() => setRevision((n) => n + 1))
+                              .catch((e) =>
+                                setError(
+                                  e instanceof Error
+                                    ? e.message
+                                    : "EMC could not be rechecked.",
+                                ),
+                              )
+                              .finally(() => setBusy(false));
+                          }}
+                        >
+                          Recheck EMC
+                        </button>
+                      )}
+
+                      <p>{user.registrationWaiting}</p>
+                      <p>
+                        Manual lookup does not prove ownership. Verify the
+                        player before approving.
+                      </p>
+                    </details>
+                  )}
               </div>
               <div className="admin-actions">
                 {tab === "registrations" ? (
                   <>
                     <button
+                      disabled={user.registrationReady === false}
+                      title={
+                        user.registrationReady === false
+                          ? user.registrationWaiting
+                          : undefined
+                      }
                       onClick={(e) =>
                         ask(
                           e.currentTarget,
@@ -286,7 +334,19 @@ export default function Administration() {
       <ExpandingConfirmation
         anchor={confirmation?.anchor || null}
         title={confirmation?.label + "?"}
-        message={"Apply this change to " + confirmation?.user.username + "?"}
+        message={
+          confirmation?.body &&
+          "status" in confirmation.body &&
+          confirmation.body.status === "approved" &&
+          confirmation.user.registrationMethod === "manual-emc"
+            ? "Confirm you have verified " +
+              confirmation.user.username +
+              "'s identity. Approval will " +
+              (confirmation.user.registration?.isMayor
+                ? "register or link their current EMC town and assign Mayor access."
+                : "add them to their current EMC town.")
+            : "Apply this change to " + confirmation?.user.username + "?"
+        }
         triggerLabel={confirmation?.label || "Confirm"}
         confirmText={confirmation?.label || "Confirm"}
         busy={busy}

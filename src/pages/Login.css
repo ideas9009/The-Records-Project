@@ -10,3 +10,16 @@
 .logout-dialog::backdrop { background:#0009; }
 .logout-dialog p { line-height:1.6; }
 .logout-actions { display:flex; justify-content:flex-end; gap:12px; margin-top:24px; }
+.manual-registration-steps{display:flex;gap:12px;list-style:none;padding:0;margin:16px 0 24px;font-size:.75rem;color:var(--muted)}
+.manual-registration-steps [aria-current]{color:var(--text);font-weight:700}
+.manual-registration-identity{display:flex;align-items:center;gap:14px;margin:16px 0}
+.manual-registration-face{width:58px;height:58px;flex:0 0 58px}
+.manual-registration-facts dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
+.manual-registration-facts dt{font-size:.8rem;color:var(--muted);margin-bottom:5px}
+.manual-registration-facts dd{margin:0;overflow-wrap:anywhere}
+.manual-registration-notice{padding:14px;border:1px solid var(--line);border-radius:12px;line-height:1.6;font-size:.9rem;background:var(--surface)}
+.manual-registration>.login-error{margin-top:16px}
+.manual-registration>button{margin-top:14px}
+.manual-review-profile{max-width:480px;margin-top:12px}
+.manual-review-profile summary{cursor:pointer;font-size:.85rem}
+@media(max-width:450px){.manual-registration-facts dl{grid-template-columns:1fr}}

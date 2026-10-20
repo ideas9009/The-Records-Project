@@ -1,7 +1,8 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { earthmc } from "./native";
-export function useVoteParty(alerts = false) {
+export function useVoteParty(alerts = false, refreshKey = 0) {
+  const [target, setTarget] = useState<number | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
@@ -13,8 +14,8 @@ export function useVoteParty(alerts = false) {
       running = true;
       try {
         const data = await earthmc("/");
-        const count = Number(data?.voteParty?.numRemaining);
-        if (!Number.isFinite(count))
+        const count = data?.voteParty?.numRemaining;
+        if (typeof count !== "number" || !Number.isFinite(count) || count < 0)
           throw Error("Vote-party data unavailable.");
         if (!cancelled) {
           if (
@@ -30,6 +31,12 @@ export function useVoteParty(alerts = false) {
             );
           previous = count;
           setRemaining(count);
+          const goal = data?.voteParty?.target;
+          setTarget(
+            typeof goal === "number" && Number.isFinite(goal) && goal > 0
+              ? goal
+              : null,
+          );
           setError("");
         }
       } catch (e) {
@@ -44,6 +51,6 @@ export function useVoteParty(alerts = false) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [alerts]);
-  return { remaining, error };
+  }, [alerts, refreshKey]);
+  return { remaining, target, error };
 }

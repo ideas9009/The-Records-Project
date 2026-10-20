@@ -23,10 +23,47 @@ const Icon = ({ name }: { name: string }) => (
 );
 const message = (reason: unknown) =>
   reason instanceof Error ? reason.message : "News could not be loaded.";
+function EditVisibilitySwitch({
+  hidden,
+  onChange,
+}: {
+  hidden: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="news-edit-visibility">
+      <input
+        type="checkbox"
+        role="switch"
+        checked={hidden}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className="news-edit-switch-track" aria-hidden="true" />
+      <span>Hide edit buttons</span>
+    </label>
+  );
+}
 type Go = (page: string) => void;
 export default function News({ page, go }: { page: string; go: Go }) {
   const { account } = useAuth(),
     publisher = canPublishNews(account);
+  const visibilityKey = "records-news-hide-edit:" + account?.uid;
+  const readVisibility = () => {
+    try {
+      return localStorage.getItem(visibilityKey) === "true";
+    } catch {
+      return false;
+    }
+  };
+  const [hideEditButtons, setHideEditButtons] = useState(readVisibility);
+  useEffect(() => setHideEditButtons(readVisibility()), [visibilityKey]);
+  const changeEditVisibility = (hidden: boolean) => {
+    setHideEditButtons(hidden);
+    try {
+      localStorage.setItem(visibilityKey, String(hidden));
+    } catch {}
+  };
+
   const [search, setSearch] = useState(""),
     [tab, setTab] = useState("published");
   const [undo, setUndo] = useState<{
@@ -97,7 +134,14 @@ export default function News({ page, go }: { page: string; go: Go }) {
       />
     ) : null
   ) : page.startsWith("news:") ? (
-    <Article key={page} id={page.slice(5)} go={go} publisher={publisher} />
+    <Article
+      key={page}
+      id={page.slice(5)}
+      go={go}
+      publisher={publisher}
+      hideEditButtons={hideEditButtons}
+      onEditVisibility={changeEditVisibility}
+    />
   ) : (
     <Feed
       search={search}
@@ -105,6 +149,8 @@ export default function News({ page, go }: { page: string; go: Go }) {
       tab={publisher ? tab : "published"}
       setTab={setTab}
       publisher={publisher}
+      hideEditButtons={hideEditButtons}
+      onEditVisibility={changeEditVisibility}
       go={go}
     />
   );
@@ -216,6 +262,8 @@ export function Feed({
   tab,
   setTab,
   publisher,
+  hideEditButtons,
+  onEditVisibility,
   go,
 }: {
   search: string;
@@ -223,6 +271,8 @@ export function Feed({
   tab: string;
   setTab: (s: string) => void;
   publisher: boolean;
+  hideEditButtons: boolean;
+  onEditVisibility: (hidden: boolean) => void;
   go: Go;
 }) {
   const [articles, setArticles] = useState<NewsCard[]>([]),
@@ -311,6 +361,12 @@ export function Feed({
             ))}
           </div>
         )}
+        {publisher && (
+          <EditVisibilitySwitch
+            hidden={hideEditButtons}
+            onChange={onEditVisibility}
+          />
+        )}
       </div>
       {error && (
         <div role="alert" className="news-error">
@@ -365,17 +421,20 @@ export function Feed({
                     </span>
                   </div>
                 </button>
-                <div className="news-row-actions">
-                  {article.kind === "meeting" && article.meetingUrl && (
-                    <MeetingActions url={article.meetingUrl} />
-                  )}
-                  {publisher && (
-                    <button onClick={() => go("news:edit:" + article.id)}>
-                      <Icon name="edit" />
-                      Edit
-                    </button>
-                  )}
-                </div>
+                {((article.kind === "meeting" && article.meetingUrl) ||
+                  (publisher && !hideEditButtons)) && (
+                  <div className="news-row-actions">
+                    {article.kind === "meeting" && article.meetingUrl && (
+                      <MeetingActions url={article.meetingUrl} />
+                    )}
+                    {publisher && !hideEditButtons && (
+                      <button onClick={() => go("news:edit:" + article.id)}>
+                        <Icon name="edit" />
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                )}
               </article>
             ))}
           </div>
@@ -411,10 +470,14 @@ function Article({
   id,
   go,
   publisher,
+  hideEditButtons,
+  onEditVisibility,
 }: {
   id: string;
   go: Go;
   publisher: boolean;
+  hideEditButtons: boolean;
+  onEditVisibility: (hidden: boolean) => void;
 }) {
   const [article, setArticle] = useState<NewsArticle | null>(null),
     [error, setError] = useState(""),
@@ -464,12 +527,20 @@ function Article({
           <Icon name="arrow_back" />
           News
         </button>
+        {publisher && (
+          <EditVisibilitySwitch
+            hidden={hideEditButtons}
+            onChange={onEditVisibility}
+          />
+        )}
         {publisher && article && (
           <div>
-            <button onClick={() => go("news:edit:" + id)}>
-              <Icon name="edit" />
-              Edit
-            </button>
+            {!hideEditButtons && (
+              <button onClick={() => go("news:edit:" + id)}>
+                <Icon name="edit" />
+                Edit
+              </button>
+            )}
             {article.status !== "archived" && (
               <button disabled={busy} onClick={() => void archive()}>
                 {busy ? <Spinner /> : <Icon name="archive" />}

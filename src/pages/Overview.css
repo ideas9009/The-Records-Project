@@ -1,0 +1,421 @@
+.overview-page {
+  padding-bottom: 24px;
+}
+.overview-page .page-header {
+  margin-bottom: 12px;
+}
+.overview-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.overview-source-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 28px;
+  margin-bottom: 22px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.overview-summary,
+.overview-secondary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.overview-details,
+.overview-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+.overview-page .overview-tile,
+.overview-page .overview-chart {
+  min-width: 0;
+  border-radius: 22px;
+  padding: 22px;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.overview-page .overview-summary .overview-tile {
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--tile-color) 12%, transparent),
+      transparent
+    ),
+    color-mix(in srgb, var(--surface) 70%, transparent);
+  border-color: color-mix(in srgb, var(--tile-color) 25%, var(--line));
+}
+.overview-page h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  margin: 0 0 18px;
+}
+.overview-tile h2 > .material-symbol {
+  color: var(--tile-color);
+  font-size: 23px;
+}
+.overview-value {
+  display: block;
+  font-size: 1.8rem;
+  line-height: 1.3;
+  color: var(--tile-color);
+  overflow-wrap: anywhere;
+}
+.overview-value small {
+  font-size: 1rem;
+}
+.overview-comparison {
+  display: flex;
+  gap: 28px;
+  margin: 0;
+}
+.overview-comparison > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 3px;
+}
+.overview-comparison dd {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--tile-color);
+  margin: 0;
+}
+.overview-comparison dt,
+.overview-tile > small,
+.overview-muted,
+.overview-caption,
+.overview-chart > p {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.overview-tile > small {
+  display: block;
+  margin-top: 8px;
+}
+.overview-caption {
+  margin: 12px 0 24px;
+}
+.overview-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.overview-names li {
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--tile-color) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tile-color) 18%, transparent);
+  border-radius: 9px;
+  overflow-wrap: anywhere;
+}
+.overview-names button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+.overview-secondary .overview-tile {
+  min-height: 180px;
+}
+.overview-vote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+.overview-vote p {
+  margin: 4px 0 8px;
+  color: var(--muted);
+}
+.overview-ring {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+    var(--tile-color) var(--progress),
+    color-mix(in srgb, var(--tile-color) 12%, transparent) 0
+  );
+  flex-shrink: 0;
+}
+.overview-ring span {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  font-weight: 700;
+}
+.overview-status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.overview-status-pills span {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.overview-details p {
+  margin-bottom: 0;
+  line-height: 1.6;
+}
+.overview-chart-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+}
+.overview-chart-trigger h2 {
+  margin: 0;
+}
+.overview-chart-trigger > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.overview-chart-trigger .material-symbol {
+  color: #89c1ff;
+}
+.overview-bars {
+  display: block;
+  width: 100%;
+  height: 200px;
+  margin-top: 24px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.overview-chart > p {
+  margin: 8px 0 0;
+}
+.overview-warning {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.overview-chart-dialog {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  color: var(--text, #eee);
+  backdrop-filter: blur(22px);
+  overflow: auto;
+}
+.overview-chart-dialog::backdrop {
+  background: #0009;
+}
+.overview-chart-dialog > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  border-bottom: 1px solid var(--line);
+}
+.overview-chart-dialog h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+.overview-chart-dialog header p {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  letter-spacing: 0.13em;
+  color: var(--muted);
+}
+.overview-chart-dialog header button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+.overview-chart-content {
+  padding: 24px 32px;
+}
+.overview-bars.large {
+  height: 52vh;
+  min-height: 260px;
+  cursor: default;
+}
+.overview-chart-table {
+  max-width: 1000px;
+  margin: 32px auto;
+}
+.overview-chart-table label {
+  display: grid;
+  gap: 8px;
+  max-width: 320px;
+  margin-bottom: 20px;
+}
+.overview-chart-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.overview-chart-table th,
+.overview-chart-table td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.overview-chart-table td:last-child,
+.overview-chart-table thead th:last-child {
+  text-align: right;
+}
+.overview-chart-table tbody th {
+  font-weight: 400;
+}
+:root[data-potato="true"] .overview-tile,
+:root[data-potato="true"] .overview-chart,
+:root[data-potato="true"] .overview-chart-dialog {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--surface);
+}
+@media (max-width: 1000px) {
+  .overview-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .overview-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .overview-secondary > .overview-tile:last-child {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 650px) {
+  .overview-summary,
+  .overview-secondary,
+  .overview-details,
+  .overview-charts {
+    grid-template-columns: 1fr;
+  }
+  .overview-secondary > .overview-tile:last-child {
+    grid-column: auto;
+  }
+  .overview-chart-dialog > header,
+  .overview-chart-content {
+    padding: 18px;
+  }
+  .overview-chart-dialog h2 {
+    font-size: 1.4rem;
+  }
+  .overview-chart-trigger > span {
+    font-size: 0;
+  }
+  .overview-chart-trigger > span .material-symbol {
+    font-size: 20px;
+  }
+}
+
+.overview-summary .overview-tile {
+  position: relative;
+}
+.overview-tile-refresh {
+  position: absolute;
+  right: 14px;
+  top: 13px;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+}
+.overview-tile-refresh:hover {
+  color: var(--text);
+  background: var(--line);
+}
+.overview-tile-refresh:disabled {
+  opacity: 0.5;
+}
+
+.overview-plot {
+  position: relative;
+  min-width: 0;
+}
+.overview-bars g[tabindex] {
+  outline: none;
+}
+.overview-bars g[tabindex]:focus-visible .overview-bar {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+.overview-bar-tooltip {
+  position: absolute;
+  top: 8px;
+  z-index: 2;
+  width: 230px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 8px 30px #0004;
+  pointer-events: none;
+  font-size: 0.85rem;
+}
+.overview-bar-tooltip > strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+.overview-bar-tooltip dl {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.overview-bar-tooltip dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.overview-bar-tooltip dt {
+  color: var(--muted);
+}
+.overview-bar-tooltip dd {
+  margin: 0;
+  text-align: right;
+}
+.overview-bar-tooltip [data-emphasized="true"] dd {
+  font-weight: 700;
+  color: #82bfff;
+}

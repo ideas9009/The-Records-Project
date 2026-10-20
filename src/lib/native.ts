@@ -9,6 +9,7 @@ export async function earthmc(endpoint: string, names: string[] = []) {
   if (isTauri()) return invoke<any>("earthmc", { endpoint, names });
   const r = await fetch("https://api.earthmc.net/v4" + endpoint, {
     method: names.length ? "POST" : "GET",
+    signal: AbortSignal.timeout(20000),
     headers: names.length ? { "Content-Type": "application/json" } : {},
     ...(names.length ? { body: JSON.stringify({ query: names }) } : {}),
   });
