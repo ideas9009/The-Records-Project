@@ -231,3 +231,12 @@ test("removal HTTP routes require management access and apply typed confirmation
   ])
     assert.equal((await call(path, body)).status, 403);
 });
+
+test("oversized cleanup fails before deleting any records", async () => {
+  const f = await fixture();
+  for (let i=0;i<401;i++) await f.store.set("users/member"+i,{uid:"member"+i,townId:"town"});
+  await assert.rejects(f.service.removeTown(f.actor,"town",{confirmName:"Harbour"}),e=>e.status===409);
+  assert.ok(await f.store.get(base+"/towns/town"));
+  assert.equal((await f.store.get("users/target")).townId,"town");
+  assert.equal((await f.store.list(base+"/audit")).length,0);
+});

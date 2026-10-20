@@ -36,6 +36,7 @@ export default function RecordRemoval({ kind }: { kind: "towns" | "players" }) {
       "/api/admin/removal/" + kind,
       (items) => {
         setRows(items);
+        setError("");
         setLoading(false);
       },
       (reason) => {
