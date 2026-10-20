@@ -12,7 +12,7 @@ To create a key for a completely new product only, use `node scripts/update-rele
 
 ## Publish (manual, after installer testing)
 
-1. Keep `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` versions aligned. Use increasing Windows MSI versions, starting at 1.4.0. These do not determine update availability. Increase APP_BUILD in src/lib/app-build.ts for every published update; the next production release is build 2.
+1. Keep `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` versions aligned. Use increasing Windows MSI versions, starting at 1.4.0. These do not determine update availability. Increase APP_BUILD in src/lib/app-build.ts for every published update for every new release.
 2. Build the MSI and signed metadata with the script. Output is in `src-tauri/target/release/bundle/msi/`.
 3. Create a stable release tagged with the exact numeric React build number (e.g. `2`) in `ideas9009/The-Records-Project` with exactly these assets: the generated x64 English MSI, `update-windows-x86_64.json`, and `update-windows-x86_64.json.sig`.
 4. Upload all assets before publishing the release. Do not rename the MSI after signing the metadata. Incomplete or unsigned releases are rejected.
@@ -27,7 +27,7 @@ About offers Check for updates and Reinstall latest release. Both use only the l
 
 On 20 October 2026 the isolated per-user updater lab passed build 0 to build 1 upgrade, restart, same-build reinstall, interrupted-download rejection, and invalid-signature rejection. See updater-lab/README.md. The production per-machine MSI still needs an installation smoke test, including elevation and the intended install path, before general release. Nothing was published automatically.
 
-The prepared production assets are in windows-build/build-2/. Upload all three unchanged to tag `2`; the release title can be `Nostra-2-Phase-1`. The previous broken updater needs a manual MSI installation to receive these fixes.
+Prepared production assets are kept in windows-build/build-<build>/. Upload all three unchanged to the matching numeric tag; the release title can be `Nostra-2-Phase-1`. The previous broken updater needs a manual MSI installation to receive these fixes.
 
 Final verification reran the full website/server/Dart/native suites, rebuilt the production MSI, verified all copied release assets, and passed a fresh isolated upgrade/reinstall/relaunch plus interrupted, invalid-signature and corrupt-MSI rejection. See FINAL-TEST-REPORT.md for the exact results and remaining release checks.
 

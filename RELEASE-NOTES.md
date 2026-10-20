@@ -1,6 +1,6 @@
 # Nostra · 2 | Phase 1
 
-**Release:** Phase 1, Build 2 (Windows MSI 1.4.0)  
+**Release:** Phase 1, Build 3 (Windows MSI 1.4.1)  
 **Last updated:** 20 October 2026
 
 Phase 1 of the planned three-phase transition from Flutter to React. These notes cover the current rebuild; release notes from previous versions are not carried forward.
@@ -176,6 +176,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Simplified the About version card beneath the project management branding.
 
 ## Windows installation and updates
+
+- Build 3 advances the Windows MSI to 1.4.1 for testing updates from build 2.
 
 - Package Nostra-2 as a Windows MSI. Nostra-1 users uninstall the Flutter version before installing Nostra-2.
 - Check GitHub releases automatically on launch and when internet access returns. Available updates replace the sidebar branding with an expanding update prompt and download progress.

@@ -1,3 +1,4 @@
+import { APP_BUILD } from "../src/lib/app-build";
 import { describe, it, expect } from "vitest";
 // The publisher is a Node-only script, independent of the application UI.
 // @ts-ignore JavaScript publishing utility
@@ -89,7 +90,7 @@ describe("GitHub release publisher", () => {
   });
   it("rejects relabeling the current MSI as another React build", async () => {
     await expect(
-      prepareRelease({ build: 3, title: "Build 3" }),
+      prepareRelease({ build: APP_BUILD + 1, title: "Wrong build" }),
     ).rejects.toThrow("does not match APP_BUILD");
   });
   it("uploads and verifies every asset before publishing the draft as latest", async () => {

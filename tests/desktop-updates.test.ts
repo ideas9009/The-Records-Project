@@ -1,3 +1,4 @@
+import { APP_BUILD } from "../src/lib/app-build";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const mock = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -35,7 +36,7 @@ it("checks at startup and on reconnect, then removes listeners", async () => {
   const u = await import("../src/lib/desktop-updates");
   const stop = u.startDesktopUpdates();
   await vi.waitFor(() =>
-    expect(mock.invoke).toHaveBeenCalledWith("desktop_update_check", { buildNumber: 2 }),
+    expect(mock.invoke).toHaveBeenCalledWith("desktop_update_check", { buildNumber: APP_BUILD }),
   );
   expect(u.updateSnapshot().stage).toBe("available");
   window.dispatchEvent(new Event("online"));
@@ -85,7 +86,7 @@ it("reinstall uses its own action and does not install automatically", async () 
   await u.downloadDesktopUpdate(true);
   expect(mock.invoke).toHaveBeenCalledWith("desktop_update_download", {
     reinstall: true,
-    buildNumber: 2,
+    buildNumber: APP_BUILD,
   });
   expect(u.updateSnapshot().reinstall).toBe(true);
   expect(
