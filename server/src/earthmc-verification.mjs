@@ -6,6 +6,14 @@ export const normalUuid = (value) =>
   )
     ? value.replaceAll("-", "").toLowerCase()
     : null;
+// EMC's query endpoint requires hyphenated UUIDs even though internal records
+// use a compact normalized identity.
+export const earthMcApiUuid = (value) => {
+  const id = normalUuid(value);
+  return id
+    ? id.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5")
+    : null;
+};
 const clean = (value) =>
   typeof value === "string"
     ? value
@@ -74,7 +82,7 @@ export async function earthMcConfirmation(minecraft, { fetcher = fetch } = {}) {
       response = await fetcher("https://api.earthmc.net/v4/" + type, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: [id] }),
+        body: JSON.stringify({ query: [earthMcApiUuid(id) || id] }),
         signal: AbortSignal.timeout(12000),
         redirect: "error",
       });

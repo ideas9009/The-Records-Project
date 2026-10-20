@@ -72,7 +72,7 @@ test("private confirmation uses fixed upstream URLs, validated identity and cond
     calls.map((item) => item.url),
     ["https://api.earthmc.net/v4/players", "https://api.earthmc.net/v4/towns"],
   );
-  assert.deepEqual(JSON.parse(calls[0].options.body), { query: [uuid] });
+  assert.deepEqual(JSON.parse(calls[0].options.body), { query: ["12345678-1234-1234-1234-1234567890ab"] });
   assert.equal("discord" in result, false);
   const mayor = player();
   mayor.status.isMayor = true;

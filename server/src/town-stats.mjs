@@ -1,4 +1,4 @@
-import { normalUuid } from "./earthmc-verification.mjs";
+import { normalUuid, earthMcApiUuid } from "./earthmc-verification.mjs";
 const testTown = (town) => town.testData === true || town.id === "test-town";
 export function createTownStats(
   store,
@@ -7,11 +7,16 @@ export function createTownStats(
   let saved = null,
     pending = null;
   return async () => {
-    const towns = (await (store.listAll ? store.listAll("nations/byzantium/towns") : store.list("nations/byzantium/towns", null, 10000))).filter(
-      (town) => !testTown(town),
-    );
+    const towns = (
+      await (store.listAll
+        ? store.listAll("nations/byzantium/towns")
+        : store.list("nations/byzantium/towns", null, 10000))
+    ).filter((town) => !testTown(town));
     const key = JSON.stringify(
-      towns.map((town) => [town.id, town.earthmcUuid || town.name]),
+      towns.map((town) => [
+        town.id,
+        earthMcApiUuid(town.earthmcUuid) || town.name,
+      ]),
     );
     if (saved?.key === key && saved.expires > now()) return saved.data;
     if (pending?.key === key) return pending.work;
@@ -25,7 +30,9 @@ export function createTownStats(
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              query: batch.map((town) => town.earthmcUuid || town.name),
+              query: batch.map(
+                (town) => earthMcApiUuid(town.earthmcUuid) || town.name,
+              ),
             }),
             signal: AbortSignal.timeout(10000),
             redirect: "error",

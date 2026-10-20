@@ -11,7 +11,11 @@ import {
   rolesOf,
   hasRole,
 } from "./security.mjs";
-import { normalUuid, mapEarthMcRanks } from "./earthmc-verification.mjs";
+import {
+  normalUuid,
+  earthMcApiUuid,
+  mapEarthMcRanks,
+} from "./earthmc-verification.mjs";
 const base = "nations/byzantium";
 const townKey = (name) =>
   Buffer.from(name.trim().replace(/\s+/g, " ").toLowerCase()).toString(
@@ -41,7 +45,7 @@ export async function lookupManualEarthMc(name, { fetchImpl = fetch } = {}) {
       response = await fetchImpl("https://api.earthmc.net/v4/" + type, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: [id] }),
+        body: JSON.stringify({ query: [earthMcApiUuid(id) || id] }),
         signal: AbortSignal.timeout(10000),
         redirect: "error",
       });
@@ -433,12 +437,27 @@ export function createManualRegistration(
           409,
           "Another capital is already registered. Resolve the capital record first.",
         );
+      const seniorReviewer = hasRole(actor, [
+        "operator",
+        "leader",
+        "prime_minister",
+      ]);
+      const mappedRoles = snapshot.roles.filter((role) =>
+        [
+          "citizen",
+          "mayor",
+          "army",
+          ...(seniorReviewer
+            ? ["leader", "prime_minister", "minister", "deputy"]
+            : []),
+        ].includes(role),
+      );
       const roles = [
         ...new Set([
           ...rolesOf(user),
           "citizen",
           ...(snapshot.isMayor ? ["mayor"] : []),
-          ...(snapshot.roles.includes("army") ? ["army"] : []),
+          ...mappedRoles,
         ]),
       ];
       const updated = {
@@ -467,7 +486,8 @@ export function createManualRegistration(
       };
       const rankRows = [...(snapshot.unknownRanks || [])];
       for (const role of snapshot.roles.filter(
-        (r) => !["citizen", "mayor", "army"].includes(r),
+        (r) =>
+          !mappedRoles.includes(r) && !["citizen", "mayor", "army"].includes(r),
       )) {
         const rank = role.replaceAll("_", " "),
           source = "nation",

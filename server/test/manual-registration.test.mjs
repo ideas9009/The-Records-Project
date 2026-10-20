@@ -235,7 +235,15 @@ test("unknown and government ranks wait for senior rank review rather than grant
     ranks: ["King"],
   });
   const user = await f.register("Mayor");
-  await f.service.approve(f.actor, user.account.uid);
+  const admin = {
+    ...f.actor,
+    uid: "admin",
+    username: "Admin",
+    roles: ["admin"],
+    role: "admin",
+  };
+  await f.store.set("users/admin", admin);
+  await f.service.approve(admin, user.account.uid);
   const profile = await f.store.get("users/" + user.account.uid);
   assert.deepEqual(profile.roles, ["citizen", "mayor"]);
   const reviews = await f.service.rankReviews(f.actor);
@@ -303,11 +311,18 @@ test("EMC profile lookup confirms the player, mayor and town by UUID", async () 
     stats: { numResidents: 5, numTownBlocks: 20, balance: 70 },
   };
   const result = await lookupManualEarthMc("mAyOr", {
-    fetchImpl: async (url) => ({
-      ok: true,
-      status: 200,
-      json: async () => (url.endsWith("/players") ? [player] : [town]),
-    }),
+    fetchImpl: async (url, options) => {
+      if (url.endsWith("/towns"))
+        assert.equal(
+          JSON.parse(options.body).query[0],
+          "22222222-2222-2222-2222-222222222222",
+        );
+      return {
+        ok: true,
+        status: 200,
+        json: async () => (url.endsWith("/players") ? [player] : [town]),
+      };
+    },
   });
   assert.equal(result.username, "Mayor");
   assert.equal(result.isMayor, true);
@@ -423,4 +438,10 @@ test("automatic mayor approval cannot create a second capital", async () => {
   await assert.rejects(f.service.approve(f.actor, m.account.uid), /capital/);
   assert.equal((await f.store.get("users/" + m.account.uid)).status, "pending");
   assert.equal((await f.store.list(base + "/towns")).length, 0);
+});
+test("senior reviewers may assign recognized EMC roles after manual identity review",async()=>{
+ const f=await setup();f.change({...mayor(),roles:["citizen","mayor","leader"],ranks:["King"]});
+ const m=await f.register("Mayor");await f.service.approve(f.actor,m.account.uid);
+ assert.ok((await f.store.get("users/"+m.account.uid)).roles.includes("leader"));
+ assert.equal((await f.service.rankReviews(f.actor)).length,0);
 });
