@@ -85,6 +85,95 @@ export function createEarthMcDirectory({
       throw new ApiError(403, "EarthMC directory access is unavailable.");
   };
   return {
+    earthmcOverview: async (profile) => {
+      allowed(profile);
+      return saved("overview", async () => {
+        const matches = await query("nations", ["Byzantium"]);
+        const item = matches.find(
+          (n) => n?.name?.toLowerCase() === "byzantium",
+        );
+        if (!item)
+          throw new ApiError(
+            503,
+            "Byzantium is currently unavailable on EarthMC.",
+          );
+        const valid = (n) =>
+          typeof n === "number" && Number.isFinite(n) && n >= 0 ? n : null;
+        const nation = {
+          name: item.name,
+          king: item.king,
+          capital: item.capital,
+          board:
+            typeof item.board === "string" ? item.board.slice(0, 1000) : null,
+          status: {
+            isOpen: item.status?.isOpen,
+            isNeutral: item.status?.isNeutral,
+          },
+          stats: Object.fromEntries(
+            ["numTowns", "numResidents", "numTownBlocks", "balance"].map(
+              (k) => [k, valid(item.stats?.[k])],
+            ),
+          ),
+          allies: Array.isArray(item.allies) ? list(item.allies) : null,
+          enemies: Array.isArray(item.enemies) ? list(item.enemies) : null,
+        };
+        const names = Array.isArray(item.towns)
+          ? item.towns.slice(0, 2000)
+          : [];
+        const towns = [];
+        let chartError = "";
+        try {
+          for (let start = 0; start < names.length; start += 50) {
+            const batch = await query(
+              "towns",
+              names.slice(start, start + 50).map((t) => t.uuid || t.name),
+            );
+            for (const town of batch)
+              if (
+                town.nation?.name?.toLowerCase() === "byzantium" &&
+                typeof town.name === "string"
+              )
+                towns.push({
+                  name: town.name,
+                  uuid: town.uuid,
+                  population: valid(town.stats?.numResidents),
+                  balance: valid(town.stats?.balance),
+                });
+          }
+          if (towns.length < names.length)
+            chartError =
+              "Some towns did not return statistics. Charts include the available towns.";
+        } catch {
+          chartError =
+            "Some town statistics could not be loaded. Refresh to try again.";
+        }
+        return {
+          nation,
+          towns,
+          chartError,
+          checkedAt: new Date(now()).toISOString(),
+        };
+      });
+    },
+    earthmcFriends: async (profile) => {
+      allowed(profile);
+      if (!/^[A-Za-z0-9_]{3,16}$/.test(profile.username || ""))
+        throw new ApiError(400, "Invalid Minecraft username.");
+      return saved("friends:" + profile.username.toLowerCase(), async () => {
+        const items = await query("players", [profile.username]);
+        const player = items.find(
+          (p) => p?.name?.toLowerCase() === profile.username.toLowerCase(),
+        );
+        if (!player)
+          throw new ApiError(
+            404,
+            "This username has no public EarthMC profile.",
+          );
+        return {
+          friends: Array.isArray(player.friends) ? list(player.friends) : null,
+        };
+      });
+    },
     earthmcDirectory: async (profile) => {
       allowed(profile);
       const [people, countries] = await Promise.all([players(), nations()]);
