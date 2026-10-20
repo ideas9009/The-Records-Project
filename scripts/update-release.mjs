@@ -52,18 +52,22 @@ if (process.argv[2] === "--init") {
     ).version;
   if (!/^\d+\.\d+\.\d+$/.test(version) || !file.toLowerCase().endsWith(".msi"))
     throw Error("Pass the release MSI; use a stable numeric version.");
+  const buildSource = await readFile(path.join(root, "src/lib/app-build.ts"), "utf8");
+  const build = Number(buildSource.match(/export const APP_BUILD = (\d+);/)?.[1]);
+  if (!Number.isSafeInteger(build) || build < 1) throw Error("Invalid React build number.");
   const bytes = await readFile(file),
     filename = path.basename(file),
     size = (await stat(file)).size;
   const manifest = Buffer.from(
     JSON.stringify({
-      schema: 1,
+      schema: 2,
+      build,
       platform: "windows-x86_64",
       version,
       filename,
       size,
       sha256: createHash("sha256").update(bytes).digest("hex"),
-      url: `https://github.com/ideas9009/The-Records-Project/releases/download/v${version}/${encodeURIComponent(filename)}`,
+      url: `https://github.com/ideas9009/The-Records-Project/releases/download/${build}/${encodeURIComponent(filename)}`,
     }) + "\n",
   );
   const privateKey = createPrivateKey(
@@ -88,8 +92,8 @@ if (process.argv[2] === "--init") {
     sign(null, manifest, privateKey).toString("base64") + "\n",
   );
   console.log(
-    "Created signed update metadata beside the MSI. Upload all three files to the matching v" +
-      version +
+    "Created signed update metadata beside the MSI. Upload all three files to the matching build " +
+      build +
       " GitHub release.",
   );
 }

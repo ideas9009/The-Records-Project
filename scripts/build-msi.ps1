@@ -13,7 +13,14 @@ try {
  if ($LASTEXITCODE -ne 0) { throw "Dart updater compilation failed" }
  npm run tauri -- build --bundles msi
  if ($LASTEXITCODE -ne 0) { throw "MSI build failed" }
- $releaseMsi=Get-ChildItem src-tauri/target/release/bundle/msi/*.msi | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+ $appConfig = Get-Content -Raw src-tauri/tauri.conf.json | ConvertFrom-Json
+ $releaseMsi = Get-Item -LiteralPath "src-tauri/target/release/bundle/msi/$($appConfig.productName)_$($appConfig.version)_x64_en-US.msi"
+ $safeName = $releaseMsi.Name.Replace(" ", "-")
+ if ($safeName -ne $releaseMsi.Name) {
+   $safePath = Join-Path $releaseMsi.DirectoryName $safeName
+   Copy-Item -LiteralPath $releaseMsi.FullName -Destination $safePath -Force
+   $releaseMsi = Get-Item -LiteralPath $safePath
+ }
  node scripts/update-release.mjs $releaseMsi.FullName
  if ($LASTEXITCODE -ne 0) { throw "Release metadata signing failed" }
  & $DartPath run updater/bin/verify_release.dart $releaseMsi.DirectoryName

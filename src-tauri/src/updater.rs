@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 use std::{
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Read},
     path::PathBuf,
     process::{Command, Stdio},
     sync::{
@@ -44,6 +44,15 @@ fn helper(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     }
 }
 fn command(path: PathBuf) -> Command {
+    // Tauri resource paths may use verbatim Windows syntax. Dart's compiled
+    // runtime rejects that executable path before main() can emit any JSON.
+    #[cfg(windows)]
+    let path = match path.to_str() {
+        Some(text) if text.starts_with(r"\\?\UNC\") =>
+            PathBuf::from(format!(r"\\{}", &text[8..])),
+        Some(text) if text.starts_with(r"\\?\") => PathBuf::from(&text[4..]),
+        _ => path,
+    };
     let mut cmd = Command::new(path);
     #[cfg(windows)]
     {
@@ -66,7 +75,7 @@ pub fn desktop_update_status(
     main_window(&window)?;
     Ok(state.status.lock().unwrap().clone())
 }
-fn run(app: &tauri::AppHandle, action: &str, mode: &str) -> Result<Value, String> {
+pub fn run(app: &tauri::AppHandle, action: &str, mode: &str, build_number: u32) -> Result<Value, String> {
     let state = app.state::<DesktopUpdater>();
     if state.busy.swap(true, Ordering::SeqCst) {
         return Err("An update operation is already running.".into());
@@ -90,24 +99,37 @@ fn run(app: &tauri::AppHandle, action: &str, mode: &str) -> Result<Value, String
             json!({"stage":if action=="prepare"{"downloading"}else{"checking"},"received":0,"total":0}),
         );
         let mut cmd = command(helper(app)?);
-        cmd.args([action, &app.package_info().version.to_string(), mode]);
+        cmd.args([action, &build_number.to_string(), mode]);
         if let Some(ref d) = dir {
             cmd.arg(d);
         }
         let mut child = cmd
             .stdout(Stdio::piped())
-            .stderr(Stdio::null())
+            .stderr(Stdio::piped())
             .spawn()
             .map_err(|e| format!("Could not start the Dart updater: {e}"))?;
+        let stderr = child.stderr.take().unwrap();
+        let errors = std::thread::spawn(move || {
+            let mut text = String::new();
+            let _ = stderr.take(16384).read_to_string(&mut text);
+            text
+        });
+        let mut responded = false;
         let mut last = json!({"stage":"error","message":"The update helper did not respond."});
         for line in BufReader::new(child.stdout.take().unwrap()).lines() {
             let line = line.map_err(|e| e.to_string())?;
             if let Ok(value) = serde_json::from_str::<Value>(&line) {
+                responded = true;
                 last = value.clone();
                 publish(app, value)
             }
         }
         let exit = child.wait().map_err(|e| e.to_string())?;
+        let error_text = errors.join().unwrap_or_default();
+        if !responded {
+            last = json!({"stage":"error","message":format!("The update helper returned no JSON (exit {}). {}", exit, error_text.trim())});
+            publish(app, last.clone());
+        }
         if last["stage"] == "ready" {
             *state.ready.lock().unwrap() = dir;
         } else if let Some(d) = dir {
@@ -126,11 +148,12 @@ fn run(app: &tauri::AppHandle, action: &str, mode: &str) -> Result<Value, String
 }
 #[tauri::command]
 pub async fn desktop_update_check(
+    build_number: u32,
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
 ) -> Result<Value, String> {
     main_window(&window)?;
-    tauri::async_runtime::spawn_blocking(move || run(&app, "check", "update"))
+    tauri::async_runtime::spawn_blocking(move || run(&app, "check", "update", build_number))
         .await
         .map_err(|e| e.to_string())?
 }
@@ -139,6 +162,7 @@ pub async fn desktop_update_download(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
     reinstall: bool,
+    build_number: u32,
 ) -> Result<Value, String> {
     main_window(&window)?;
     tauri::async_runtime::spawn_blocking(move || {
@@ -146,6 +170,7 @@ pub async fn desktop_update_download(
             &app,
             "prepare",
             if reinstall { "reinstall" } else { "update" },
+            build_number,
         )
     })
     .await

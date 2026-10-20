@@ -1,0 +1,40 @@
+{
+    "$schema":  "https://schema.tauri.app/config/2",
+    "productName":  "TRP Updater Lab",
+    "version":  "0.1.1",
+    "identifier":  "com.therecordsproject.updaterlab",
+    "build":  {
+                  "frontendDist":  "../web"
+              },
+    "app":  {
+                "windows":  [
+                                {
+                                    "label":  "main",
+                                    "visible":  false,
+                                    "title":  "TRP Updater Lab"
+                                }
+                            ]
+            },
+    "bundle":  {
+                   "active":  true,
+                   "targets":  [
+                                   "msi"
+                               ],
+                   "icon":  [
+                                "../../src-tauri/icons/icon.ico"
+                            ],
+                   "resources":  {
+                                     "resources/trp-updater.exe":  "updater/trp-updater.exe"
+                                 },
+                   "windows":  {
+                                   "webviewInstallMode":  {
+                                                              "type":  "skip"
+                                                          },
+                                   "wix":  {
+                                               "language":  "en-US",
+                                               "upgradeCode":  "815a358e-77a6-492c-a61a-36c38f0c6e9a",
+                                               "template":  "../fixtures/lab-template.wxs"
+                                           }
+                               }
+               }
+}

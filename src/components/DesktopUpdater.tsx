@@ -60,7 +60,7 @@ export function SidebarUpdater({
             {s.demo
               ? "Preview only"
               : s.version
-                ? "Nostra-2 · " + s.version
+                ? "Build " + s.version
                 : "Nostra-2"}
           </p>
           {s.stage === "available" && s.notes && (
@@ -160,13 +160,13 @@ export function AboutUpdater() {
               disabled={updateBusy(s) || s.stage === "ready"}
               onClick={() => setReinstall(true)}
             >
-              Reinstall current version
+              Reinstall latest release
             </button>
           </div>
           {reinstall && (
             <div className="update-reinstall-confirm">
               <p>
-                Download the published MSI for this version? Your local settings
+                Download the MSI from the latest release? Your local settings
                 will be kept. Installation starts only after you choose Install
                 and restart in the sidebar.
               </p>

@@ -1,16 +1,17 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:cryptography/cryptography.dart';
-import 'package:pub_semver/pub_semver.dart';
 import 'public_key.dart';
 
 const repository = 'ideas9009/The-Records-Project';
 const manifestName = 'update-windows-x86_64.json';
 const maximumInstallerBytes = 256 * 1024 * 1024;
-Version stableVersion(String value) {
-  if (!RegExp(r'^\d+\.\d+\.\d+$').hasMatch(value))
-    throw const FormatException('Invalid release version.');
-  return Version.parse(value);
+int buildNumber(String value) {
+  if (!RegExp(r'^(0|[1-9][0-9]{0,8})$').hasMatch(value)) {
+    throw const FormatException(
+        'Release tags must be numeric build numbers, such as 1 or 2.');
+  }
+  return int.parse(value);
 }
 
 Future<Map<String, dynamic>> verifyManifest(
@@ -24,11 +25,11 @@ Future<Map<String, dynamic>> verifyManifest(
   if (!await Ed25519().verify(bytes, signature: sig))
     throw const FormatException('The update signature is invalid.');
   final data = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-  stableVersion(version);
+  buildNumber(version);
   final filename = data['filename'];
-  if (data['schema'] != 1 ||
+  if (data['schema'] != 2 ||
       data['platform'] != 'windows-x86_64' ||
-      data['version'] != version ||
+      data['build'] != buildNumber(version) ||
       filename is! String ||
       !RegExp(r'^[A-Za-z0-9_. -]+_x64_en-US\.msi$').hasMatch(filename) ||
       data['size'] is! int ||
@@ -37,7 +38,7 @@ Future<Map<String, dynamic>> verifyManifest(
       data['sha256'] is! String ||
       !RegExp(r'^[a-f0-9]{64}$').hasMatch(data['sha256']) ||
       data['url'] !=
-          'https://github.com/$repository/releases/download/v$version/${Uri.encodeComponent(filename)}')
+          'https://github.com/$repository/releases/download/$version/${Uri.encodeComponent(filename)}')
     throw const FormatException(
         'The update metadata does not match this Windows release.');
   return data;

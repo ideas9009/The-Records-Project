@@ -1,3 +1,4 @@
+import { APP_BUILD } from "./app-build";
 import { useSyncExternalStore } from "react";
 export type DesktopUpdate = {
   stage: string;
@@ -45,7 +46,7 @@ export async function checkDesktopUpdates() {
     return;
   update({ ...state, stage: "checking" });
   try {
-    update(await command("desktop_update_check"));
+    update(await command("desktop_update_check", { buildNumber: APP_BUILD }));
   } catch (e) {
     update({ stage: "error", message: String(e) });
   }
@@ -92,8 +93,8 @@ export function previewDesktopUpdate() {
   engaged = false;
   update({
     stage: "available",
-    version: "2.0.1",
-    current: "2.0.0",
+    version: String(APP_BUILD + 1),
+    current: String(APP_BUILD),
     notes: "Preview of the sidebar update prompt. No update will be installed.",
     demo: true,
   });
@@ -130,7 +131,7 @@ export async function downloadDesktopUpdate(reinstall = false) {
   if (!desktop()) return;
   update({ ...state, stage: "downloading", received: 0, total: 0, reinstall });
   try {
-    update(await command("desktop_update_download", { reinstall }));
+    update(await command("desktop_update_download", { reinstall, buildNumber: APP_BUILD }));
   } catch (e) {
     update({ stage: "error", message: String(e) });
   }

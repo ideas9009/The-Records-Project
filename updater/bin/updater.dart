@@ -27,8 +27,8 @@ String githubAsset(Map<String, dynamic> release, String name) {
 }
 
 Future<Map<String, dynamic>> release(String mode, String current) async {
-  stableVersion(current);
-  final route = mode == 'reinstall' ? 'tags/v$current' : 'latest';
+  buildNumber(current);
+  const route = 'latest';
   Response response;
   try {
     response = await dio
@@ -43,14 +43,12 @@ Future<Map<String, dynamic>> release(String mode, String current) async {
   if (r['draft'] != false || r['prerelease'] != false)
     throw const FormatException('This is not a stable release.');
   final tag = r['tag_name'] as String;
-  if (!tag.startsWith('v'))
+  final version = tag,
+      latest = buildNumber(tag),
+      installed = buildNumber(current);
+  if (mode == 'reinstall' && latest < installed)
     throw const FormatException(
-        'The release tag must use v followed by its version.');
-  final version = tag.substring(1),
-      latest = stableVersion(version),
-      installed = stableVersion(current);
-  if (mode == 'reinstall' && latest != installed)
-    throw const FormatException('No matching reinstall is available.');
+        'The latest release is older than this installed build.');
   if (mode != 'reinstall' && latest <= installed)
     return {
       'stage': 'up_to_date',
@@ -88,6 +86,16 @@ Future<void> verifyFile(Directory dir, Map<String, dynamic> job) async {
         'The MSI verification failed. Download it again.');
 }
 
+List<String> installerArguments(Directory dir, String mode) => [
+    '/i',
+    '${dir.path}${Platform.pathSeparator}update.msi',
+    '/passive',
+    '/norestart',
+    '/L*v',
+    '${dir.path}${Platform.pathSeparator}install.log',
+    if (mode == 'reinstall') ...['REINSTALL=ALL', 'REINSTALLMODE=vomus']
+  ];
+
 Future<void> install(Directory dir, int parent, String exe) async {
   final job = jsonDecode(await File('${dir.path}/job.json').readAsString())
       as Map<String, dynamic>;
@@ -117,16 +125,8 @@ Future<void> install(Directory dir, int parent, String exe) async {
     close(handle);
   }
   final system = Platform.environment['SystemRoot'] ?? r'C:\Windows';
-  final args = [
-    '/i',
-    '${dir.path}/update.msi',
-    '/passive',
-    '/norestart',
-    '/L*v',
-    '${dir.path}/install.log',
-    if (job['mode'] == 'reinstall') ...['REINSTALL=ALL', 'REINSTALLMODE=vomus']
-  ];
-  final result = await Process.run('$system/System32/msiexec.exe', args);
+  final args = installerArguments(dir, job['mode'] as String);
+  final result = await Process.run('$system${Platform.pathSeparator}System32${Platform.pathSeparator}msiexec.exe', args);
   if (result.exitCode != 0 && result.exitCode != 3010) {
     await File('${dir.path}/error.txt').writeAsString(
         'Windows Installer failed (${result.exitCode}). See install.log.');
@@ -189,7 +189,9 @@ Future<void> main(List<String> args) async {
             'The MSI verification failed. No installation was attempted.');
       await partial.rename('${dir.path}/update.msi');
       await File('${dir.path}/job.json').writeAsString(jsonEncode({
-        'mode': mode,
+        'mode': mode == 'reinstall' && info['version'] == current
+            ? 'reinstall'
+            : 'update',
         'version': info['version'],
         'metadata': info['metadata'],
         'signature': info['signature']

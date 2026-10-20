@@ -12,17 +12,21 @@ To create a key for a completely new product only, use `node scripts/update-rele
 
 ## Publish (manual, after installer testing)
 
-1. Keep `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` versions aligned. Use increasing stable numeric versions, e.g. 2.0.0, 2.0.1.
+1. Keep `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` versions aligned. Use increasing Windows MSI versions, starting at 1.4.0. These do not determine update availability. Increase APP_BUILD in src/lib/app-build.ts for every published update; the next production release is build 2.
 2. Build the MSI and signed metadata with the script. Output is in `src-tauri/target/release/bundle/msi/`.
-3. Create a stable release tagged `v<version>` in `ideas9009/The-Records-Project` with exactly these assets: the generated x64 English MSI, `update-windows-x86_64.json`, and `update-windows-x86_64.json.sig`.
+3. Create a stable release tagged with the exact numeric React build number (e.g. `2`) in `ideas9009/The-Records-Project` with exactly these assets: the generated x64 English MSI, `update-windows-x86_64.json`, and `update-windows-x86_64.json.sig`.
 4. Upload all assets before publishing the release. Do not rename the MSI after signing the metadata. Incomplete or unsigned releases are rejected.
 
-The JSON signature authenticates the version, exact MSI URL, byte count and SHA-256 digest. This is updater verification, separate from Windows Authenticode signing or SmartScreen reputation. The downloader does not strip zone information or change Defender settings. No prompt-free behaviour is guaranteed.
+The JSON signature authenticates the build number, exact MSI URL, byte count and SHA-256 digest. This is updater verification, separate from Windows Authenticode signing or SmartScreen reputation. The downloader does not strip zone information or change Defender settings. No prompt-free behaviour is guaranteed.
 
 ## Behaviour
 
 The Windows app checks on launch, on the online event and every six hours while online. An available update replaces the sidebar branding; click it to expand details and download progress. Downloading does not close the app. Install and restart is a separate user action and honours form navigation guards. The helper re-verifies the MSI, waits for the app process to exit, invokes Windows Installer with a visible passive progress UI, and relaunches the installed executable. Failed installs reopen the previous app with an error. Windows may request administrator approval. Logs are retained in the temporary `trp-update-*` directory; the MSI is removed only on success.
 
-About offers Check for updates and Reinstall current version. Reinstall uses the exact `v<installed version>` release; it cannot silently downgrade or select an unrelated MSI. Local data directories are not removed. The dev website has a simulated sidebar-prompt preview that never downloads or installs files; it is excluded from production builds.
+About offers Check for updates and Reinstall latest release. Both use only the latest stable GitHub release. Numeric tags are compared with the React build number, independently of release titles and MSI versions. Reinstall accepts the same or a newer build and refuses an older build. Local data directories are not removed. The dev website has a simulated sidebar-prompt preview that never downloads or installs files; it is excluded from production builds.
 
-End-to-end installation, reinstallation, interrupted downloads, custom install paths and a version-to-version upgrade remain to be tested before general release. Do not publish a release automatically from this development task.
+On 20 October 2026 the isolated per-user updater lab passed build 0 to build 1 upgrade, restart, same-build reinstall, interrupted-download rejection, and invalid-signature rejection. See updater-lab/README.md. The production per-machine MSI still needs an installation smoke test, including elevation and the intended install path, before general release. Nothing was published automatically.
+
+The prepared production assets are in windows-build/build-2/. Upload all three unchanged to tag `2`; the release title can be `Nostra-2-Phase-1`. The previous broken updater needs a manual MSI installation to receive these fixes.
+
+Final verification reran the full website/server/Dart/native suites, rebuilt the production MSI, verified all copied release assets, and passed a fresh isolated upgrade/reinstall/relaunch plus interrupted, invalid-signature and corrupt-MSI rejection. See FINAL-TEST-REPORT.md for the exact results and remaining release checks.

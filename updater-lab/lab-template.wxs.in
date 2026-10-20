@@ -1,0 +1,200 @@
+<?if $(sys.BUILDARCH)="x86"?>
+    <?define Win64 = "no" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+<?elseif $(sys.BUILDARCH)="x64"?>
+    <?define Win64 = "yes" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+<?elseif $(sys.BUILDARCH)="arm64"?>
+    <?define Win64 = "yes" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+<?else?>
+    <?error Unsupported value of sys.BUILDARCH=$(sys.BUILDARCH)?>
+<?endif?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product
+            Id="*"
+            Name="TRP Updater Lab"
+            UpgradeCode="815a358e-77a6-492c-a61a-36c38f0c6e9a"
+            Language="!(loc.TauriLanguage)"
+            Manufacturer="therecordsproject"
+            Version="@VERSION@">
+
+        <Package Id="*"
+                 Keywords="Installer"
+                 InstallerVersion="450"
+                 Languages="0"
+                 Compressed="yes"
+                 InstallScope="perUser"
+                 SummaryCodepage="!(loc.TauriCodepage)"/>
+
+        <!-- https://docs.microsoft.com/en-us/windows/win32/msi/reinstallmode -->
+        <!-- reinstall all files; rewrite all registry entries; reinstall all shortcuts -->
+        <Property Id="REINSTALLMODE" Value="amus" />
+
+        <!-- Auto launch app after installation, useful for passive mode which usually used in updates -->
+        <Property Id="AUTOLAUNCHAPP" Secure="yes" />
+        <!-- Property to forward cli args to the launched app to not lose those of the pre-update instance -->
+        <Property Id="LAUNCHAPPARGS" Secure="yes" />
+
+            <MajorUpgrade Schedule="afterInstallInitialize" AllowDowngrades="yes" />
+
+        <InstallExecuteSequence>
+            <RemoveShortcuts>Installed AND NOT UPGRADINGPRODUCTCODE</RemoveShortcuts>
+        </InstallExecuteSequence>
+
+        <Media Id="1" Cabinet="app.cab" EmbedCab="yes" />
+
+
+        <Icon Id="ProductIcon" SourceFile="@ROOT@\src-tauri\target\release\resources\icon.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+        <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />      <!-- Remove repair -->
+        <SetProperty Id="ARPNOMODIFY" Value="1" After="InstallValidate" Sequence="execute"/>
+
+
+        <!-- NOTE: The order of RegistrySearch elements below matters. In WIX, when multiple
+             RegistrySearch elements are listed under a single Property, the LAST successful
+             match wins. We list the NSIS default-key search first and the MSI InstallDir
+             search second so that the MSI-specific path takes priority when both keys exist. -->
+        <Property Id="INSTALLDIR">
+          <!-- First attempt: Search for the default key value (this is how the nsis installer stores the path) -->
+          <RegistrySearch Id="PrevInstallDirNoName" Root="HKCU" Key="Software\therecordsproject\TRP Updater Lab" Type="raw" />
+
+          <!-- Second attempt: Search for "InstallDir" which takes priority if found (this is how the msi installer stores the path) -->
+          <RegistrySearch Id="PrevInstallDirWithName" Root="HKCU" Key="Software\therecordsproject\TRP Updater Lab" Name="InstallDir" Type="raw" />
+        </Property>
+
+        <!-- launch app checkbox -->
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.LaunchApp)" />
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"/>
+        <CustomAction Id="LaunchApplication" Impersonate="yes" FileKey="Path" ExeCommand="[LAUNCHAPPARGS]" Return="asyncNoWait" />
+
+        <UI>
+            <!-- launch app checkbox -->
+            <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+
+            <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+
+            <!-- Skip license dialog -->
+            <Publish Dialog="WelcomeDlg"
+                     Control="Next"
+                     Event="NewDialog"
+                     Value="InstallDirDlg"
+                     Order="2">1</Publish>
+            <Publish Dialog="InstallDirDlg"
+                     Control="Back"
+                     Event="NewDialog"
+                     Value="WelcomeDlg"
+                     Order="2">1</Publish>
+        </UI>
+
+        <UIRef Id="WixUI_InstallDir" />
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="DesktopFolder" Name="Desktop">
+                <Component Id="ApplicationShortcutDesktop" Guid="*">
+                    <Shortcut Id="ApplicationDesktopShortcut" Name="TRP Updater Lab" Description="Runs TRP Updater Lab" Target="[!Path]" WorkingDirectory="INSTALLDIR" />
+                    <RemoveFolder Id="DesktopFolder" On="uninstall" />
+                    <RegistryValue Root="HKCU" Key="Software\therecordsproject\TRP Updater Lab" Name="Desktop Shortcut" Type="integer" Value="1" KeyPath="yes" />
+                </Component>
+            </Directory>
+            <Directory Id="LocalAppDataFolder">
+                <Directory Id="INSTALLDIR" Name="TRP Updater Lab"/>
+            </Directory>
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="TRP Updater Lab"/>
+            </Directory>
+        </Directory>
+
+        <DirectoryRef Id="INSTALLDIR">
+            <Component Id="RegistryEntries" Guid="*">
+                <RegistryKey Root="HKCU" Key="Software\therecordsproject\TRP Updater Lab">
+                    <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLDIR]" KeyPath="yes" />
+                </RegistryKey>
+                <!-- Change the Root to HKCU for perUser installations -->
+</Component>
+            <Component Id="Path" Guid="b4c2220b-6a0c-5deb-b270-29e99e729600" Win64="$(var.Win64)">
+                <File Id="Path" Source="@ROOT@\src-tauri\target\release\trp-updater-lab.exe" Checksum="yes"/>
+<RegistryValue Root="HKCU" Key="Software\therecordsproject\TRP Updater Lab\Components" Name="Path" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Directory Id="I78677bfb886f4774bcf93b07b12c01be" Name="updater"><Component Id="Ifd37ad429c88435693a38d3e2273c3ac" Guid="aa6d3a23-c56d-4d1b-9da1-e8cbba9fd5ff" Win64="$(var.Win64)"><File Id="PathFile_Ifd37ad429c88435693a38d3e2273c3ac" Source="@ROOT@\updater-lab\src-tauri\resources\trp-updater.exe" Name="trp-updater.exe" /><RegistryValue Root="HKCU" Key="Software\therecordsproject\TRP Updater Lab\Components" Name="Ifd37ad429c88435693a38d3e2273c3ac" Type="integer" Value="1" KeyPath="yes" /><RemoveFolder Id="RemoveIfd37ad429c88435693a38d3e2273c3ac" On="uninstall" /></Component></Directory>
+            <Component Id="CMP_UninstallShortcut" Guid="*">
+
+                <Shortcut Id="UninstallShortcut"
+						  Name="Uninstall TRP Updater Lab"
+						  Description="Uninstalls TRP Updater Lab"
+						  Target="[System64Folder]msiexec.exe"
+						  Arguments="/x [ProductCode]" />
+
+				<RemoveFolder Id="INSTALLDIR"
+							  On="uninstall" />
+
+				<RegistryValue Root="HKCU"
+							   Key="Software\therecordsproject\TRP Updater Lab"
+							   Name="Uninstaller Shortcut"
+							   Type="integer"
+							   Value="1"
+							   KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="*">
+                <Shortcut Id="ApplicationStartMenuShortcut"
+                    Name="TRP Updater Lab"
+                    Description="Runs TRP Updater Lab"
+                    Target="[!Path]"
+                    Icon="ProductIcon"
+                    WorkingDirectory="INSTALLDIR">
+                    <ShortcutProperty Key="System.AppUserModel.ID" Value="com.therecordsproject.updaterlab"/>
+                </Shortcut>
+                <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\therecordsproject\TRP Updater Lab" Name="Start Menu Shortcut" Type="integer" Value="1" KeyPath="yes"/>
+           </Component>
+        </DirectoryRef>
+
+<Feature
+                Id="MainProgram"
+                Title="Application"
+                Description="!(loc.InstallAppFeature)"
+                Level="1"
+                ConfigurableDirectory="INSTALLDIR"
+                AllowAdvertise="no"
+                Display="expand"
+                Absent="disallow">
+
+            <ComponentRef Id="RegistryEntries"/>
+
+<ComponentRef Id="Ifd37ad429c88435693a38d3e2273c3ac"/>
+
+            <Feature Id="ShortcutsFeature"
+                Title="Shortcuts"
+                Level="1">
+                <ComponentRef Id="Path"/>
+                <ComponentRef Id="CMP_UninstallShortcut" />
+                <ComponentRef Id="ApplicationShortcut" />
+                <ComponentRef Id="ApplicationShortcutDesktop" />
+            </Feature>
+
+            <Feature
+                Id="Environment"
+                Title="PATH Environment Variable"
+                Description="!(loc.PathEnvVarFeature)"
+                Level="1"
+                Absent="allow">
+            <ComponentRef Id="Path"/>
+</Feature>
+        </Feature>
+
+        <Feature Id="External" AllowAdvertise="no" Absent="disallow">
+</Feature>
+
+
+
+        <InstallExecuteSequence>
+          <Custom Action="LaunchApplication" After="InstallFinalize">AUTOLAUNCHAPP AND NOT Installed</Custom>
+        </InstallExecuteSequence>
+
+        <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize"/>
+    </Product>
+</Wix>
+

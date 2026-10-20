@@ -1,0 +1,6 @@
+fixtures/
+reports/
+helper/
+src-tauri/resources/
+src-tauri/target/
+src-tauri/gen/
