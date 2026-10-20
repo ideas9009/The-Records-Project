@@ -8,6 +8,7 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  if(req.method==='GET'&&path==='/health'){send(200,{status:'ok'});return}
  let body={};if(['POST','PUT'].includes(req.method)){if(!req.headers['content-type']?.startsWith('application/json'))throw new ApiError(415,'Use JSON for this request.');let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>8*1024*1024)throw new ApiError(413,'Upload is too large.');chunks.push(chunk)}try{body=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}')}catch{throw new ApiError(400,'Invalid JSON.')}if(!body||Array.isArray(body)||typeof body!=='object')throw new ApiError(400,'Invalid request.')}
  const forwarded=trustRenderProxy?req.headers['x-forwarded-for']?.split(',').at(-1)?.trim():null,ip=forwarded&&isIP(forwarded)?forwarded:req.socket.remoteAddress||'unknown';
+ if(req.method==='POST'&&path==='/api/auth/register/lookup'){send(200,await service.manualLookup(body,ip));return}
  if(req.method==='POST'&&path==='/api/auth/register'){send(201,await service.register(body,ip));return}if(req.method==='POST'&&path==='/api/auth/login'){send(200,await service.login(body,ip));return}
  const token=req.headers.authorization?.startsWith('Bearer ')?req.headers.authorization.slice(7):null;
  if(req.method==='GET'&&path==='/api/auth/microsoft/config'){send(200,service.microsoftConfig());return}
@@ -18,6 +19,7 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  if(req.method==='GET'&&path==='/api/auth/microsoft/callback'){const result=await service.microsoftCallback(new URL(req.url,'http://api.local').searchParams);res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");res.writeHead(200);res.end('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>The Records Project</title><body style="background:#18181c;color:#fff;font-family:system-ui;padding:40px"><h1>The Records Project</h1><p>'+(result.ok?'Microsoft verification completed. Return to the app to continue.':'Verification could not be completed. Return to the app to retry or use manual registration.')+'</p></body></html>');return}
  const profile=await service.authenticate(token);
  let result;if(req.method==='GET'&&path==='/api/auth/me')result=await service.me(profile);
+ else if(req.method==='POST'&&path==='/api/auth/register/recheck')result=await service.manualRecheck(profile,body);
  else if(req.method==='POST'&&path==='/api/auth/password')result=await service.changePassword(profile,token,body);
  else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
  else if(req.method==='PUT'&&path==='/api/preferences')throw new ApiError(410,'Appearance preferences are stored on this device.');

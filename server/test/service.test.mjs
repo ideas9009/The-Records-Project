@@ -1,5 +1,5 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
-import {createService} from '../src/service.mjs';import {memoryStore} from './memory-store.mjs';import {digest} from '../src/security.mjs';
+import {createService} from './registration-fixture.mjs';import {memoryStore} from './memory-store.mjs';import {digest} from '../src/security.mjs';
 const sampleTown={id:'test-town',name:'Test Town',registeredResidents:['Sumeitideas'],image:'/wallpapers/test.webp',recordsResidents:1,earthmcResidents:24,claimedChunks:128,testData:true};
 const fixture=()=>{const store=memoryStore();let time=1000;return {store,service:createService(store,{now:()=>time,sampleTown}),advance:amount=>{time+=amount}}};
 async function account(f,name='Citizen',role='member',status='pending'){const result=await f.service.register({username:name,password:'test-password'},name);const saved=await f.store.get('users/'+result.account.uid);await f.store.set('users/'+saved.uid,{...saved,role,roles:[role==='member'?'citizen':role],status});return {...result,profile:await f.service.authenticate(result.token)}}

@@ -60,6 +60,8 @@ export function createMicrosoftAuth(
     if (!["login", "register", "link"].includes(body.mode))
       throw new ApiError(400, "Choose Microsoft sign-in or registration.");
     const linked = body.mode === "link" ? await authenticate(token) : null;
+    if(linked?.registrationMethod==="manual-emc"&&linked.status==="pending")throw new ApiError(409,"Your manual registration must be reviewed before linking Microsoft. You can link it after approval.");
+
     const id = sessionToken(),
       secret = sessionToken(),
       verifier = sessionToken(),

@@ -117,7 +117,7 @@ export function createRankReviews(store, { now = Date.now } = {}) {
         !target ||
         target.nation !== "byzantium" ||
         target.status !== "approved" ||
-        target.minecraftVerified !== true ||
+        (target.minecraftVerified !== true && target.emcIdentityReviewed !== true) ||
         normalUuid(target.minecraftUuid) !== review.minecraftUuid
       )
         throw new ApiError(

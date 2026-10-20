@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createService} from '../src/service.mjs';
+import {createService} from './registration-fixture.mjs';
 import {memoryStore} from './memory-store.mjs';
 import {digest} from '../src/security.mjs';
 async function setup(){const store=memoryStore(),service=createService(store);const user=await service.register({username:'PasswordUser',password:'original-password'},'register');return {store,service,user,profile:await service.authenticate(user.token)}}

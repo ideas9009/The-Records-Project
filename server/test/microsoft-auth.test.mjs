@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createService } from "../src/service.mjs";
+import { createService } from "./registration-fixture.mjs";
 import { memoryStore } from "./memory-store.mjs";
 import { ApiError, digest } from "../src/security.mjs";
 import { createApi } from "../src/http.mjs";
@@ -48,7 +48,16 @@ function fixture() {
   const service = createService(store, {
     now: () => time,
     microsoft: { provider, confirmation: async (id) => snapshot(id) },
+    registration:{lookup:async name=>({...snapshot({uuid,username:name}),isCapital:false,town:{...snapshot({uuid,username:name}).town,mayorName:"Mayor"}})},
   });
+  // These existing linking tests represent accounts from the old manual form.
+  const registerLegacy=service.register;
+  service.register=async(...args)=>{
+    const result=await registerLegacy(...args),user=await store.get("users/"+result.account.uid);
+    const {registrationMethod,registration,minecraftUuid,...legacy}=user;
+    await store.set("users/"+user.uid,legacy);
+    return result;
+  };
   return {
     store,
     service,

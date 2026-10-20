@@ -11,7 +11,10 @@ import {
 const base = "nations/byzantium",
   management = ["operator", "leader", "prime_minister"],
   registrars = [...management, "admin", "minister"];
-export function createAdministration(store, { now = Date.now } = {}) {
+export function createAdministration(
+  store,
+  { now = Date.now, approveManual, registrationState } = {},
+) {
   const stamp = () => new Date(now()).toISOString();
   const valid = (target) =>
     target?.authType === "records" && target.nation === "byzantium";
@@ -35,7 +38,7 @@ export function createAdministration(store, { now = Date.now } = {}) {
     const records = await (store.listAll
       ? store.listAll("users", ["nation", "byzantium"])
       : store.list("users", ["nation", "byzantium"], 10000));
-    return records
+    const projected = records
       .filter(valid)
       .map((item) =>
         mayors
@@ -43,11 +46,33 @@ export function createAdministration(store, { now = Date.now } = {}) {
           : publicProfile({ ...item, roles: rolesOf(item) }),
       )
       .sort((a, b) => a.username.localeCompare(b.username));
+    return mayors || !registrationState
+      ? projected
+      : Promise.all(
+          projected.map(async (item) => ({
+            ...item,
+            ...(await registrationState(item)),
+          })),
+        );
   }
   async function updateUser(profile, uid, body) {
     reviewer(profile);
     if (!/^[A-Za-z0-9_-]{1,100}$/.test(uid))
       throw new ApiError(400, "Invalid user.");
+    if (body.status === "approved" && approveManual) {
+      const pending = await store.get("users/" + uid);
+      if (
+        pending?.registrationMethod === "manual-emc" &&
+        !pending.emcIdentityReviewed
+      ) {
+        if (body.roles !== undefined)
+          throw new ApiError(
+            400,
+            "Approve the registration before editing its roles.",
+          );
+        if (await approveManual(profile, uid)) return { ok: true };
+      }
+    }
     await store.transaction(async (tx) => {
       const actor = await tx.get("users/" + profile.uid),
         target = await tx.get("users/" + uid);
@@ -179,6 +204,17 @@ export function createAdministration(store, { now = Date.now } = {}) {
           409,
           capital.name +
             " is already the capital. Only one capital is allowed.",
+        );
+      if (
+        mayors.some(
+          (mayor) =>
+            mayor.registrationMethod === "manual-emc" &&
+            mayor.status !== "approved",
+        )
+      )
+        throw new ApiError(
+          409,
+          "Approve the manual mayor registration before registering the town.",
         );
       const mayorNames = mayors.map((mayor) => mayor.username);
       const leadership = {
