@@ -30,3 +30,13 @@ On 20 October 2026 the isolated per-user updater lab passed build 0 to build 1 u
 The prepared production assets are in windows-build/build-2/. Upload all three unchanged to tag `2`; the release title can be `Nostra-2-Phase-1`. The previous broken updater needs a manual MSI installation to receive these fixes.
 
 Final verification reran the full website/server/Dart/native suites, rebuilt the production MSI, verified all copied release assets, and passed a fresh isolated upgrade/reinstall/relaunch plus interrupted, invalid-signature and corrupt-MSI rejection. See FINAL-TEST-REPORT.md for the exact results and remaining release checks.
+
+## Publish with the Windows batch file
+
+Double-click `Publish-Release.bat` in the project folder. Enter the numeric build number and exact release title when prompted, then confirm publication. The publisher uses the already-built MSI from `windows-build/build-<number>/`; it does not build on GitHub or invent a new build number for an old MSI.
+
+Before the next update, increase `APP_BUILD`, use an increasing MSI version in the package/Tauri configuration, build and sign the new MSI, and copy all three release files into the matching build folder. The publisher rejects mismatched build numbers, invalid signatures and changed MSI files. The release title is only a display name and can remain `Nostra-2-Phase-1` across Phase 1 updates; Phase 3 can use `Nostra-2`.
+
+GitHub sign-in comes from Git Credential Manager, GitHub CLI, or a token supplied in the process environment. Credentials are never printed or saved by this script. Uploads go to a draft first. The script verifies GitHub's uploaded hashes before publishing as the latest stable release. A failed upload leaves the draft for inspection; rerunning can resume a matching draft. Existing published releases are never overwritten.
+
+Optional command-line example: `Publish-Release.bat --build 2 --title Nostra-2-Phase-1 --folder windows-build/build-2`. Add `--dry-run` to verify locally without using GitHub. `--yes` skips only the final interactive confirmation.

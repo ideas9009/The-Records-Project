@@ -1,6 +1,6 @@
 # Nostra · 2 | Phase 1
 
-**Status:** Unreleased development draft  
+**Release:** Phase 1, Build 2 (Windows MSI 1.4.0)  
 **Last updated:** 20 October 2026
 
 Phase 1 of the planned three-phase transition from Flutter to React. These notes cover the current rebuild; release notes from previous versions are not carried forward.
@@ -55,6 +55,8 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Submitted the Minecraft AppID review request. Microsoft registration, sign-in and linking remain disabled pending approval; live provider verification is still outstanding.
 
 ## Administration and roles
+
+- Administration now has separate Remove Towns and Remove Players pages for Operator, Leader and Prime Minister, with typed-name confirmation, server permission checks, audit records and atomic membership/sign-in cleanup.
 
 - Added multiple simultaneous roles: Operator, Leader, Prime Minister, Admin, Minister, Deputy, Mayor, Army and Citizen.
 - Prime Minister has Leader permissions. Army has Citizen-level access without additional permissions.
@@ -179,16 +181,13 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Check GitHub releases automatically on launch and when internet access returns. Available updates replace the sidebar branding with an expanding update prompt and download progress.
 - Added a compiled Dart/Dio helper with signed release metadata and streaming MSI verification before installation.
 - About includes manual update checks and reinstallation of the current published version. Installation remains a separate Install and restart action.
-- Installer and version-to-version update testing remain pending before general release.
 
 ## Still in development
 
-- Overview remains to be rebuilt.
 - Marked Companies, Expansion Packs and the full My Profile experience as **Coming soon in future phases**. Existing account status, Microsoft linking and sign-out remain available.
 - Microsoft integration awaits Minecraft API approval and end-to-end provider testing.
 - Discord linking, Discord confirmation delivery and the general notification centre are not implemented. Hiring conversations have their own unread inbox and in-app notices.
 - Profile customization is planned for a future phase.
-- Final Windows installer, update delivery and release acceptance testing remain ahead. This is not a published release.
 
 ## Player directory PDF export
 
@@ -202,4 +201,3 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 - Fixed packaged Windows PDF worker compatibility by creating processing workers from the page, using classic production worker bundles, and merging in a separate worker. Added startup timeouts and errors identifying processing, merging or saving failures.
 
 
-- Administration now has separate Remove Towns and Remove Players pages for Operator, Leader and Prime Minister, with typed-name confirmation, server permission checks, audit records and atomic membership/sign-in cleanup.

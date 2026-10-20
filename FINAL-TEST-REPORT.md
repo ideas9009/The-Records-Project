@@ -4,7 +4,7 @@ Result: automated checks and the isolated Windows updater cycle passed. No GitHu
 
 | Check | Result |
 | --- | --- |
-| React/client tests | 161 passed across 30 files |
+| React/client tests | 169 passed across 31 files |
 | API/server tests | 177 passed |
 | Dart analysis | No issues |
 | Dart updater tests | 8 passed |
@@ -28,11 +28,11 @@ The fresh lab build exposed a Windows PowerShell 5 UTF-8 BOM problem in its conf
 
 The current website, book icon and updater are included in `windows-build/build-2/`:
 
-- `The-Records-Project_1.4.0_x64_en-US.msi` — 37,306,368 bytes
+- `The-Records-Project_1.4.0_x64_en-US.msi` — 37,302,272 bytes
 - `update-windows-x86_64.json`
 - `update-windows-x86_64.json.sig`
 
-MSI SHA-256: `d9effe763787011729b605021e83ab07708c2d3f4799f737cef3124ba0ca50bc`.
+MSI SHA-256: `d6b0ad1197e740200195888c8821e0d78e893f66cf4eda48f34b4b2f35d4a928`.
 
 React build: 2. MSI version: 1.4.0. Availability uses the numeric latest-release tag, not the MSI version or release title. Windows Installer still applies its own installation rules.
 
@@ -44,3 +44,5 @@ React build: 2. MSI version: 1.4.0. Availability uses the numeric latest-release
 Build warnings were limited to the existing frontend chunk size/dynamic-import notices and unused command functions in the intentionally minimal lab.
 
 Detailed isolated results and installer logs are retained in `tmp/final-updater-tests/` and the corresponding Windows temporary `trp-update-*` job folders. Private signing material remains outside Git.
+
+Release preparation: added and passed eight release-publisher tests, corrected outdated About/release-note text, rebuilt and verified the MSI with those notes, and prepared numeric tag 2 with title Nostra-2-Phase-1. Publication is authorized separately from the test run above.
