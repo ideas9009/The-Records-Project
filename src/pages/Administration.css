@@ -99,3 +99,25 @@
   border-radius: 10px;
   max-width: 100%;
 }
+
+.record-removal {
+  padding: 24px;
+}
+.record-removal > p {
+  color: var(--text-muted, #aaa);
+  line-height: 1.65;
+  max-width: 850px;
+}
+.remove-record-button {
+  color: #ffb7b7;
+  border-color: #ff777755;
+}
+.removal-confirmation {
+  max-width: 650px;
+  padding: 20px 0;
+}
+.removal-confirmation label {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   canReview,
+  canRemoveRecords,
   canManageRoles,
   canRegisterTown,
   canPublishNews,
@@ -43,4 +44,25 @@ it("Army has Citizen-level access without administrative or publishing privilege
   expect(canManageRoles(army)).toBe(false);
   expect(canRegisterTown(army)).toBe(false);
   expect(canPublishNews(army)).toBe(false);
+});
+
+it("only approved Operator, Leader and Prime Minister accounts can remove records", () => {
+  for (const role of [
+    "operator",
+    "leader",
+    "prime_minister",
+    "admin",
+    "minister",
+    "deputy",
+    "mayor",
+    "army",
+    "citizen",
+  ] as Role[]) {
+    expect(canRemoveRecords(account([role]))).toBe(
+      ["operator", "leader", "prime_minister"].includes(role),
+    );
+    for (const status of ["pending", "suspended", "rejected"] as const)
+      expect(canRemoveRecords(account([role], status))).toBe(false);
+  }
+  expect(canRemoveRecords(null)).toBe(false);
 });

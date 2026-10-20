@@ -58,6 +58,10 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='GET'&&/^\/api\/citizens\/[^/]+$/.test(path))result=await service.citizen(profile,path.split('/')[3]);
  else if(req.method==='GET'&&path==='/api/admin/rank-reviews')result=await service.rankReviews(profile);
  else if(req.method==='POST'&&/^\/api\/admin\/rank-reviews\/[^/]+\/resolve$/.test(path))result=await service.resolveRankReview(profile,path.split('/')[4],body);
+ else if(req.method==='GET'&&path==='/api/admin/removal/towns')result=await service.removalTowns(profile);
+ else if(req.method==='GET'&&path==='/api/admin/removal/players')result=await service.removalUsers(profile);
+ else if(req.method==='POST'&&/^\/api\/admin\/removal\/towns\/[^/]+$/.test(path))result=await service.removeTown(profile,path.split('/')[5],body);
+ else if(req.method==='POST'&&/^\/api\/admin\/removal\/players\/[^/]+$/.test(path))result=await service.removeUser(profile,path.split('/')[5],body);
  else if(req.method==='GET'&&path==='/api/admin/users')result=await service.adminUsers(profile);
  else if(req.method==='GET'&&path==='/api/admin/activity')result=await service.activity(profile);
  else if(req.method==='PUT'&&/^\/api\/admin\/users\/[^/]+$/.test(path))result=await service.updateUser(profile,path.split('/')[4],body);

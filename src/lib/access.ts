@@ -102,3 +102,6 @@ export function canPerform(
 ) {
   return !!account && account.status === "approved";
 }
+
+export const canRemoveRecords = (account: Account | null) =>
+  hasRole(account, ["operator", "leader", "prime_minister"]);

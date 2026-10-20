@@ -201,3 +201,5 @@ Phase 1 of the planned three-phase transition from Flutter to React. These notes
 
 - Fixed packaged Windows PDF worker compatibility by creating processing workers from the page, using classic production worker bundles, and merging in a separate worker. Added startup timeouts and errors identifying processing, merging or saving failures.
 
+
+- Administration now has separate Remove Towns and Remove Players pages for Operator, Leader and Prime Minister, with typed-name confirmation, server permission checks, audit records and atomic membership/sign-in cleanup.

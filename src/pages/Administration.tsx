@@ -1,3 +1,4 @@
+import RecordRemoval from "./RecordRemoval";
 import { RegistrationFacts } from "../components/ManualRegistration";
 import RankReviews from "./RankReviews";
 import { useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import { useAuth } from "../lib/auth-context";
 import {
   accountRoles,
   canManageRoles,
+  canRemoveRecords,
   hasRole,
   roleNames,
   roleLabels,
@@ -41,7 +43,7 @@ export default function Administration() {
       label: string;
     } | null>(null);
   useEffect(() => {
-    if (tab === "ranks") return;
+    if (["ranks", "remove-towns", "remove-players"].includes(tab)) return;
     setLoading(true);
     setError("");
     return watchResource<Account[] | Audit[]>(
@@ -103,6 +105,12 @@ export default function Administration() {
           ["users", "People & Permissions"],
           ["activity", "Activity Log"],
           ["ranks", "Rank Review"],
+          ...(canRemoveRecords(account)
+            ? [
+                ["remove-towns", "Remove Towns"],
+                ["remove-players", "Remove Players"],
+              ]
+            : []),
         ].map(([id, label]) => (
           <button
             key={id}
@@ -117,7 +125,9 @@ export default function Administration() {
         ))}
       </nav>
       {error && !confirmation && <p role="alert">{error}</p>}
-      {tab !== "activity" && tab !== "ranks" && (
+      {!["activity", "ranks", "remove-towns", "remove-players"].includes(
+        tab,
+      ) && (
         <input
           className="admin-search"
           aria-label="Search users"
@@ -126,10 +136,16 @@ export default function Administration() {
           onChange={(e) => setQuery(e.target.value)}
         />
       )}
-      {loading && tab !== "ranks" && (
-        <LoadingStatus>Loading administration…</LoadingStatus>
-      )}
-      {tab === "ranks" ? (
+      {loading &&
+        !["ranks", "remove-towns", "remove-players"].includes(tab) && (
+          <LoadingStatus>Loading administration…</LoadingStatus>
+        )}
+      {tab === "remove-towns" || tab === "remove-players" ? (
+        <RecordRemoval
+          key={tab}
+          kind={tab === "remove-towns" ? "towns" : "players"}
+        />
+      ) : tab === "ranks" ? (
         <RankReviews />
       ) : tab === "activity" ? (
         <section className="card">

@@ -125,7 +125,8 @@ async function request<T>(path: string, options: Options): Promise<T> {
       setSyncIdentity(data.account, base);
     if (
       !get &&
-      (path.startsWith("/api/shop-search") || path.startsWith("/api/availability") ||
+      (path.startsWith("/api/shop-search") ||
+        path.startsWith("/api/availability") ||
         path.startsWith("/api/task-board") ||
         path.startsWith("/api/news") ||
         path.startsWith("/api/towns") ||
@@ -146,6 +147,15 @@ async function request<T>(path: string, options: Options): Promise<T> {
         path === "/api/auth/microsoft/finish")
     )
       await invalidateCache("/api/citizens").catch(() => {});
+    if (!get && path.startsWith("/api/admin/removal/")) {
+      for (const resource of [
+        "/api/towns",
+        "/api/citizens",
+        "/api/overview",
+        "/api/availability",
+      ])
+        await invalidateCache(resource).catch(() => {});
+    }
     if (get && cacheAllowed(path)) {
       try {
         await saveCachedData(path, data, generation);
