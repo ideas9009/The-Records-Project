@@ -19,8 +19,10 @@ type WindowsPreferences = {
   minimized: boolean;
   background: boolean;
 };
-export default function Settings() {
-  const [tab, setTab] = useState("appearance");
+export default function Settings({
+  initialTab = "appearance",
+}: { initialTab?: "appearance" | "account" } = {}) {
+  const [tab, setTab] = useState<string>(initialTab);
   const [scale, setScale] = useState(savedScale),
     [potato, setPotato] = useState(savedPotato);
   const [selected, setSelected] = useState(

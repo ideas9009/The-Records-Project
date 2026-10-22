@@ -1,3 +1,4 @@
+import MyProfile from "./MyProfile";
 import { apiRequest } from "../lib/api";
 import { RegistrationFacts } from "../components/ManualRegistration";
 import MinecraftFace from "../components/MinecraftFace";
@@ -10,7 +11,18 @@ import { useState } from "react";
 import { PREVIEW_MODE } from "../lib/runtime-mode";
 import { useAuth } from "../lib/auth-context";
 import { signOutCloud, firebaseError } from "../lib/cloud-auth";
-export function RegistrationProfile() {
+export function RegistrationProfile({
+  go,
+}: { go?: (page: string) => void } = {}) {
+  const { account } = useAuth();
+  if (!account) return null;
+  return account.status === "approved" ? (
+    <MyProfile go={go} />
+  ) : (
+    <RegistrationStatus />
+  );
+}
+function RegistrationStatus() {
   const { account, retry } = useAuth();
   const [rechecking, setRechecking] = useState(false),
     [recheckError, setRecheckError] = useState("");
