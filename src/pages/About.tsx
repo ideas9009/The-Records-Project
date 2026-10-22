@@ -1,7 +1,9 @@
-import {AboutUpdater} from "../components/DesktopUpdater";
-import ReactMarkdown from "react-markdown";
+import { AboutUpdater } from "../components/DesktopUpdater";
+import ReleaseNotes from "../components/ReleaseNotes";
+import { APP_RELEASE_LABEL } from "../lib/app-release";
+import "./Changelog.css";
 import releaseNotes from "../../RELEASE-NOTES.md?raw";
-export default function About() {
+export default function About({ go }: { go?: (page: string) => void } = {}) {
   return (
     <div className="about-page">
       <header className="page-header">
@@ -10,23 +12,46 @@ export default function About() {
           <p>The Records Project</p>
         </div>
       </header>
-      <section className="card about-management" aria-label="Project management">
+      <section
+        className="card about-management"
+        aria-label="Project management"
+      >
         <div className="about-management-brand">
-          <svg viewBox="296 381 1408 1239" aria-hidden="true" width="48" height="48"><image href="/trp-logo.png" width="2000" height="2000" /></svg>
+          <svg
+            viewBox="296 381 1408 1239"
+            aria-hidden="true"
+            width="48"
+            height="48"
+          >
+            <image href="/trp-logo.png" width="2000" height="2000" />
+          </svg>
           <h2>The Records Project</h2>
         </div>
         <div className="about-management-credit">
           <span>managed by</span>
-          <img src="/branding/byzantine-republic.svg" alt="The Byzantine Republic" width="360" height="73" />
+          <img
+            src="/branding/byzantine-republic.svg"
+            alt="The Byzantine Republic"
+            width="360"
+            height="73"
+          />
         </div>
       </section>
       <section className="card about-version" aria-label="App version">
-        <h2>Nostra &middot; 2 | Phase 1</h2>
+        <h2>{APP_RELEASE_LABEL}</h2>
+        {go && (
+          <button onClick={() => go("changelog")}>
+            <span className="material-symbol" aria-hidden="true">
+              history
+            </span>
+            Changelog
+          </button>
+        )}
       </section>
-      <AboutUpdater/>
+      <AboutUpdater />
       <section className="card release-notes">
-        <h2>Release notes</h2>
-        <ReactMarkdown>{releaseNotes}</ReactMarkdown>
+        <h2>Phase 2 release notes</h2>
+        <ReleaseNotes notes={releaseNotes} />
       </section>
       <section className="card">
         <h2>Credits</h2>

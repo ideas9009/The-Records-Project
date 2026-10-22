@@ -1,0 +1,184 @@
+.changelog-page {
+  max-width: 1000px;
+  margin-inline: auto;
+}
+.changelog-page .page-header {
+  align-items: center;
+}
+.changelog-page .page-header p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.changelog-intro {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 26px 0 16px;
+}
+.changelog-versions {
+  display: grid;
+  gap: 14px;
+}
+.changelog-versions .changelog-version {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  padding: 24px;
+  text-align: left;
+  margin: 0;
+}
+.changelog-version-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: #c5b4ff12;
+  color: #c5b4ff;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.changelog-version-copy {
+  display: grid;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+}
+.changelog-version-copy strong {
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+.changelog-version-copy > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.changelog-version-meta {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.changelog-version-meta time {
+  color: var(--muted);
+  font-size: 11px;
+}
+.changelog-status {
+  display: inline-block;
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 6px;
+  color: #a8ddc7;
+  background: #a8ddc712;
+  font-size: 11px;
+}
+.changelog-status.development {
+  color: #c5b4ff;
+  background: #c5b4ff16;
+}
+.changelog-status.prerelease {
+  color: #ffbf58;
+  background: #ffbf5816;
+}
+.changelog-detail {
+  padding: 28px 32px;
+  margin-top: 24px;
+}
+.changelog-detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.changelog-detail-heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.changelog-detail-heading .material-symbol {
+  font-size: 16px;
+}
+.release-notes-content {
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.release-notes-content h1 {
+  font-size: 26px;
+  line-height: 1.25;
+}
+.release-notes-content h2 {
+  font-size: 20px;
+  margin-top: 28px;
+}
+.release-notes-content h3 {
+  font-size: 16px;
+  margin-top: 24px;
+}
+.release-notes-content p,
+.release-notes-content li {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.release-notes-content li {
+  margin-bottom: 7px;
+}
+.release-notes-content table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.release-notes-content th,
+.release-notes-content td {
+  padding: 10px;
+  border: 1px solid var(--line);
+}
+.release-notes-content pre {
+  overflow-x: auto;
+}
+.changelog-refresh-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.about-version {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+.about-version h2 {
+  margin: 0;
+}
+:root[data-theme="light"] .changelog-status {
+  color: #326c55;
+}
+:root[data-theme="light"] .changelog-status.development,
+:root[data-theme="light"] .changelog-version-icon {
+  color: #635297;
+}
+@media (max-width: 650px) {
+  .changelog-versions .changelog-version {
+    flex-wrap: wrap;
+    gap: 13px;
+    padding: 20px;
+  }
+  .changelog-version-meta {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding-left: 57px;
+  }
+  .changelog-detail {
+    padding: 22px;
+  }
+}

@@ -1,3 +1,4 @@
+import { APP_RELEASE_LABEL } from "../lib/app-release";
 import ManualRegistration from "../components/ManualRegistration";
 import MicrosoftVerification from "../components/MicrosoftVerification";
 import { Spinner } from "../components/Loading";
@@ -91,7 +92,7 @@ export default function Login() {
           mode={mode}
           onActiveChange={setMicrosoftActive}
         />
-        <p className="login-note">Nostra · 2 | Phase 1</p>
+        <p className="login-note">{APP_RELEASE_LABEL}</p>
       </section>
     </div>
   );
