@@ -85,6 +85,15 @@ export function createEarthMcDirectory({
     )
       throw new ApiError(403, "EarthMC directory access is unavailable.");
   };
+  const townDetail = (id) =>
+    saved("town:" + id.toLowerCase(), async () => {
+      const items = await query("towns", [id]);
+      const town = items.find(
+        (item) => item?.uuid?.toLowerCase() === id.toLowerCase(),
+      );
+      if (!town) throw new ApiError(404, "This EarthMC town is unavailable.");
+      return { town, checkedAt: new Date(now()).toISOString() };
+    });
   return {
     earthmcOverview: async (profile) => {
       allowed(profile);
@@ -246,14 +255,41 @@ export function createEarthMcDirectory({
     earthmcTown: async (profile, id) => {
       allowed(profile);
       if (!uuid(id)) throw new ApiError(400, "Invalid town.");
-      return saved("town:" + id.toLowerCase(), async () => {
-        const items = await query("towns", [id]);
-        const town = items.find(
-          (item) => item?.uuid?.toLowerCase() === id.toLowerCase(),
+      return townDetail(id);
+    },
+    earthmcTownQuarter: async (profile, townId, quarterId) => {
+      allowed(profile);
+      if (!uuid(townId) || !uuid(quarterId))
+        throw new ApiError(400, "Invalid town or apartment.");
+      const { town } = await townDetail(townId);
+      const belongs =
+        Array.isArray(town.quarters) &&
+        town.quarters.some(
+          (item) => {
+            const id = typeof item === "string" ? item : item?.uuid;
+            return uuid(id) && id.toLowerCase() === quarterId.toLowerCase();
+          },
         );
-        if (!town) throw new ApiError(404, "This EarthMC town is unavailable.");
-        return { town, checkedAt: new Date(now()).toISOString() };
-      });
+      if (!belongs)
+        throw new ApiError(404, "This apartment is not listed in this town.");
+      return saved(
+        "quarter:" + townId.toLowerCase() + ":" + quarterId.toLowerCase(),
+        async () => {
+          const items = await query("quarters", [quarterId]);
+          const quarter = items.find(
+            (item) => item?.uuid?.toLowerCase() === quarterId.toLowerCase(),
+          );
+          if (
+            !quarter ||
+            quarter.town?.uuid?.toLowerCase() !== townId.toLowerCase()
+          )
+            throw new ApiError(
+              404,
+              "This apartment is unavailable in this town.",
+            );
+          return { quarter, checkedAt: new Date(now()).toISOString() };
+        },
+      );
     },
     earthmcPlayer: async (profile, id) => {
       allowed(profile);
