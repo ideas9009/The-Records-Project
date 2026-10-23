@@ -1,3 +1,4 @@
+import {identityDisabled} from "./account-controls.mjs";
 import { isTownMayor } from "./town-membership.mjs";
 import { randomUUID } from "node:crypto";
 import {
@@ -110,6 +111,9 @@ export function createMicrosoftAuth(
         );
       const identity = await provider.exchange(code, flow.verifier),
         snapshot = await confirmation(identity);
+      if (await identityDisabled(store,snapshot.minecraftUuid)) throw new ApiError(401,"Account not found.");
+      const disabledName = await store.get("account_names/"+snapshot.username.toLowerCase());
+      if (disabledName && (await store.get("users/"+disabledName.uid))?.status==="disabled") throw new ApiError(401,"Account not found.");
       const townMap = await store.get(
         base + "/earthmc_towns/" + snapshot.town.uuid,
       );
@@ -226,6 +230,10 @@ export function createMicrosoftAuth(
           409,
           "This verification has expired, changed or was already used.",
         );
+      if (await identityDisabled(tx,fresh.minecraftUuid)) throw new ApiError(401,"Account not found.");
+      if (claim && (await tx.get("users/"+claim.uid))?.status==="disabled") throw new ApiError(401,"Account not found.");
+      const disabledNameClaim=await tx.get("account_names/"+fresh.username.toLowerCase());
+      if (disabledNameClaim && (await tx.get("users/"+disabledNameClaim.uid))?.status==="disabled") throw new ApiError(401,"Account not found.");
       const targetUid =
         flow.mode === "register"
           ? uid

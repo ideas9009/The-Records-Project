@@ -78,6 +78,7 @@ export function createAdministration(
         target = await tx.get("users/" + uid);
       reviewer(actor);
       if (!valid(target)) throw new ApiError(404, "User not found.");
+      if (target.status === "disabled") throw new ApiError(409, "Disabled accounts can only be enabled from Account access in Phase 2 Administration or later.");
       const next = { ...target },
         changes = {};
       if (body.roles !== undefined) {

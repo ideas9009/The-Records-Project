@@ -128,6 +128,7 @@ export function createRecordRemoval(store, { now = Date.now } = {}) {
         throw new ApiError(409, "You cannot remove your own account.");
       if (rolesOf(target).includes("operator") && !hasRole(actor, ["operator"]))
         throw new ApiError(403, "Only an Operator can remove an Operator.");
+      if (target.status === "disabled") throw new ApiError(409,"Enable this account from Account access before removing it.");
       confirm(body, target.username);
       const [towns, sessions, names, claims] = await Promise.all([
         tx.list(base + "/towns"),
