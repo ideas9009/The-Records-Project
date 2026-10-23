@@ -45,6 +45,15 @@ export function createEarthMcDirectory({
       );
       if (!response.ok) throw Error();
       const data = await response.json();
+      if (endpoint === "online") {
+        if (
+          !data ||
+          !Array.isArray(data.players) ||
+          !Number.isFinite(data.count)
+        )
+          throw Error();
+        return data.players;
+      }
       if (!Array.isArray(data)) throw Error();
       return data;
     } catch {
@@ -54,7 +63,7 @@ export function createEarthMcDirectory({
       );
     }
   }
-  async function saved(key, load) {
+  async function saved(key, load, ttl = 60000) {
     const old = cache.get(key);
     if (old && old.expires > now()) return old.data;
     if (pending.has(key)) return pending.get(key);
@@ -62,7 +71,7 @@ export function createEarthMcDirectory({
       throw new ApiError(503, "EarthMC is busy. Please try again shortly.");
     const job = load().then((data) => {
       if (cache.size >= 200) cache.delete(cache.keys().next().value);
-      cache.set(key, { data, expires: now() + 60000 });
+      cache.set(key, { data, expires: now() + ttl });
       return data;
     });
     pending.set(key, job);
@@ -184,6 +193,17 @@ export function createEarthMcDirectory({
         };
       });
     },
+    earthmcOnline: async (profile) => {
+      allowed(profile);
+      return saved(
+        "online",
+        async () => ({
+          players: list(await query("online")),
+          checkedAt: new Date(now()).toISOString(),
+        }),
+        20000,
+      );
+    },
     earthmcDirectory: async (profile) => {
       allowed(profile);
       const [people, countries] = await Promise.all([players(), nations()]);
@@ -264,12 +284,10 @@ export function createEarthMcDirectory({
       const { town } = await townDetail(townId);
       const belongs =
         Array.isArray(town.quarters) &&
-        town.quarters.some(
-          (item) => {
-            const id = typeof item === "string" ? item : item?.uuid;
-            return uuid(id) && id.toLowerCase() === quarterId.toLowerCase();
-          },
-        );
+        town.quarters.some((item) => {
+          const id = typeof item === "string" ? item : item?.uuid;
+          return uuid(id) && id.toLowerCase() === quarterId.toLowerCase();
+        });
       if (!belongs)
         throw new ApiError(404, "This apartment is not listed in this town.");
       return saved(
