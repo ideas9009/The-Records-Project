@@ -74,6 +74,7 @@ export function createEarthMcDirectory({
   }
   const players = () =>
     saved("players", async () => list(await query("players")));
+  const towns = () => saved("towns", async () => list(await query("towns")));
   const nations = () =>
     saved("nations", async () => list(await query("nations")));
   const allowed = (profile) => {
@@ -206,6 +207,52 @@ export function createEarthMcDirectory({
           players: people.filter((player) => members.has(player.uuid)),
           checkedAt: new Date(now()).toISOString(),
         };
+      });
+    },
+    earthmcTownDirectory: async (profile) => {
+      allowed(profile);
+      const [places, countries] = await Promise.all([towns(), nations()]);
+      return {
+        towns: places,
+        nations: countries,
+        checkedAt: new Date(now()).toISOString(),
+      };
+    },
+    earthmcNationTowns: async (profile, id) => {
+      allowed(profile);
+      if (!uuid(id)) throw new ApiError(400, "Invalid nation.");
+      return saved("nation-towns:" + id.toLowerCase(), async () => {
+        const [places, items] = await Promise.all([
+          towns(),
+          query("nations", [id]),
+        ]);
+        const nation = items.find(
+          (item) => item?.uuid?.toLowerCase() === id.toLowerCase(),
+        );
+        if (!nation) throw new ApiError(404, "Nation not found.");
+        if (!Array.isArray(nation.towns))
+          throw new ApiError(503, "EarthMC nation towns are unavailable.");
+        const members = new Set(
+          nation.towns
+            .filter((item) => uuid(item?.uuid))
+            .map((item) => item.uuid.toLowerCase()),
+        );
+        return {
+          towns: places.filter((town) => members.has(town.uuid)),
+          checkedAt: new Date(now()).toISOString(),
+        };
+      });
+    },
+    earthmcTown: async (profile, id) => {
+      allowed(profile);
+      if (!uuid(id)) throw new ApiError(400, "Invalid town.");
+      return saved("town:" + id.toLowerCase(), async () => {
+        const items = await query("towns", [id]);
+        const town = items.find(
+          (item) => item?.uuid?.toLowerCase() === id.toLowerCase(),
+        );
+        if (!town) throw new ApiError(404, "This EarthMC town is unavailable.");
+        return { town, checkedAt: new Date(now()).toISOString() };
       });
     },
     earthmcPlayer: async (profile, id) => {

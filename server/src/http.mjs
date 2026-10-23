@@ -51,6 +51,9 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='GET'&&/^\/api\/citizens\/[^/]+\/earthmc$/.test(path))result=await service.citizenEarthMc(profile,path.split('/')[3]);
  else if(req.method==='GET'&&path==='/api/overview')result=await service.earthmcOverview(profile);
  else if(req.method==='GET'&&path==='/api/overview/friends')result=await service.earthmcFriends(profile);
+ else if(req.method==='GET'&&path==='/api/earthmc/town-directory')result=await service.earthmcTownDirectory(profile);
+ else if(req.method==='GET'&&/^\/api\/earthmc\/nations\/[^/]+\/towns$/.test(path))result=await service.earthmcNationTowns(profile,path.split('/')[4]);
+ else if(req.method==='GET'&&/^\/api\/earthmc\/towns\/[^/]+$/.test(path))result=await service.earthmcTown(profile,path.split('/')[4]);
  else if(req.method==='GET'&&path==='/api/earthmc/directory')result=await service.earthmcDirectory(profile);
  else if(req.method==='GET'&&/^\/api\/earthmc\/nations\/[^/]+\/players$/.test(path))result=await service.earthmcNationPlayers(profile,path.split('/')[4]);
  else if(req.method==='GET'&&/^\/api\/earthmc\/players\/[^/]+$/.test(path))result=await service.earthmcPlayer(profile,path.split('/')[4]);
