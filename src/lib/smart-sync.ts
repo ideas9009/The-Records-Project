@@ -73,7 +73,7 @@ const settingsKey = "records-smartsync",
 const defaults: SmartSyncSettings = {
   enabled: false,
   pages: ["towns", "news"],
-  interval: 5,
+  interval: 10,
 };
 let identity: Identity | null = null,
   origin = "",
@@ -104,7 +104,7 @@ export function smartSyncSettings(): SmartSyncSettings {
                 smartSyncPages.some((page) => page.id === p),
               )
             : defaults.pages,
-          interval: [1, 5, 15, 30].includes(raw.interval) ? raw.interval : 5,
+          interval: [10, 15, 30].includes(raw.interval) ? raw.interval : 10,
         }
       : { ...defaults, pages: [...defaults.pages] };
   } catch {

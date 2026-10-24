@@ -1,0 +1,41 @@
+.app.auth-screen {
+  position: relative;
+  isolation: isolate;
+}
+.auth-wallpapers {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--canvas, #19191d);
+}
+.auth-wallpapers img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--wallpaper-fade-duration, 600ms) ease-in-out;
+}
+.auth-wallpapers img.is-visible {
+  opacity: 1;
+}
+.developer-preview-toolbar {
+  position: relative;
+  z-index: 1;
+}
+:root:not([data-potato="true"]) .auth-screen .login-entry {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.auth-screen:has(.auth-wallpapers) .connection-content {
+  text-shadow: 0 1px 5px #000c;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-wallpapers img {
+    transition: none;
+  }
+}

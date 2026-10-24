@@ -1,4 +1,4 @@
-import { prepareTownPhoto } from "../lib/town-gallery";
+import { prepareTownCover } from "../lib/town-gallery";
 import ExpandingConfirmation from "../components/ExpandingConfirmation";
 import type { Town } from "../lib/cloud-towns";
 import { townTypes } from "../lib/cloud-towns";
@@ -257,7 +257,7 @@ export default function RegisterTown({
                 setProcessing(true);
                 setError("");
                 try {
-                  setImage(await prepareTownPhoto(file));
+                  setImage(await prepareTownCover(file));
                 } catch (reason) {
                   setError(
                     reason instanceof Error
@@ -273,9 +273,11 @@ export default function RegisterTown({
           {processing && <LoadingStatus>Preparing cover image�</LoadingStatus>}
           <img
             className="town-cover-preview"
-            src={image}
+            src={image || "/wallpapers/2026-06-09_13.05.52_4K.webp"}
             alt="Town cover preview"
           />
+          <p className="hint">Cover images fit within 1280 × 720. Gallery images keep their original resolution.</p>
+          {image.startsWith("data:") && <button type="button" disabled={busy || processing} onClick={()=>setImage("")}>Remove cover image</button>}
           <label>
             Residents in The Records Project
             <select

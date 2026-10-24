@@ -1,0 +1,39 @@
+.page-viewport {
+  position: relative;
+  /* Keep pinned page controls below the expanding sidebar. */
+  z-index: 0;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.page-viewport > main { min-width: 0; }
+/* Animate the surfaces themselves. Never filter main, a page wrapper, or
+   a viewport overlay: the wallpaper between tiles must remain sharp.
+   Exclude nested surfaces so blur is applied only once per tile. */
+.page-viewport main :is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search):not(:is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search) *) {
+  transition: filter 120ms ease-in;
+}
+.page-viewport[data-transition="out"] main :is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search):not(:is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search) *) {
+  filter: blur(4px);
+}
+.page-viewport[data-transition="in"] main :is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search):not(:is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search) *) {
+  animation: tile-sharpen 240ms ease-out;
+}
+@keyframes tile-sharpen {
+  from { filter: blur(4px); }
+  to { filter: blur(0px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-viewport main :is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search) {
+    filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+:root[data-potato="true"] .page-viewport main :is(.card, .stat, .entity-card, .job-card, .quick-card, .news-search, .citizens-search, .town-search) {
+  filter: none !important;
+  animation: none !important;
+  transition: none !important;
+}

@@ -42,6 +42,7 @@ export function TownStatistics({ town }: { town: Town }) {
   );
 }
 type Props = {
+  onEarthMc: () => void;
   canOpen: boolean;
   search: string;
   onSearch: (value: string) => void;
@@ -52,6 +53,7 @@ export default function TownRegistry({
   onSearch,
   onOpenTown,
   canOpen,
+  onEarthMc,
 }: Props) {
   const { towns, loading, error } = useTowns();
   const { account } = useAuth();
@@ -61,14 +63,20 @@ export default function TownRegistry({
   );
   return (
     <div className="town-registry">
-      <header className="page-header">
+      <header className="page-header page-banner">
         <h1>Town Registry</h1>
-        {canRegisterTown(account) && (
-          <button onClick={() => setRegistering((value) => !value)}>
-            <TownIcon name="add" />
-            Register Town
+        <div className="page-header-actions">
+          <button onClick={onEarthMc}>
+            <TownIcon name="public" />
+            View towns on EarthMC
           </button>
-        )}
+          {canRegisterTown(account) && (
+            <button onClick={() => setRegistering((value) => !value)}>
+              <TownIcon name="add" />
+              Register Town
+            </button>
+          )}
+        </div>
       </header>
       {registering && (
         <RegisterTown

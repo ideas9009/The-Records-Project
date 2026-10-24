@@ -1,11 +1,17 @@
 import { canRetainOfflineSession, setSyncIdentity } from "./smart-sync";
-import { LoadingStatus } from "../components/Loading";
+import ConnectionScreen from "../components/ConnectionScreen";
+import {
+  connectionStage,
+  setConnectionStage,
+  subscribeConnection,
+} from "./connection-progress";
 import "../pages/Login.css";
 import {
   createContext,
   useContext,
   useEffect,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { PREVIEW_MODE, previewAccount } from "./runtime-mode";
@@ -29,15 +35,18 @@ function ServerAuthProvider({ children }: { children: ReactNode }) {
       stop?.();
       setAccount(null);
       setError("");
+      setConnectionStage("session");
       if (!session()) {
         setLoading(false);
         return;
       }
       setLoading(true);
+      setConnectionStage("waiting");
       stop = watchResource<{ account: Account }>(
         "/api/auth/me",
         (result) => {
           verifiedAt = Date.now();
+          setConnectionStage("ready");
           setAccount(result.account);
           setLoading(false);
           setError("");
@@ -74,22 +83,20 @@ function ServerAuthProvider({ children }: { children: ReactNode }) {
 export const useAuth = () => useContext(AuthContext);
 export function ConnectionStatus() {
   const { loading, error, retry } = useAuth();
+  const stage = useSyncExternalStore(
+    subscribeConnection,
+    connectionStage,
+    () => "session" as const,
+  );
   return (
-    <div className="app login-screen">
-      <section className="card login-card">
-        <h1>The Records Project</h1>
-        {loading ? (
-          <LoadingStatus>Connecting…</LoadingStatus>
-        ) : (
-          <>
-            <p role="alert">{error || "Your account could not be loaded."}</p>
-            <button onClick={retry}>Retry connection</button>
-          </>
-        )}
-      </section>
-    </div>
+    <ConnectionScreen
+      stage={stage}
+      error={loading ? "" : error || "Your account could not be loaded."}
+      onRetry={retry}
+    />
   );
 }
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   return PREVIEW_MODE ? (
     <AuthContext.Provider

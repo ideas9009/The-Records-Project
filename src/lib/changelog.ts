@@ -15,10 +15,13 @@ export type ReleaseEntry = {
 };
 export const savedChangelog: ReleaseEntry[] = [
   {
-    id: "phase-2",
+    id: "4",
     title: APP_RELEASE_LABEL,
-    date: "2026-10-22",
-    status: "development",
+    build: 4,
+    version: "1.4.2",
+    url: `https://github.com/${repository}/releases/tag/4`,
+    date: "2026-10-24",
+    status: "released",
     notes: currentNotes,
   },
   {

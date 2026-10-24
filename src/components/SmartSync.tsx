@@ -1,3 +1,4 @@
+import { startBackgroundPolling } from "../lib/background-polling";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useAuth } from "../lib/auth-context";
 import {
@@ -28,19 +29,7 @@ export function SmartSyncManager() {
     pages = prefs.pages.join(",");
   useEffect(() => {
     if (!account || !prefs.enabled) return;
-    const refresh = () => {
-      if (document.visibilityState === "visible" && navigator.onLine !== false)
-        void syncSelectedPages();
-    };
-    refresh();
-    const timer = setInterval(refresh, prefs.interval * 60000);
-    window.addEventListener("online", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener("online", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-    };
+    return startBackgroundPolling(()=>syncSelectedPages(), Math.max(10,prefs.interval) * 60000);
   }, [
     account?.uid,
     account?.role,
@@ -172,7 +161,7 @@ export default function SmartSyncSettingsPanel() {
               void change({ ...prefs, interval: Number(event.target.value) })
             }
           >
-            {[1, 5, 15, 30].map((minutes) => (
+            {[10, 15, 30].map((minutes) => (
               <option key={minutes} value={minutes}>
                 {minutes} {minutes === 1 ? "minute" : "minutes"}
               </option>

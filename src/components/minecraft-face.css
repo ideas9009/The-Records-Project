@@ -68,3 +68,8 @@
     flex-basis: 100px;
   }
 }
+
+.minecraft-face > .minecraft-online-dot {
+ position:absolute;right:0;bottom:0;width:12px;height:12px;min-width:12px;
+ border-radius:50%;background:#37d77a;border:2px solid #202126;box-sizing:border-box;z-index:2;
+}

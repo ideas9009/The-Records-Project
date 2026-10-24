@@ -104,13 +104,13 @@ export default function Citizens({
   );
   return (
     <div className="citizens-page">
+      <header className="page-header page-banner">
       {citizenId && (
         <button className="citizens-back" onClick={onBack}>
           <Icon name="arrow_back" />
           Citizens
         </button>
       )}
-      <header className="page-header">
         <h1 ref={heading} tabIndex={-1}>
           {citizenId ? citizen?.username || "Citizen Profile" : "Citizens"}
         </h1>

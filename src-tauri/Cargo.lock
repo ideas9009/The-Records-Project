@@ -4255,7 +4255,7 @@ dependencies = [
 
 [[package]]
 name = "the-records-project"
-version = "1.4.1"
+version = "1.4.2"
 dependencies = [
  "fs2",
  "reqwest 0.12.28",

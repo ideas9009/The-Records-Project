@@ -11,7 +11,7 @@ const source = path.join(project, "wallpapers"),
 await fs.mkdir(output, { recursive: true });
 if (!(await fs.stat(source).catch(()=>null))) {
   const saved=JSON.parse(await fs.readFile(path.join(project,"src","lib","wallpapers.json"),"utf8"));
-  for(const wallpaper of saved)for(const asset of [wallpaper.url,wallpaper.thumbnail])await fs.access(path.join(project,"public",asset.replace(/^\//,"")));
+  for(const wallpaper of saved)for(const asset of [wallpaper.url,wallpaper.thumbnail,wallpaper.authUrl].filter(Boolean))await fs.access(path.join(project,"public",asset.replace(/^\//,"")));
   console.log(`Using ${saved.length} prepared wallpapers.`);
   process.exit(0);
 }
@@ -46,16 +46,20 @@ for (const [index, file] of files.entries()) {
       .webp({ quality: 80 })
       .toFile(thumbnail);
   }
+  const authImage = path.join(output, stem + ".auth.webp");
+  const authCurrent = await fs.stat(authImage).then(s => s.mtimeMs >= modified).catch(() => false);
+  if (!authCurrent) await sharp(input).resize({ width:1600, height:900, fit:"cover", withoutEnlargement:true }).webp({quality:82}).toFile(authImage);
   catalog.push({
     name: "Wallpaper " + (index + 1),
     file,
     url: "/wallpapers/" + path.basename(image),
     thumbnail: "/wallpapers/" + path.basename(thumbnail),
+    authUrl: "/wallpapers/" + path.basename(authImage),
     legacyUrl: "/wallpapers/" + file,
   });
 }
 const expected = new Set(
-  catalog.flatMap((w) => [path.basename(w.url), path.basename(w.thumbnail)]),
+  catalog.flatMap((w) => [path.basename(w.url), path.basename(w.thumbnail), path.basename(w.authUrl)]),
 );
 for (const name of await fs.readdir(output)) {
   const target = path.resolve(output, name);

@@ -1,3 +1,5 @@
+import MinecraftFace from "../components/MinecraftFace";
+import AccountAccess from "./AccountAccess";
 import RecordRemoval from "./RecordRemoval";
 import { RegistrationFacts } from "../components/ManualRegistration";
 import RankReviews from "./RankReviews";
@@ -43,7 +45,12 @@ export default function Administration() {
       label: string;
     } | null>(null);
   useEffect(() => {
-    if (["ranks", "remove-towns", "remove-players"].includes(tab)) return;
+    if (
+      ["account-access", "ranks", "remove-towns", "remove-players"].includes(
+        tab,
+      )
+    )
+      return;
     setLoading(true);
     setError("");
     return watchResource<Account[] | Audit[]>(
@@ -96,51 +103,98 @@ export default function Administration() {
   );
   return (
     <div className="administration">
-      <header className="page-header">
+      <header className="page-header page-banner">
         <h1>Administration</h1>
       </header>
       <nav className="admin-tabs" aria-label="Administration sections">
         {[
-          ["registrations", "Registrations"],
-          ["users", "People & Permissions"],
-          ["activity", "Activity Log"],
-          ["ranks", "Rank Review"],
+          {
+            label: "People",
+            items: [
+              ["registrations", "Registrations", "person_add"],
+              ["users", "People & Permissions", "manage_accounts"],
+              ["account-access", "Account access", "lock"],
+            ],
+          },
+          {
+            label: "Reviews",
+            items: [
+              ["ranks", "Rank Review", "badge"],
+              ["activity", "Activity Log", "history"],
+            ],
+          },
           ...(canRemoveRecords(account)
             ? [
-                ["remove-towns", "Remove Towns"],
-                ["remove-players", "Remove Players"],
+                {
+                  label: "Records",
+                  items: [
+                    ["remove-towns", "Remove Towns", "location_city"],
+                    ["remove-players", "Remove Players", "person_remove"],
+                  ],
+                },
               ]
             : []),
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            aria-pressed={tab === id}
-            onClick={() => {
-              setTab(id);
-              setEditing(null);
-            }}
+        ].map((group) => (
+          <div
+            className="admin-tab-group"
+            key={group.label}
+            role="group"
+            aria-label={group.label}
           >
-            {label}
-          </button>
+            <span className="admin-group-label">{group.label}</span>
+            <div>
+              {group.items.map(([id, label, icon]) => (
+                <button
+                  key={id}
+                  aria-pressed={tab === id}
+                  onClick={() => {
+                    setTab(id);
+                    setEditing(null);
+                    setQuery("");
+                  }}
+                >
+                  <span className="material-symbol" aria-hidden="true">
+                    {icon}
+                  </span>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
       {error && !confirmation && <p role="alert">{error}</p>}
-      {!["activity", "ranks", "remove-towns", "remove-players"].includes(
-        tab,
-      ) && (
-        <input
-          className="admin-search"
-          aria-label="Search users"
-          placeholder="Search users"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      {![
+        "account-access",
+        "activity",
+        "ranks",
+        "remove-towns",
+        "remove-players",
+      ].includes(tab) && (
+        <div className="admin-search admin-searchbar">
+          <span className="material-symbol" aria-hidden="true">
+            search
+          </span>
+          <input
+            type="search"
+            aria-label="Search users"
+            placeholder={
+              tab === "registrations"
+                ? "Search pending registrations"
+                : "Search people"
+            }
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
       )}
       {loading &&
-        !["ranks", "remove-towns", "remove-players"].includes(tab) && (
-          <LoadingStatus>Loading administration…</LoadingStatus>
-        )}
-      {tab === "remove-towns" || tab === "remove-players" ? (
+        !["account-access", "ranks", "remove-towns", "remove-players"].includes(
+          tab,
+        ) && <LoadingStatus>Loading administration…</LoadingStatus>}
+      {tab === "account-access" ? (
+        <AccountAccess />
+      ) : tab === "remove-towns" || tab === "remove-players" ? (
         <RecordRemoval
           key={tab}
           kind={tab === "remove-towns" ? "towns" : "players"}
@@ -149,7 +203,13 @@ export default function Administration() {
         <RankReviews />
       ) : tab === "activity" ? (
         <section className="card">
-          <h2>Activity Log</h2>
+          <div className="admin-panel-heading">
+            <div>
+              <h2>Activity Log</h2>
+              <p>Recent account and administration changes.</p>
+            </div>
+            <span className="admin-count">{logs.length} entries</span>
+          </div>
           {logs.map((log) => (
             <div className="admin-row" key={log.id}>
               <div>
@@ -161,12 +221,34 @@ export default function Administration() {
               <time>{new Date(log.createdAt).toLocaleString()}</time>
             </div>
           ))}
-          {!loading && !logs.length && <p>No recorded activity.</p>}
+          {!loading && !logs.length && (
+            <p className="admin-empty">No recorded activity.</p>
+          )}
         </section>
       ) : (
         <section className="card">
+          <div className="admin-panel-heading">
+            <div>
+              <h2>
+                {tab === "registrations"
+                  ? "Registration requests"
+                  : "People & Permissions"}
+              </h2>
+              <p>
+                {tab === "registrations"
+                  ? "Review player details before approving access."
+                  : "Manage roles and registration status for TRP members."}
+              </p>
+            </div>
+            {!loading && (
+              <span className="admin-count">
+                {filtered.length}{" "}
+                {tab === "registrations" ? "pending" : "people"}
+              </span>
+            )}
+          </div>
           {!loading && !filtered.length && (
-            <p>
+            <p className="admin-empty">
               {tab === "registrations"
                 ? "No pending registrations."
                 : "No users found."}
@@ -174,11 +256,17 @@ export default function Administration() {
           )}
           {filtered.map((user) => (
             <div className="admin-row" key={user.uid}>
-              <div>
-                <strong>{user.username}</strong>
-                <p>
-                  {roleLabels(user)} · {user.status}
-                </p>
+              <div className="admin-person">
+                <div className="admin-person-summary">
+                  <MinecraftFace username={user.username} />
+                  <div>
+                    <strong>{user.username}</strong>
+                    <span className="admin-status" data-status={user.status}>
+                      {user.status}
+                    </span>
+                  </div>
+                </div>
+                <p>{roleLabels(user)}</p>
                 {user.registrationMethod === "manual-emc" &&
                   user.registration && (
                     <details className="manual-review-profile">
@@ -257,7 +345,8 @@ export default function Administration() {
                   </>
                 ) : (
                   <>
-                    {canManageRoles(account) &&
+                    {user.status !== "disabled" &&
+                      canManageRoles(account) &&
                       (!accountRoles(user).includes("operator") ||
                         hasRole(account, ["operator"])) && (
                         <button
@@ -269,7 +358,8 @@ export default function Administration() {
                           Edit roles
                         </button>
                       )}
-                    {user.uid !== account.uid &&
+                    {user.status !== "disabled" &&
+                      user.uid !== account.uid &&
                       (hasRole(account, ["operator"]) ||
                         (!accountRoles(user).includes("operator") &&
                           (canManageRoles(account) ||

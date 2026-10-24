@@ -1,3 +1,4 @@
+import { startBackgroundPolling } from "./background-polling";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { earthmc } from "./native";
@@ -45,11 +46,10 @@ export function useVoteParty(alerts = false, refreshKey = 0) {
         running = false;
       }
     }
-    void load();
-    const timer = setInterval(() => void load(), 30000);
+    const stopPolling = startBackgroundPolling(load);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      stopPolling();
     };
   }, [alerts, refreshKey]);
   return { remaining, target, error };

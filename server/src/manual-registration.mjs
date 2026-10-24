@@ -1,3 +1,4 @@
+import {identityDisabled} from "./account-controls.mjs";
 import { randomUUID } from "node:crypto";
 import {
   ApiError,
@@ -210,6 +211,7 @@ export function createManualRegistration(
     await rate("manual-lookup:" + ip, 20);
     const name = username(body.username),
       snapshot = await fresh(name);
+    if (await identityDisabled(store,snapshot.minecraftUuid)) throw new ApiError(401,"Account not found.");
     if (await store.get("account_names/" + snapshot.username.toLowerCase()))
       throw new ApiError(
         409,
@@ -294,6 +296,7 @@ export function createManualRegistration(
           410,
           "Your EMC confirmation expired or was already used.",
         );
+      if (await identityDisabled(tx,snapshot.minecraftUuid)) throw new ApiError(401,"Account not found.");
       if (existing || verifiedClaim)
         throw new ApiError(
           409,

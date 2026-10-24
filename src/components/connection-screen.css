@@ -1,0 +1,81 @@
+.app.connection-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 32px;
+  background: transparent;
+  box-sizing: border-box;
+}
+.connection-content {
+  width: min(100%, 380px);
+  color: var(--text);
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.connection-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.35px;
+}
+.connection-heading .loading-spinner {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+.connection-heading > .material-symbol {
+  font-size: 28px;
+}
+.connection-detail {
+  margin: 30px 0 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.connection-progress {
+  height: 4px;
+  width: 100%;
+  background: color-mix(in srgb, var(--text) 14%, transparent);
+  overflow: hidden;
+}
+.connection-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--text);
+  transition: width 220ms ease-out;
+}
+.connection-error {
+  margin: 24px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+:root[data-wallpaper="true"]:not([data-potato="true"]) .connection-content {
+  text-shadow: 0 1px 5px #000c;
+}
+:root[data-wallpaper="true"][data-theme="light"] .connection-content {
+  text-shadow: 0 1px 5px #fffc;
+}
+.developer-preview:has(.connection-screen) {
+  background-image: inherit;
+  background-size: cover;
+  background-position: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .connection-progress > span {
+    transition: none;
+  }
+}
+:root[data-potato="true"] .connection-progress > span {
+  transition: none;
+}
+
+.connection-help {
+ margin: -8px 0 24px;
+ color: var(--muted);
+ font-size: 13px;
+ line-height: 1.7;
+}

@@ -122,9 +122,9 @@ export function createTownEdit(store, { now = Date.now } = {}) {
       if (
         body.image !== undefined &&
         body.image !== town.image &&
-        !validPhoto(body.image)
+        body.image !== "" && (!validPhoto(body.image) || body.image.length > 160000)
       )
-        throw new ApiError(400, "Choose a valid compressed cover image.");
+        throw new ApiError(400, "Choose a compressed cover image under 120 KB.");
       let selectedResidents;
       if (body.residentUids !== undefined) {
         if (
@@ -180,7 +180,7 @@ export function createTownEdit(store, { now = Date.now } = {}) {
         name,
         type: body.type,
         ...leadership,
-        ...(body.image !== undefined ? { image: body.image } : {}),
+        ...(body.image !== undefined ? { image: body.image || "/wallpapers/2026-06-09_13.05.52_4K.webp" } : {}),
         ...(selectedResidents ? { residentsManaged: true } : {}),
         recordsResidents: residents.length,
         version: (town.version || 0) + 1,

@@ -133,7 +133,7 @@ function Directory({
     );
   return (
     <div className="task-board shop-search">
-      <header className="board-heading">
+      <header className="board-heading page-banner">
         <h1>Shop Search</h1>
         <BoardPageSlider
           selected={kind}
@@ -322,7 +322,7 @@ function Editor({
     guard = useShopGuard(dirty, busy, back);
   return (
     <div className="task-board shop-search">
-      <header className="shop-editor-heading">
+      <header className="shop-editor-heading page-banner">
         <button disabled={busy} onClick={(e) => guard.leave(e.currentTarget)}>
           <Icon name="arrow_back" />
           Shop Search
@@ -488,7 +488,7 @@ function Details({ id, go }: { id: string; go: (p: string) => void }) {
   const v = updated || data;
   return (
     <div className="task-board shop-search">
-      <header className="board-heading">
+      <header className="board-heading page-banner">
         <button onClick={() => go(v?.kind === "bulk" ? "shops:bulk" : "shops")}>
           <Icon name="arrow_back" />
           Shop Search

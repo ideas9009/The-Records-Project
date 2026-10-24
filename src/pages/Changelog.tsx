@@ -99,7 +99,7 @@ export default function Changelog({
     : null;
   return (
     <div className="changelog-page">
-      <header className="page-header">
+      <header className="page-header page-banner">
         <div>
           <h1>{versionId ? "Release notes" : "Changelog"}</h1>
           <p>

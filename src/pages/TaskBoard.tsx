@@ -11,7 +11,7 @@ import { apiRequest, watchResource } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
 import { Spinner, LoadingStatus } from "../components/Loading";
 import ExpandingConfirmation from "../components/ExpandingConfirmation";
-import { prepareTownPhoto } from "../lib/town-gallery";
+import { prepareTaskProof } from "../lib/town-gallery";
 import {
   boardStatus,
   goldLabel,
@@ -101,7 +101,7 @@ export default function TaskBoard({ page, go }: { page: string; go: Go }) {
         : "task";
   return (
     <div className="task-board">
-      <header className="board-heading board-topbar">
+      <header className="board-heading board-topbar page-banner">
         <h1>Task Board</h1>
         <BoardPageSlider selected={tab} go={go} />
         <div className="board-publish-slot">
@@ -387,7 +387,7 @@ function BoardEditor({ kind, go }: { kind: BoardKind; go: Go }) {
   }
   return (
     <div className="task-board">
-      <header className="board-editor-header">
+      <header className="board-editor-header page-banner">
         <button className="board-back" disabled={busy} onClick={back}>
           <Icon name="arrow_back" />
           Task Board
@@ -575,7 +575,7 @@ function BoardDetails({ id, go }: { id: string; go: Go }) {
     worker = account?.uid === item?.assigneeUid;
   return (
     <div className="task-board">
-      <div className="board-heading">
+      <div className="board-heading page-banner">
         <button
           className="board-back"
           onClick={() =>
@@ -1192,7 +1192,7 @@ function ProofForm({
             setError("");
             setPreparing(true);
             try {
-              setImage(await prepareTownPhoto(file));
+              setImage(await prepareTaskProof(file));
             } catch (reason) {
               setError(errorText(reason));
             } finally {

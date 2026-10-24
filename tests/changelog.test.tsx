@@ -9,9 +9,10 @@ import { VersionList } from "../src/pages/Changelog";
 import ReleaseNotes from "../src/components/ReleaseNotes";
 import { canAccessPage, type Account } from "../src/lib/access";
 afterEach(() => vi.unstubAllGlobals());
-it("keeps Phase 2 development notes separate from the two original Phase 1 releases", () => {
+it("keeps released Phase 2 notes separate from the two original Phase 1 releases", () => {
   const [current, build3, build2] = savedChangelog;
-  expect(current.status).toBe("development");
+  expect(current.status).toBe("released");
+  expect(current).toMatchObject({id:"4",build:4,version:"1.4.2"});
   expect(current.notes).toContain("# Nostra · 2 | Phase 2");
   expect(current.notes).not.toContain("## Player directory PDF export");
   expect(build3.notes).toContain("Phase 1, Build 3 (Windows MSI 1.4.1)");
@@ -23,13 +24,13 @@ it("keeps Phase 2 development notes separate from the two original Phase 1 relea
 it("adds newly published versions, sorts newest first, and never imports drafts", () => {
   const entries = mergePublishedReleases([
     {
-      tag_name: "4",
+      tag_name: "5",
       name: "Nostra-2-Phase-2",
       draft: false,
       prerelease: false,
-      published_at: "2026-10-23T10:00:00Z",
+      published_at: "2026-10-25T10:00:00Z",
       body: "# New version",
-      assets: [{ name: "TRP_1.4.2_x64_en-US.msi" }],
+      assets: [{ name: "TRP_1.4.3_x64_en-US.msi" }],
     },
     {
       tag_name: "5",
@@ -48,12 +49,8 @@ it("adds newly published versions, sorts newest first, and never imports drafts"
     null,
     {},
   ]);
-  expect(entries.map((e) => e.id)).toEqual(["phase-2", "4", "3", "2"]);
-  expect(entries[1]).toMatchObject({
-    build: 4,
-    version: "1.4.2",
-    notes: "# New version",
-  });
+  expect(entries.map((e) => e.id)).toEqual(["5", "4", "3", "2"]);
+  expect(entries[0]).toMatchObject({build:5, version:"1.4.3", notes:"# New version"});
   expect(entries[2].notes).toBe(savedChangelog[1].notes);
 });
 it("renders distinct version buttons and safe individual Markdown notes", () => {
@@ -62,7 +59,8 @@ it("renders distinct version buttons and safe individual Markdown notes", () => 
   );
   expect(html).toContain("Build 3");
   expect(html).toContain("Build 2");
-  expect(html).toContain("In development");
+  expect(html).toContain("Build 4");
+  expect(html).not.toContain("In development");
   const notes = renderToStaticMarkup(
     <ReleaseNotes
       notes={
@@ -81,7 +79,7 @@ it("failed live refresh does not discard the bundled offline archive", async () 
   await expect(
     publishedChangelog(new AbortController().signal),
   ).rejects.toThrow("saved release history");
-  expect(savedChangelog.map((e) => e.id)).toEqual(["phase-2", "3", "2"]);
+  expect(savedChangelog.map((e) => e.id)).toEqual(["4", "3", "2"]);
 });
 it("history is readable by approved and pending members without granting administrative access", () => {
   const account: Account = {

@@ -6,7 +6,7 @@ import releaseNotes from "../../RELEASE-NOTES.md?raw";
 export default function About({ go }: { go?: (page: string) => void } = {}) {
   return (
     <div className="about-page">
-      <header className="page-header">
+      <header className="page-header page-banner">
         <div>
           <h1>About</h1>
           <p>The Records Project</p>

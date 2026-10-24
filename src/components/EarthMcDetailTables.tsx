@@ -17,6 +17,12 @@ const human = (key: string) =>
       lastOnline: "Last online",
       balance: "Bank balance",
       numFriends: "Number of friends",
+      numResidents: "Residents",
+      numTownBlocks: "Claimed chunks",
+      maxTownBlocks: "Maximum chunks",
+      claimedAt: "Claimed",
+      joinedNationAt: "Joined nation",
+      ruinedAt: "Ruined",
       pvp: "Player combat (PvP)",
       explosion: "Explosions",
       fire: "Fire",
@@ -53,7 +59,9 @@ export default function EarthMcDetailTables({
   section,
   value,
   render,
+  entity = "player",
 }: {
+  entity?: "player" | "town" | "quarter";
   section: string;
   value: unknown;
   render: (value: unknown, field?: string) => ReactNode;
@@ -68,24 +76,33 @@ export default function EarthMcDetailTables({
     const groups = Array.from(
       { length: count },
       (_, index) =>
-        ["Friends", "Town members", "Allies", "Outsiders"][index] ||
+        (entity === "town"
+          ? ["Residents", "Nation members", "Allies", "Outsiders"]
+          : ["Friends", "Town members", "Allies", "Outsiders"])[index] ||
         "Group " + (index + 1),
     );
     const flags = Object.entries(object(object(value).flags));
     return (
       <>
         <p className="citizens-muted">
-          Default permissions on this player's plots. Allies include fellow
-          nation members and allied nations.
+          {entity === "town"
+            ? "Default town permissions for residents, nation members, allies and outsiders."
+            : "Default permissions on this player's plots. Allies include fellow nation members and allied nations."}
         </p>
         <div
           className="earthmc-table-scroll"
           tabIndex={0}
           role="region"
-          aria-label="Player plot permissions"
+          aria-label={
+            entity === "town" ? "Town permissions" : "Player plot permissions"
+          }
         >
           <table className="earthmc-info-table permission-table">
-            <caption>Player plot permissions</caption>
+            <caption>
+              {entity === "town"
+                ? "Town permissions"
+                : "Player plot permissions"}
+            </caption>
             <thead>
               <tr>
                 <th scope="col">Action</th>
@@ -112,7 +129,7 @@ export default function EarthMcDetailTables({
         </div>
         {!!flags.length && (
           <table className="earthmc-info-table">
-            <caption>Plot flags</caption>
+            <caption>{entity === "town" ? "Town flags" : "Plot flags"}</caption>
             <thead>
               <tr>
                 <th scope="col">Setting</th>
@@ -170,7 +187,13 @@ export default function EarthMcDetailTables({
               const date = valid ? new Date(item) : null;
               return (
                 <tr key={key}>
-                  <th scope="row">{human(key)}</th>
+                  <th scope="row">
+                    {key === "registered" && entity !== "player"
+                      ? entity === "quarter"
+                        ? "Apartment created"
+                        : "Town founded"
+                      : human(key)}
+                  </th>
                   <td>
                     {date
                       ? date.toLocaleDateString(undefined, {

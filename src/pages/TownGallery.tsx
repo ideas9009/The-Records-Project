@@ -8,6 +8,7 @@ import {
   watchTownPhotos,
   saveTownPhotos,
   prepareTownPhoto,
+  updateTownPhoto,
   MAX_TOWN_PHOTOS,
   type TownPhoto,
 } from "../lib/town-gallery";
@@ -27,9 +28,11 @@ export default function TownGallery({
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
+    [confirmRemove, setConfirmRemove] = useState(false),
     [selected, setSelected] = useState<TownPhoto | null>(null);
   const picker = useRef<HTMLInputElement>(null),
-    dialog = useRef<HTMLDialogElement>(null);
+    dialog = useRef<HTMLDialogElement>(null),
+    replacementPicker = useRef<HTMLInputElement>(null);
   const { account } = useAuth();
   const isMayor =
     !PREVIEW_MODE &&
@@ -86,6 +89,20 @@ export default function TownGallery({
       if (picker.current) picker.current.value = "";
     }
   }
+  async function changePhoto(action: "replace"|"remove", file?: File) {
+    if(!selected || !isMayor || busy || (action==="replace" && !file))return;
+    const previous=selected;
+    setBusy(true);setError("");
+    try {
+      const src=file ? await prepareTownPhoto(file) : undefined;
+      const items=await updateTownPhoto(town.id,previous,action,src);
+      setPhotos(items);setConfirmRemove(false);
+      if(action==="remove"){dialog.current?.close();setSelected(null)}
+      else setSelected(items.find(photo=>photo.id===previous.id)||null);
+    } catch(reason) {
+      setError(reason instanceof Error ? reason.message : "The gallery could not be updated.");
+    } finally {setBusy(false);if(replacementPicker.current)replacementPicker.current.value="";}
+  }
   return (
     <section
       className="card town-gallery"
@@ -113,6 +130,7 @@ export default function TownGallery({
         aria-label="Upload town images"
         onChange={(event) => void upload(Array.from(event.target.files ?? []))}
       />
+      <p className="town-gallery-storage">Gallery images keep their original resolution. If an image cannot fit the storage limit, it will not be uploaded.</p>
       <SyncStatus path={"/api/towns/" + town.id + "/photos"} />
       {error && (
         <p className="town-gallery-error" role="alert">
@@ -128,7 +146,7 @@ export default function TownGallery({
               key={photo.id}
               className="town-gallery-photo"
               aria-label={"View town image " + (index + 1)}
-              onClick={() => setSelected(photo)}
+              onClick={() => {setConfirmRemove(false);setError("");setSelected(photo)}}
             >
               <img
                 src={photo.src}
@@ -151,19 +169,33 @@ export default function TownGallery({
         ref={dialog}
         className="town-photo-dialog"
         aria-label={town.name + " gallery image"}
-        onClose={() => setSelected(null)}
+        onCancel={event=>{if(busy)event.preventDefault()}}
+        onClose={() => {setSelected(null);setConfirmRemove(false)}}
         onClick={(event) => {
-          if (event.target === event.currentTarget) dialog.current?.close();
+          if (!busy && event.target === event.currentTarget) dialog.current?.close();
         }}
       >
         <button
           className="town-photo-close"
+          disabled={busy}
           aria-label="Close image"
           onClick={() => dialog.current?.close()}
         >
           <TownIcon name="close" />
         </button>
         {selected && <img src={selected.src} alt={town.name} />}
+        {isMayor && selected && <div className="town-photo-actions">
+          <input ref={replacementPicker} className="town-gallery-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Replace gallery image" onChange={event=>void changePhoto("replace",event.target.files?.[0])}/>
+          <button disabled={busy} onClick={()=>{setConfirmRemove(false);replacementPicker.current?.click()}}>Replace image</button>
+          <button disabled={busy} onClick={()=>setConfirmRemove(true)}>Remove image</button>
+          {busy && <span role="status">Saving…</span>}
+          {confirmRemove && <div className="town-photo-confirm">
+            <p>Remove this image permanently from the town gallery?</p>
+            <button disabled={busy} onClick={()=>void changePhoto("remove")}>Confirm removal</button>
+            <button disabled={busy} onClick={()=>setConfirmRemove(false)}>Keep image</button>
+          </div>}
+          {error && <p role="alert" className="town-gallery-error">{error}</p>}
+        </div>}
       </dialog>
     </section>
   );

@@ -1,6 +1,6 @@
 # Microsoft verification setup
 
-Status: implementation prepared; NOT ENABLED pending production configuration and Minecraft API approval. Public client ID: 8dba1883-5bb6-4c05-b384-ec361a91b886. Client secret must be entered directly in Render. The existing manual registration and password sign-in remain operational. Army and the rank review queue are available independently.
+Status: Minecraft API approval received and live Microsoft verification/linking enabled and tested by the owner. The Phase 2 persistent desktop sign-in window still needs a live Windows cookie-persistence test. Public client ID: 8dba1883-5bb6-4c05-b384-ec361a91b886. Client secret must be entered directly in Render. The existing manual registration and password sign-in remain operational. Army and the rank review queue are available independently.
 
 ## Register the Microsoft application
 
@@ -43,6 +43,20 @@ One-use state, PKCE verifier and independent poll secret bind each handoff. Expi
 
 New Microsoft registration sets the password after confirming the profile. Confirmed verified members are approved automatically, including residents whose mayor has not registered. Mayors register/link towns transactionally; conflicting existing ownership requires administrator intervention. Pending town affiliations are joined by verified EarthMC town UUID on read once the mayor registers. Rank reviews are created atomically with registration/linking. Returning sign-in preserves manually assigned roles. It does not provide ongoing revocation of EarthMC-derived roles; administrators retain moderation controls.
 
-Production enablement is blocked until Minecraft API approval and a live consent test. Mocked integration tests do not establish external approval. Microsoft/Xbox accounts requiring additional Xbox or family setup receive an error and can use manual verification.
+Minecraft API approval and the initial live consent/linking test have been confirmed by the owner. Further desktop sign-in changes require their own live test. Mocked integration tests do not establish external approval. Microsoft/Xbox accounts requiring additional Xbox or family setup receive an error and can use manual verification.
 
 Existing unlinked accounts receive an optional “Recommended: Link with Microsoft” card after sign-in once the provider is enabled. “Not now” is stored only on that device for that account. Linking remains available in My Profile. The recommendation is never shown as a requirement for accessing the app.
+
+## Phase 2 desktop sign-in window
+
+The desktop app opens a dedicated Microsoft WebView2 window by default. Its persistent data folder is `microsoft-signin` inside the app local data directory. Microsoft controls cookies and account remembrance; TRP does not copy browser cookies or intercept credentials. This window is separate from browser and Windows account stores, is not incognito, and receives no Tauri remote capabilities. Navigation is limited to Microsoft domains and the exact existing server callback. OAuth code exchange, PKCE, state checking and Minecraft ownership verification remain on the server; the app continues polling its existing secret-bound handoff.
+
+The sign-in location selector is saved locally. Users can select their default browser before starting, or switch to it while verification is pending. Native-window failures leave that fallback available. Cancel and successful verification close the window without deleting cookies. This is persistent in-app Microsoft web sign-in, not a Windows WAM integration. A packaged Windows test of sign-in, close/reopen and remembered-account selection is still required.
+
+### Windows test checklist
+
+1. Use the newly built Phase 2 Windows executable. Select TRP sign-in window when signing in or linking.
+2. Complete Microsoft sign-in yourself, then confirm the Minecraft profile in TRP.
+3. Close and reopen TRP, and start Microsoft sign-in again. Check whether Microsoft offers the previously used account. Cookie expiry, Microsoft policy and any Stay signed in choice can affect this.
+4. Test My default browser separately. It should use the browser account list, not the TRP sign-in window’s cookies.
+5. Test cancelling or closing the Microsoft window, then reopening it or switching to the browser.

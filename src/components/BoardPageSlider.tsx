@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -38,9 +39,14 @@ export default function BoardPageSlider({
     pages.findIndex((page) => page.key === selected),
   );
   const [position, setPosition] = useState<number | null>(null);
+  const [pending, setPending] = useState<number | null>(null);
+  useEffect(() => setPending(null), [selected]);
   const root = useRef<HTMLDivElement>(null),
-    pointer = useRef<number | null>(null);
+    pointer = useRef<number | null>(null),
+    dragStart = useRef(0);
   function select(index: number) {
+    // Keep the destination visible while the outgoing page transition finishes.
+    setPending(index);
     root.current?.querySelectorAll<HTMLButtonElement>("button")[index]?.focus();
     go(pages[index].route);
   }
@@ -57,11 +63,15 @@ export default function BoardPageSlider({
     if (event.button !== 0 || pointer.current !== null) return;
     event.preventDefault();
     pointer.current = event.pointerId;
+    dragStart.current = event.clientX;
     event.currentTarget.setPointerCapture(event.pointerId);
-    setPosition(at(event));
   }
   function move(event: PointerEvent<HTMLDivElement>) {
-    if (pointer.current === event.pointerId) setPosition(at(event));
+    if (
+      pointer.current === event.pointerId &&
+      (position !== null || Math.abs(event.clientX - dragStart.current) >= 4)
+    )
+      setPosition(at(event));
   }
   function up(event: PointerEvent<HTMLDivElement>) {
     if (pointer.current !== event.pointerId) return;
@@ -73,15 +83,18 @@ export default function BoardPageSlider({
     select(index);
   }
   function cancel() {
+    // Releasing capture after a successful drop is not a cancelled drag.
+    if (pointer.current === null) return;
     pointer.current = null;
     setPosition(null);
   }
   function keyboard(event: KeyboardEvent<HTMLDivElement>) {
     let next: number;
+    const current = pending ?? active;
     if (event.key === "ArrowRight" || event.key === "ArrowDown")
-      next = (active + 1) % pages.length;
+      next = (current + 1) % pages.length;
     else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
-      next = (active + pages.length - 1) % pages.length;
+      next = (current + pages.length - 1) % pages.length;
     else if (event.key === "Home") next = 0;
     else if (event.key === "End") next = pages.length - 1;
     else return;
@@ -97,7 +110,7 @@ export default function BoardPageSlider({
       data-dragging={position !== null ? "true" : undefined}
       style={
         {
-          "--slider-position": position ?? active,
+          "--slider-position": position ?? pending ?? active,
           "--slider-count": pages.length,
         } as CSSProperties
       }
@@ -108,7 +121,13 @@ export default function BoardPageSlider({
       onLostPointerCapture={cancel}
       onKeyDown={keyboard}
     >
-      <span className="board-page-slider-thumb" aria-hidden="true" />
+      <span className="board-page-slider-thumb" aria-hidden="true">
+        <span className="board-page-slider-ink">
+          {pages.map((page) => (
+            <span key={page.key}>{page.label}</span>
+          ))}
+        </span>
+      </span>
       {pages.map((page, index) => (
         <button
           type="button"

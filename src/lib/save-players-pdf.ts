@@ -1,7 +1,21 @@
 import { isTauri } from "@tauri-apps/api/core";
-export async function savePlayersPdf(bytes: ArrayBuffer) {
+export async function savePlayersPdf(
+  bytes: ArrayBuffer,
+  kind: "players" | "town" | "player" = "players",
+  name = "",
+) {
+  const safeName = name
+    .normalize("NFKD")
+    .replace(/[^a-z0-9_-]/gi, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 40);
   const filename =
-    "TRP-EarthMC-players-" + new Date().toISOString().replace(/[:.]/g, "-") + ".pdf";
+    "TRP-EarthMC-" +
+    kind +
+    "-" +
+    (safeName ? safeName + "-" : "") +
+    new Date().toISOString().replace(/[:.]/g, "-") +
+    ".pdf";
   if (isTauri()) {
     const { downloadDir, join } = await import("@tauri-apps/api/path");
     const path = await join(await downloadDir(), filename);

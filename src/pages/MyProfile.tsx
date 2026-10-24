@@ -67,7 +67,7 @@ export default function MyProfile({ go }: { go?: (page: string) => void }) {
   }
   return (
     <div className="my-profile">
-      <header className="page-header">
+      <header className="page-header page-banner">
         <div>
           <h1>My Profile</h1>
           <p>Your place in The Records Project.</p>

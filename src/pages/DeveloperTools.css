@@ -1,0 +1,109 @@
+.developer-tools {
+  display: grid;
+  gap: 20px;
+}
+.developer-tools .card > p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.developer-tools label {
+  display: grid;
+  gap: 8px;
+}
+.developer-tools input,
+.developer-tools select {
+  width: 100%;
+  box-sizing: border-box;
+}
+.developer-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.developer-tool-grid button {
+  justify-content: space-between;
+  text-align: left;
+  min-height: 52px;
+  gap: 12px;
+}
+.developer-record-form {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.developer-record-form label {
+  flex: 1;
+  min-width: 180px;
+}
+.developer-preview {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg, #19191d);
+  color: var(--text);
+  box-sizing: border-box;
+}
+.developer-preview[open] {
+  display: flex;
+  flex-direction: column;
+}
+.developer-preview::backdrop {
+  background: #000b;
+}
+.developer-preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface, #242428);
+  flex-shrink: 0;
+}
+.developer-preview-toolbar > div {
+  margin-right: auto;
+}
+.developer-preview-toolbar small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.developer-preview-toolbar select {
+  max-width: 40vw;
+}
+.developer-preview-content {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+.developer-preview-content > .app {
+  min-height: 100%;
+  height: auto;
+  box-sizing: border-box;
+}
+.developer-preview-content .login-card {
+  margin: auto;
+}
+.developer-preview-content .login-card h1 {
+  font-size: 26px;
+}
+@media (max-width: 650px) {
+  .developer-preview-toolbar {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+  .developer-preview-toolbar > div {
+    width: 100%;
+  }
+  .developer-preview-toolbar select {
+    max-width: 62vw;
+  }
+}

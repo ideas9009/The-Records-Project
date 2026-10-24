@@ -1,4 +1,11 @@
 @font-face {
+  font-family: "Telegraf";
+  src: url("/fonts/Telegraf-Regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
   font-family: "Material Symbols Outlined";
   src: url("/fonts/MaterialSymbolsOutlined.woff2") format("woff2");
   font-style: normal;
@@ -70,11 +77,15 @@
   transition: width 260ms ease, height 260ms ease;
 }
 .sidebar-brand-name {
+  font-family: "Telegraf", sans-serif;
+  /* The supplied family has Regular and UltraBold only; a subtle stroke
+     gives the wordmark a weight between Regular and SemiBold. */
+  -webkit-text-stroke: .22px currentColor;
   display: flex;
   flex-direction: column;
   margin-top: 12px;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 400;
   line-height: .98;
   letter-spacing: -.9px;
   opacity: 0;
@@ -320,4 +331,12 @@
 }
 .rebuild-shell .hover-sidebar:not(:hover):not(:has(:focus-visible)) :is(.sidebar-user-name, .sidebar-user-arrow) {
   display: none;
+}
+
+.rebuild-shell .hover-sidebar .nav-label small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.3;
+  margin-top: 2px;
+  opacity: .8;
 }

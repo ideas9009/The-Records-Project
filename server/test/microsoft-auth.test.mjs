@@ -381,3 +381,30 @@ test("HTTP configuration is public; callback is a plain token-free return page",
   });
   assert.equal((await poll.json()).status, "ready");
 });
+
+test("disabled accounts fail Microsoft login and registration, including changed Minecraft usernames",async()=>{
+ const f=fixture(),registration=await ready(f),created=await finish(f,registration);
+ const actor={uid:"moderator",username:"Moderator",authType:"records",nation:"byzantium",status:"approved",roles:["operator"],role:"operator"};
+ await f.store.set("users/moderator",actor);
+ await f.service.setAccountEnabled(actor,created.account.uid,{enabled:false,expectedStatus:"approved"});
+ for(const mode of ["login","register"]){
+ const flow=await f.service.microsoftStart({mode},null,"disabled-"+mode);
+ assert.equal((await f.service.microsoftCallback(new URLSearchParams({state:flow.id,code:"test-code"}))).ok,false);
+ const result=await f.service.microsoftPoll(flow);assert.equal(result.status,"failed");assert.match(result.error,/Account not found/);
+ }
+ f.setIdentity({uuid,username:"Renamed",skin:null});
+ const flow=await f.service.microsoftStart({mode:"register"},null,"disabled-renamed");
+ assert.equal((await f.service.microsoftCallback(new URLSearchParams({state:flow.id,code:"test-code"}))).ok,false);
+ assert.equal((await f.service.microsoftPoll(flow)).status,"failed");
+ assert.equal(await f.store.get("account_names/renamed"),null);
+ await f.service.setAccountEnabled(actor,created.account.uid,{enabled:true,expectedStatus:"disabled"});
+ const logged=await finish(f,await ready(f,"login"));assert.equal(logged.account.uid,created.account.uid);
+ await assert.rejects(f.service.authenticate(created.token),e=>e.status===401);
+});
+test("a Microsoft proof obtained before disabling cannot finish afterwards",async()=>{
+ const f=fixture(),created=await finish(f,await ready(f)),flow=await ready(f,"login");
+ const actor={uid:"moderator",username:"Moderator",authType:"records",nation:"byzantium",status:"approved",roles:["operator"],role:"operator"};await f.store.set("users/moderator",actor);
+ await f.service.setAccountEnabled(actor,created.account.uid,{enabled:false,expectedStatus:"approved"});
+ await assert.rejects(finish(f,flow),e=>e.status===401&&e.message==="Account not found.");
+ assert.equal((await f.store.get("users/"+created.account.uid)).status,"disabled");
+});

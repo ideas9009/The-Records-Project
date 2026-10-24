@@ -1,3 +1,6 @@
+import DeveloperTools from "./DeveloperTools";
+import { canUseDeveloperTools } from "../lib/developer-tools";
+import { useAuth } from "../lib/auth-context";
 import AccountSettings from "../components/AccountSettings";
 import SmartSyncSettingsPanel from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
@@ -21,7 +24,13 @@ type WindowsPreferences = {
 };
 export default function Settings({
   initialTab = "appearance",
-}: { initialTab?: "appearance" | "account" } = {}) {
+  go,
+}: {
+  initialTab?: "appearance" | "account";
+  go?: (page: string) => void;
+} = {}) {
+  const { account } = useAuth();
+  const developer = canUseDeveloperTools(account);
   const [tab, setTab] = useState<string>(initialTab);
   const [scale, setScale] = useState(savedScale),
     [potato, setPotato] = useState(savedPotato);
@@ -121,7 +130,7 @@ export default function Settings({
   }
   return (
     <div className="settings-page">
-      <header className="page-header">
+      <header className="page-header page-banner">
         <div>
           <h1>Settings</h1>
         </div>
@@ -140,6 +149,9 @@ export default function Settings({
             ["account", "Account", "manage_accounts"],
             ["smartsync", "SmartSync", "sync"],
             ["windows", "Windows behaviour", "desktop_windows"],
+            ...(developer
+              ? [["developer", "Developer Tools", "developer_mode"]]
+              : []),
           ].map(([id, label, icon]) => (
             <button
               key={id}
@@ -170,7 +182,9 @@ export default function Settings({
               {error}
             </p>
           )}
-          {tab === "account" ? (
+          {tab === "developer" && developer ? (
+            <DeveloperTools go={go} />
+          ) : tab === "account" ? (
             <AccountSettings />
           ) : tab === "smartsync" ? (
             <SmartSyncSettingsPanel />

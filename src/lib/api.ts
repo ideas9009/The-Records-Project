@@ -1,3 +1,5 @@
+import { startBackgroundPolling } from "./background-polling";
+import { setConnectionStage } from "./connection-progress";
 import { beginRequest } from "./request-activity";
 import {
   cacheEpoch,
@@ -104,6 +106,7 @@ async function request<T>(path: string, options: Options): Promise<T> {
       setSession(null);
     if ([403, 404].includes(response.status) && cacheAllowed(path))
       await invalidateCache(path).catch(() => {});
+    if (path === "/api/auth/me" && response.ok && token === session()) setConnectionStage("reading");
     let data: any;
     try {
       data = await response.json();
@@ -121,8 +124,10 @@ async function request<T>(path: string, options: Options): Promise<T> {
     }
     if (token !== session())
       throw new ApiError("Your session has changed. Please try again.", 401);
-    if (path === "/api/auth/me" && data.account)
+    if (path === "/api/auth/me" && data.account) {
+      setConnectionStage("preparing");
       setSyncIdentity(data.account, base);
+    }
     if (
       !get &&
       (path.startsWith("/api/shop-search") ||
@@ -209,7 +214,7 @@ export function watchResource<T>(
   let active = true,
     busy = false;
   const refresh = async () => {
-    if (busy) return;
+    if (!active || busy) return;
     busy = true;
     try {
       const value = await apiRequest<T>(path);
@@ -221,6 +226,7 @@ export function watchResource<T>(
       busy = false;
     }
   };
+  let stopPolling: (() => void) | undefined;
   void cachedData<T>(path)
     .then((cached) => {
       if (active && cached) {
@@ -234,16 +240,10 @@ export function watchResource<T>(
     })
     .catch(() => {})
     .finally(() => {
-      if (active) void refresh();
+      if (active) stopPolling = startBackgroundPolling(refresh);
     });
-  const timer = window.setInterval(() => void refresh(), 30000),
-    focus = () => void refresh();
-  window.addEventListener("focus", focus);
-  window.addEventListener("online", focus);
   return () => {
     active = false;
-    clearInterval(timer);
-    window.removeEventListener("focus", focus);
-    window.removeEventListener("online", focus);
+    stopPolling?.();
   };
 }

@@ -274,3 +274,8 @@
     font-size: 11px;
   }
 }
+
+.earthmc-towns .minecraft-identity { display: flex; align-items: center; gap: 16px; }
+.earthmc-towns .earthmc-facts dd > button { display: inline-flex; align-items: center; gap: 10px; }
+.earthmc-more-residents { margin-top: 16px; }
+.earthmc-towns .earthmc-value-list + button { margin-top: 16px; }

@@ -1,0 +1,121 @@
+/* Page chrome uses the same solid light/dark pair as its sidebar entry. */
+.rebuild-shell main .page-banner:not(:empty) {
+  --text: var(--page-banner-ink);
+  --muted: var(--page-banner-ink);
+  --accent: var(--page-banner-ink);
+  padding: 24px 28px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--page-banner-fill);
+  color: var(--page-banner-ink);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.rebuild-shell main .page-banner,
+.rebuild-shell main .page-banner * { text-shadow: none !important; }
+.rebuild-shell main .page-banner :is(h1,h2,p,.eyebrow,.material-symbol) {
+  color: var(--page-banner-ink);
+}
+.rebuild-shell main .page-banner :is(h1,h2) { margin: 0; overflow-wrap: anywhere; }
+.rebuild-shell main .page-banner > div { min-width: 0; }
+.rebuild-shell main .page-banner p { margin-top: 8px; }
+.rebuild-shell main .page-banner button {
+  background: var(--page-banner-ink);
+  border-color: var(--page-banner-ink);
+  color: var(--page-banner-fill);
+  box-shadow: none;
+}
+.rebuild-shell main .page-banner button :is(.material-symbol,svg,span) { color: inherit; }
+.rebuild-shell main .page-banner button:not([role="radio"]):hover:not(:disabled) {
+  background: var(--page-banner-ink);
+  color: var(--page-banner-fill);
+  box-shadow: inset 0 0 0 2px var(--page-banner-fill);
+}
+.rebuild-shell main .page-banner button:focus-visible {
+  outline: 2px solid var(--page-banner-ink);
+  outline-offset: 3px;
+}
+.rebuild-shell main .page-banner .badge {
+  background: var(--page-banner-ink);
+  border-color: var(--page-banner-ink);
+  color: var(--page-banner-fill);
+}
+/* Keep the segmented navigation's sliding selection visible on a solid track. */
+.rebuild-shell main .page-banner .board-page-slider {
+  background: var(--page-banner-ink);
+  border-color: var(--page-banner-ink);
+}
+.rebuild-shell main .page-banner .board-page-slider > button {
+  background: transparent;
+  color: var(--page-banner-fill);
+}
+.rebuild-shell main .page-banner .board-page-slider-thumb {
+  border: 0;
+  background: var(--page-banner-fill);
+  overflow: hidden;
+  z-index: 2;
+}
+.rebuild-shell main .page-banner .board-page-slider > button:focus-visible {
+  outline-color: var(--page-banner-fill);
+  outline-offset: -4px;
+}
+@container (max-width: 620px) {
+  .rebuild-shell main .page-banner:not(:empty) { padding: 20px; border-radius: 20px; gap: 16px; }
+  .rebuild-shell main .page-banner :is(h1,h2) { font-size: 26px; }
+}
+.rebuild-shell main .page-banner button:not([role="radio"]) {
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 14px;
+}
+.rebuild-shell main .town-page-actions.page-banner h1 { flex: 1; }
+/* The shell already supplies the top inset shared with the sidebar. */
+.rebuild-shell .workspace-body main:has(.page-banner) {
+  padding-top: 0;
+}
+.rebuild-shell main > .breadcrumb:has(+ .page-banner) {
+  display: none;
+}
+.rebuild-shell main .page-banner .citizens-back { margin: 0; }
+
+/* A clipped copy of the labels travels opposite the pill: glyphs stay aligned
+   while their covered pixels switch to dark ink, including partial letters. */
+.rebuild-shell main .page-banner .board-page-slider > button {
+  font-weight: 600;
+  transition: none;
+}
+.rebuild-shell main .page-banner .board-page-slider > button:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.board-page-slider-ink {
+  display: grid;
+  grid-template-columns: repeat(var(--slider-count), minmax(0, 1fr));
+  width: calc(100% * var(--slider-count));
+  height: 100%;
+  transform: translateX(calc(var(--slider-position) * -100% / var(--slider-count)));
+  transition: transform 0.18s ease;
+  color: var(--page-banner-ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+.board-page-slider-ink > span {
+  display: grid;
+  place-items: center;
+  padding: 8px 10px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.board-page-slider[data-dragging="true"] .board-page-slider-ink {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-page-slider-ink { transition: none; }
+}

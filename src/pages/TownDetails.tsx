@@ -44,13 +44,14 @@ export default function TownDetails({
   }, [townId, town]);
   return (
     <div className="town-detail-page">
-      <div className="town-page-actions">
+      <div className="town-page-actions page-banner">
         {!editing && (
           <button className="town-back" onClick={onBack}>
             <TownIcon name="arrow_back" />
             Town Registry
           </button>
         )}
+        {!editing && town && <h1 ref={heading} tabIndex={-1}>{town.name}</h1>}
         {!editing && access.canEdit && (
           <button className="town-edit" onClick={() => setEditing(true)}>
             <TownIcon name="edit" />
@@ -81,22 +82,17 @@ export default function TownDetails({
         </section>
       ) : (
         <>
-          <header className="card town-detail-hero">
+          <div className="card town-detail-hero">
             <img
               className="town-cover"
               src={town.image}
               alt=""
               decoding="async"
             />
-            <div>
-              <h1 ref={heading} tabIndex={-1}>
-                {town.name}
-              </h1>
-            </div>
             {town.testData && (
               <span className="town-test-label">Test data</span>
             )}
-          </header>
+          </div>
           <div className="town-detail-grid">
             <section className="card">
               <h2>Town information</h2>

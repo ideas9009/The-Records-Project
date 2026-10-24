@@ -51,6 +51,11 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='GET'&&/^\/api\/citizens\/[^/]+\/earthmc$/.test(path))result=await service.citizenEarthMc(profile,path.split('/')[3]);
  else if(req.method==='GET'&&path==='/api/overview')result=await service.earthmcOverview(profile);
  else if(req.method==='GET'&&path==='/api/overview/friends')result=await service.earthmcFriends(profile);
+ else if(req.method==='GET'&&/^\/api\/earthmc\/towns\/[^/]+\/quarters\/[^/]+$/.test(path))result=await service.earthmcTownQuarter(profile,path.split('/')[4],path.split('/')[6]);
+ else if(req.method==='GET'&&path==='/api/earthmc/town-directory')result=await service.earthmcTownDirectory(profile);
+ else if(req.method==='GET'&&/^\/api\/earthmc\/nations\/[^/]+\/towns$/.test(path))result=await service.earthmcNationTowns(profile,path.split('/')[4]);
+ else if(req.method==='GET'&&/^\/api\/earthmc\/towns\/[^/]+$/.test(path))result=await service.earthmcTown(profile,path.split('/')[4]);
+ else if(req.method==='GET'&&path==='/api/earthmc/online')result=await service.earthmcOnline(profile);
  else if(req.method==='GET'&&path==='/api/earthmc/directory')result=await service.earthmcDirectory(profile);
  else if(req.method==='GET'&&/^\/api\/earthmc\/nations\/[^/]+\/players$/.test(path))result=await service.earthmcNationPlayers(profile,path.split('/')[4]);
  else if(req.method==='GET'&&/^\/api\/earthmc\/players\/[^/]+$/.test(path))result=await service.earthmcPlayer(profile,path.split('/')[4]);
@@ -62,12 +67,14 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='GET'&&path==='/api/admin/removal/players')result=await service.removalUsers(profile);
  else if(req.method==='POST'&&/^\/api\/admin\/removal\/towns\/[^/]+$/.test(path))result=await service.removeTown(profile,path.split('/')[5],body);
  else if(req.method==='POST'&&/^\/api\/admin\/removal\/players\/[^/]+$/.test(path))result=await service.removeUser(profile,path.split('/')[5],body);
+ else if(req.method==='POST'&&/^\/api\/admin\/account-access\/[^/]+$/.test(path))result=await service.setAccountEnabled(profile,path.split('/')[4],body);
  else if(req.method==='GET'&&path==='/api/admin/users')result=await service.adminUsers(profile);
  else if(req.method==='GET'&&path==='/api/admin/activity')result=await service.activity(profile);
  else if(req.method==='PUT'&&/^\/api\/admin\/users\/[^/]+$/.test(path))result=await service.updateUser(profile,path.split('/')[4],body);
  else if(req.method==='GET'&&path==='/api/towns/stats')result=await service.townStats(profile);
  else if(req.method==='GET'&&path==='/api/towns/mayor-options')result=await service.mayorOptions(profile);
  else if(/^\/api\/towns\/[^/]+\/edit$/.test(path)&&req.method==='GET')result=await service.townEditAccess(profile,path.split('/')[3]);
+ else if(req.method==='POST'&&/^\/api\/towns\/[^/]+\/photos\/[^/]+$/.test(path))result=await service.updateTownPhoto(profile,path.split('/')[3],path.split('/')[5],body);
  else if(/^\/api\/towns\/[^/]+$/.test(path)&&req.method==='PUT')result=await service.updateTown(profile,path.split('/')[3],body);
  else if(req.method==='POST'&&path==='/api/towns')result=await service.registerTown(profile,body);
  else if(req.method==='GET'&&path==='/api/towns')result=await service.towns(profile);

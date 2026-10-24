@@ -1,3 +1,4 @@
+import { useEarthMcPresence, isEarthMcOnline } from "../lib/earthmc-presence";
 import { useState } from "react";
 import "./minecraft-face.css";
 export default function MinecraftFace({
@@ -13,6 +14,8 @@ export default function MinecraftFace({
   eager?: boolean;
   variant?: "face" | "body";
 }) {
+  useEarthMcPresence();
+  const online = isEarthMcOnline(uuid, username);
   const identifier =
     uuid &&
     /^(?:[a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i.test(
@@ -40,7 +43,8 @@ export default function MinecraftFace({
       role="img"
       aria-label={
         username +
-        (variant === "body" ? " 3D Minecraft character" : " Minecraft face")
+        (variant === "body" ? " 3D Minecraft character" : " Minecraft face") +
+        (online ? " — online on EarthMC" : "")
       }
     >
       <span
@@ -49,6 +53,9 @@ export default function MinecraftFace({
       >
         {username.slice(0, 2).toUpperCase()}
       </span>
+      {online && variant === "face" && (
+        <span className="minecraft-online-dot" aria-hidden="true" />
+      )}
       {src && failed !== src && (
         <img
           key={src}

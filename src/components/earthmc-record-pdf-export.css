@@ -1,0 +1,3 @@
+.earthmc-record-export{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;max-width:100%}
+.earthmc-record-export>button{display:inline-flex;align-items:center;gap:8px}
+.earthmc-record-export>span[role="status"]{flex-basis:100%;text-align:right;max-width:360px;overflow-wrap:anywhere}

@@ -14,7 +14,7 @@ export type Account = {
   username: string;
   role: "member" | Role;
   roles?: Role[];
-  status: "pending" | "approved" | "rejected" | "suspended";
+  status: "pending" | "approved" | "rejected" | "suspended" | "disabled";
   createdAt: string;
   registrationMethod?: "manual-emc";
   registration?: import("./manual-registration").ManualProfile;
@@ -75,12 +75,14 @@ const pendingPages = [
   "about",
 ];
 export function canAccessPage(account: Account | null, page: string) {
-  if (!account) return false;
+  if (!account || account.status === "disabled") return false;
   if (page === "admin") return canReview(account);
   if (page === "changelog" || page.startsWith("changelog:"))
     return account.status === "approved" || account.status === "pending";
   if (
     page.startsWith("citizen:") ||
+    page === "earthmc-towns" ||
+    page.startsWith("earthmc-town:") ||
     page === "earthmc-people" ||
     page.startsWith("earthmc-player:")
   )
@@ -107,3 +109,8 @@ export function canPerform(
 
 export const canRemoveRecords = (account: Account | null) =>
   hasRole(account, ["operator", "leader", "prime_minister"]);
+
+export function canControlAccount(actor: (Account & {uid:string}) | null,target:Account & {uid:string}){
+ if(!actor || actor.uid===target.uid || !canReview(actor))return false;
+ return hasRole(actor,["operator"]) || (!accountRoles(target).includes("operator") && (canManageRoles(actor) || accountRoles(target).every(role=>["citizen","army"].includes(role))));
+}

@@ -1,3 +1,4 @@
+import { startBackgroundPolling } from "../lib/background-polling";
 import { useEffect, useRef, useState } from "react";
 import { apiRequest, watchResource } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
@@ -127,15 +128,12 @@ export function HiringNotice({ go, page }: { go: Go; page: string }) {
           setUnread(items.filter((item) => item.lastSeq > item.readSeq).length);
       } catch {}
     };
-    void load();
-    const timer = setInterval(() => void load(), 30000);
+    const stopPolling = startBackgroundPolling(load);
     window.addEventListener("hiring-updated", load);
-    window.addEventListener("focus", load);
     return () => {
       active = false;
-      clearInterval(timer);
+      stopPolling();
       window.removeEventListener("hiring-updated", load);
-      window.removeEventListener("focus", load);
     };
   }, [account?.uid, account?.status]);
   if (!unread || page.startsWith("jobs:chat:") || page === "jobs:inbox")
@@ -293,7 +291,7 @@ function AvailabilityForm({
   );
   return (
     <div className="task-board">
-      <header className="board-editor-header">
+      <header className="board-editor-header page-banner">
         <button onClick={(event) => guard.leave(event.currentTarget)}>
           <Icon name="arrow_back" />
           Available
@@ -443,7 +441,7 @@ export function HirePerson({ id, go }: { id: string; go: Go }) {
   );
   return (
     <div className="task-board">
-      <header className="board-editor-header">
+      <header className="board-editor-header page-banner">
         <button onClick={(event) => guard.leave(event.currentTarget)}>
           <Icon name="arrow_back" />
           Available
@@ -514,7 +512,7 @@ export function HiringInboxPage({ go }: { go: Go }) {
     useResource<HiringInbox[]>("/api/hiring/inbox");
   return (
     <div className="task-board">
-      <header className="board-editor-header">
+      <header className="board-editor-header page-banner">
         <button onClick={() => go("jobs:available")}>
           <Icon name="arrow_back" />
           Available
@@ -620,14 +618,11 @@ export function HiringChat({ id, go }: { id: string; go: Go }) {
         busy = false;
       }
     };
-    void refresh();
-    const timer = setInterval(() => void refresh(), 5000);
-    window.addEventListener("focus", refresh);
+    const stopPolling = startBackgroundPolling(refresh);
     return () => {
       active = false;
       generation.current++;
-      clearInterval(timer);
-      window.removeEventListener("focus", refresh);
+      stopPolling();
     };
   }, [id]);
   const other =
@@ -636,12 +631,13 @@ export function HiringChat({ id, go }: { id: string; go: Go }) {
       : data?.thread.workerName;
   return (
     <div className="task-board hiring-chat">
-      <header className="board-editor-header">
+      <header className="board-editor-header page-banner">
         <button onClick={(event) => guard.leave(event.currentTarget)}>
           <Icon name="arrow_back" />
           Hiring inbox
         </button>
         <h1>{other || "Hiring conversation"}</h1>
+        <button onClick={()=>void load().catch(error=>setError(reason(error)))}><Icon name="refresh"/>Refresh messages</button>
       </header>
       {loading && <LoadingStatus>Loading conversation...</LoadingStatus>}
       {error && <p role="alert">{error}</p>}

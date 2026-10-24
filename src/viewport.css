@@ -1,0 +1,23 @@
+/* The window owns a fixed viewport; only the app's internal panels scroll.
+   This prevents WebView2 scroll chaining/elastic overscroll from exposing
+   the area beneath the wallpaper, including at custom interface scales. */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+/* Apply scroll containment to real panels, not clipped buttons/cards: hidden
+   overflow on those elements must still pass wheel input to their parent. */
+#root main, #root nav, dialog {
+  overscroll-behavior: none;
+}
+.app.rebuild-shell {
+  min-height: 0;
+  overflow: hidden;
+}
+.rebuild-shell .workspace-body { min-height: 0; }
+/* Authentication retains its own scrolling on short windows. */
+.app.login-screen { overflow: auto; }

@@ -1,3 +1,6 @@
+import {usePageScrollEffects} from "./lib/page-scroll";
+import "./page-transitions.css";
+import {startEarthMcPresence} from "./lib/earthmc-presence";
 import Changelog from "./pages/Changelog";
 import { APP_RELEASE_LABEL } from "./lib/app-release";
 import Overview from "./pages/Overview";
@@ -9,6 +12,7 @@ import TaskBoard from "./pages/TaskBoard";
 import {PdfExportBar} from "./components/PlayersPdfExport";
 import MinecraftFace from "./components/MinecraftFace";
 import EarthMcPeople from "./pages/EarthMcPeople";
+import EarthMcTowns from "./pages/EarthMcTowns";
 import MicrosoftLinkRecommendation from "./components/MicrosoftLinkRecommendation";
 import Citizens from "./pages/Citizens";
 import {roleLabels} from "./lib/access";
@@ -49,6 +53,7 @@ function Symbol({name, className = ""}: {name: string; className?: string}) {
 export default function App() {
  const {account,loading,error}=useAuth();
  const desktopUpdate=useDesktopUpdate();
+ useEffect(()=>startEarthMcPresence(!!account && ["approved","pending"].includes(account.status) && !loading && !error),[account?.username,account?.status,loading,error]);
  const [updateOpen,setUpdateOpen]=useState(false);
  useEffect(startDesktopUpdates,[]);
  useEffect(()=>{if(!showUpdatePrompt(desktopUpdate))setUpdateOpen(false)},[desktopUpdate.stage]);
@@ -79,14 +84,36 @@ export default function App() {
  };
  useEffect(()=>{setPage("home");setTownSearch("");setNotifications(false);setHovered(null)},[account?.username]);
  const page=canAccessPage(account,requestedPage)?requestedPage:"home";
+ const pageScrollRef=useRef<HTMLElement>(null);
+ usePageScrollEffects(pageScrollRef,[page,loading,error,account?.uid,account?.status].join(":"));
+ const [pageTransition,setPageTransition] = useState<"idle"|"out"|"in">("idle");
+ const pageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+ useEffect(()=>{
+   setPageTransition("idle");
+   return ()=>{if(pageTimer.current!==null)clearTimeout(pageTimer.current)};
+ },[loading,error,account?.username,account?.status]);
+ const changePage = (id:string)=>{
+   if(pageTimer.current!==null)clearTimeout(pageTimer.current);
+   const commit = ()=>{setPage(id);setNotifications(false);document.querySelector("main")?.scrollTo(0,0)};
+   if(id===page || document.documentElement.dataset.potato==="true" || window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+     setPageTransition("idle");commit();return;
+   }
+   setPageTransition("out");
+   pageTimer.current=setTimeout(()=>{
+     commit();setPageTransition("in");
+     pageTimer.current=setTimeout(()=>{setPageTransition("idle");pageTimer.current=null},240);
+   },120);
+ };
  useEffect(()=>{if(page==="map")setMapLoading(true)},[page]);
+ const pageSection = /^town:|^earthmc-town/.test(page) ? "towns" : /^citizen:|^earthmc-people$|^earthmc-player:/.test(page) ? "citizens" : page.split(":")[0];
+ const pagePalette = navigation.find(([id])=>id===pageSection) || navigation.find(([id])=>id==="settings")!;
  const deferredPage = page === "companies" || page === "expansions";
  const title = navigation.find(([id])=>id===page)?.[1] || (page==="about" ? "About" : "Overview");
- const go=(id:string)=>{if(!canAccessPage(account,id))return;const proceed=()=>{setPage(id);setNotifications(false);document.querySelector("main")?.scrollTo(0,0)};if(!window.dispatchEvent(new CustomEvent("records-navigate",{cancelable:true,detail:{proceed,anchor:document.activeElement instanceof HTMLElement?document.activeElement.closest("button"):null}})))return;proceed()};
+ const go=(id:string)=>{if(!canAccessPage(account,id))return;const proceed=()=>changePage(id);if(!window.dispatchEvent(new CustomEvent("records-navigate",{cancelable:true,detail:{proceed,anchor:document.activeElement instanceof HTMLElement?document.activeElement.closest("button"):null}})))return;proceed()};
  if(loading||error)return <ConnectionStatus/>;
  if(!account)return <Login/>;
- if(account.registrationMethod==="manual-emc"&&account.status==="pending")return <div className="app login-screen"><section className="card login-card"><RegistrationProfile/></section></div>;
- return <div className="app rebuild-shell" data-page={page}>
+ if(account.registrationMethod==="manual-emc"&&account.status==="pending")return <RegistrationProfile/>;
+ return <div className="app rebuild-shell" data-page={page} style={{"--page-banner-fill":pagePalette[3],"--page-banner-ink":pagePalette[4]} as CSSProperties}>
    <SmartSyncManager/><ServerActivity/><div className="sidebar-slot">
    <aside className="sidebar hover-sidebar" aria-label="Main sidebar" data-update-open={updateOpen&&showUpdatePrompt(desktopUpdate)?"true":undefined}
      onPointerMove={event=>{pointer.current={x:event.clientX,y:event.clientY};refreshHover()}}
@@ -101,9 +128,9 @@ export default function App() {
      }
      <div className="sidebar-scroll">
      <nav aria-label="Workspace" ref={navRef} onScroll={trackScroll}>
-       {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="citizens" && (page.startsWith("citizen:") || page.startsWith("earthmc-"))) || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:")) || (id==="jobs" && page.startsWith("jobs:")) || (id==="shops" && page.startsWith("shops:")) || (id==="settings" && page.startsWith("settings:"))?"active":""} aria-label={name} title={name} aria-current={page===id || (id==="citizens" && (page.startsWith("citizen:") || page.startsWith("earthmc-"))) || (id==="towns" && page.startsWith("town:")) || (id==="news" && page.startsWith("news:")) || (id==="jobs" && page.startsWith("jobs:")) || (id==="shops" && page.startsWith("shops:")) || (id==="settings" && page.startsWith("settings:"))?"page":undefined}
+       {navigation.filter(([id])=>canAccessPage(account,id)).map(([id,name,icon,fill,ink])=><button key={id} data-nav={id} data-hovered={hovered===id ? "true" : undefined} onClick={()=>go(id)} className={page===id || (id==="citizens" && (page.startsWith("citizen:") || page==="earthmc-people" || page.startsWith("earthmc-player:"))) || (id==="towns" && (page.startsWith("town:") || page==="earthmc-towns" || page.startsWith("earthmc-town:"))) || (id==="news" && page.startsWith("news:")) || (id==="jobs" && page.startsWith("jobs:")) || (id==="shops" && page.startsWith("shops:")) || (id==="settings" && page.startsWith("settings:"))?"active":""} aria-label={name} title={id==="companies"||id==="expansions" ? name+" — Coming soon in future updates" : name} aria-current={page===id || (id==="citizens" && (page.startsWith("citizen:") || page==="earthmc-people" || page.startsWith("earthmc-player:"))) || (id==="towns" && (page.startsWith("town:") || page==="earthmc-towns" || page.startsWith("earthmc-town:"))) || (id==="news" && page.startsWith("news:")) || (id==="jobs" && page.startsWith("jobs:")) || (id==="shops" && page.startsWith("shops:")) || (id==="settings" && page.startsWith("settings:"))?"page":undefined}
          style={{"--pill-fill":fill,"--pill-ink":ink} as CSSProperties}>
-         {pendingRequests>0&&(page===id||(id==="news"&&page.startsWith("news:"))||(id==="jobs"&&page.startsWith("jobs:"))||(id==="shops"&&page.startsWith("shops:"))||(id==="citizens"&&(page.startsWith("citizen:") || page.startsWith("earthmc-")))||(id==="towns"&&page.startsWith("town:")))?<span className="sidebar-icon-slot"><Spinner/></span>:<Symbol name={icon}/>}<span className="nav-label">{name}</span>
+         {pendingRequests>0&&(page===id||(id==="news"&&page.startsWith("news:"))||(id==="jobs"&&page.startsWith("jobs:"))||(id==="shops"&&page.startsWith("shops:"))||(id==="citizens"&&(page.startsWith("citizen:") || page==="earthmc-people" || page.startsWith("earthmc-player:")))||(id==="towns"&&(page.startsWith("town:") || page==="earthmc-towns" || page.startsWith("earthmc-town:"))))?<span className="sidebar-icon-slot"><Spinner/></span>:<Symbol name={icon}/>}<span className="nav-label">{name}{(id==="companies"||id==="expansions")&&<small>Coming soon</small>}</span>
        </button>)}
      </nav>
      </div>
@@ -119,21 +146,23 @@ export default function App() {
    </aside>
    </div>
    <div className="workspace-body">
-     <main className={page === "map" ? "map-page" : undefined}>
+     <div className="page-viewport" data-transition={pageTransition}>
+     <main ref={pageScrollRef} className={page === "map" ? "map-page" : undefined}>
        <HiringNotice page={page} go={go}/>
        {page!=="profile"&&page!=="map"&&<MicrosoftLinkRecommendation onLink={()=>go("profile")}/>}
-       {page === "map" ? <div className="map-loading-stage">{mapLoading&&<div className="map-loading-status"><LoadingStatus>Loading map…</LoadingStatus></div>}<iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" onLoad={()=>setMapLoading(false)} allowFullScreen/></div> : page === "shops" || page.startsWith("shops:") ? <ShopSearch key={page} page={page} go={go}/> : page === "jobs" || page.startsWith("jobs:") ? <TaskBoard page={page} go={go}/> : page === "news" || page.startsWith("news:") ? <News page={page} go={go}/> : page.startsWith("earthmc-") ? <EarthMcPeople playerId={page.startsWith("earthmc-player:")?page.slice(15):undefined} onOpen={id=>go("earthmc-player:"+id)} onBack={()=>go("earthmc-people")} onCitizens={()=>go("citizens")}/> : page === "citizens" || page.startsWith("citizen:") ? <Citizens onEarthMc={()=>go("earthmc-people")} citizenId={(page.startsWith("citizen:") || page.startsWith("earthmc-"))?page.slice(8):undefined} onOpen={id=>go("citizen:"+id)} onBack={()=>go("citizens")} onTown={id=>go("town:"+id)}/> : page === "towns" ? <TownRegistry search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile go={go}/> : page === "admin" ? <RegistrationRequests/> : page === "settings" || page === "settings:account" ? <Settings key={page} initialTab={page === "settings:account" ? "account" : "appearance"}/> : page === "about" ? <About go={go}/> : page === "changelog" || page.startsWith("changelog:") ? <Changelog versionId={page.startsWith("changelog:") ? page.slice(10) : undefined} go={go}/> : page === "home" ? <Overview go={go}/> : <>
+       {page === "map" ? <div className="map-loading-stage">{mapLoading&&<div className="map-loading-status"><LoadingStatus>Loading map…</LoadingStatus></div>}<iframe className="earthmc-map-frame" src="https://earthmc.net/map" title="EarthMC live map" onLoad={()=>setMapLoading(false)} allowFullScreen/></div> : page === "shops" || page.startsWith("shops:") ? <ShopSearch page={page} go={go}/> : page === "jobs" || page.startsWith("jobs:") ? <TaskBoard page={page} go={go}/> : page === "news" || page.startsWith("news:") ? <News page={page} go={go}/> : page==="earthmc-towns" || page.startsWith("earthmc-town:") ? <EarthMcTowns townId={page.startsWith("earthmc-town:")?page.slice(13):undefined} onOpen={id=>go("earthmc-town:"+id)} onBack={()=>go("earthmc-towns")} onRegistry={()=>go("towns")} onPlayer={id=>go("earthmc-player:"+id)}/> : (page==="earthmc-people" || page.startsWith("earthmc-player:")) ? <EarthMcPeople playerId={page.startsWith("earthmc-player:")?page.slice(15):undefined} onOpen={id=>go("earthmc-player:"+id)} onBack={()=>go("earthmc-people")} onCitizens={()=>go("citizens")}/> : page === "citizens" || page.startsWith("citizen:") ? <Citizens onEarthMc={()=>go("earthmc-people")} citizenId={page.startsWith("citizen:")?page.slice(8):undefined} onOpen={id=>go("citizen:"+id)} onBack={()=>go("citizens")} onTown={id=>go("town:"+id)}/> : page === "towns" ? <TownRegistry onEarthMc={()=>go("earthmc-towns")} search={townSearch} onSearch={setTownSearch} canOpen={canPerform(account,"open-town")} onOpenTown={id=>go("town:"+id)}/> : page.startsWith("town:") ? <TownDetails townId={page.slice(5)} onBack={()=>go("towns")}/> : page === "profile" ? <RegistrationProfile go={go}/> : page === "admin" ? <RegistrationRequests/> : page === "settings" || page === "settings:account" ? <Settings key={page} go={go} initialTab={page === "settings:account" ? "account" : "appearance"}/> : page === "about" ? <About go={go}/> : page === "changelog" || page.startsWith("changelog:") ? <Changelog versionId={page.startsWith("changelog:") ? page.slice(10) : undefined} go={go}/> : page === "home" ? <Overview go={go}/> : <>
        <div className="breadcrumb">Workspace <span>/</span> {title}</div>
-       <header className="page-header"><div><div className="eyebrow">THE RECORDS PROJECT</div><h1>{title}</h1><p>{deferredPage ? "Planned for a future phase of Nostra-2." : "A fresh workspace for Nostra-2."}</p></div><span className="badge">{deferredPage ? "Coming soon" : "To be rebuilt"}</span></header>
+       <header className="page-header page-banner"><div><div className="eyebrow">THE RECORDS PROJECT</div><h1>{title}</h1><p>{deferredPage ? "Planned for a future update of The Records Project." : "A fresh workspace for Nostra-2."}</p></div><span className="badge">{deferredPage ? "Coming soon" : "To be rebuilt"}</span></header>
        <section className="card rebuild-placeholder">
          <div className="empty">
            <Symbol name="layers"/>
-           <h2>{deferredPage ? "Coming soon in future phases" : "Ready for a fresh start"}</h2>
+           <h2>{deferredPage ? "Coming soon in future updates" : "Ready for a fresh start"}</h2>
            <p>{deferredPage ? "This section is planned for a future update." : "This section is empty and ready to be designed."}</p>
          </div>
        </section>
        </>}
      </main>
+     </div>
      {notifications && <section className="card notifications-panel" id="notifications-panel" role="dialog" aria-labelledby="notifications-heading">
        <div className="notifications-heading"><h2 id="notifications-heading">Notifications</h2><button aria-label="Close notifications" onClick={()=>setNotifications(false)}><Symbol name="close"/></button></div>
        <p>Notifications will return when this section is rebuilt.</p>

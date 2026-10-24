@@ -1,3 +1,9 @@
+import {
+  useEarthMcPresence,
+  filterOnlinePlayers,
+  refreshEarthMcPresence,
+} from "../lib/earthmc-presence";
+import EarthMcRecordPdfExport from "../components/EarthMcRecordPdfExport";
 import PlayersPdfExport from "../components/PlayersPdfExport";
 import {
   earthMcPageSizes,
@@ -91,6 +97,8 @@ export default function EarthMcPeople({
   onBack: () => void;
   onCitizens: () => void;
 }) {
+  const presence = useEarthMcPresence();
+  const [onlineOnly, setOnlineOnly] = useState(false);
   const [directory, setDirectory] = useState<Directory | null>(null),
     [list, setList] = useState<Person[]>([]),
     [nation, setNation] = useState("all"),
@@ -188,10 +196,11 @@ export default function EarthMcPeople({
   }, [playerId, detailAttempt]);
   const filtered = useMemo(
     () =>
-      list.filter((person) =>
-        person.name.toLowerCase().includes(search.trim().toLowerCase()),
+      (onlineOnly ? filterOnlinePlayers(list, presence.players) : list).filter(
+        (person) =>
+          person.name.toLowerCase().includes(search.trim().toLowerCase()),
       ),
-    [list, search],
+    [list, search, onlineOnly, presence.players],
   );
   const limit = typeof pageSize === "number" ? pageSize : 20;
   const pages = Math.max(1, Math.ceil(filtered.length / limit)),
@@ -199,13 +208,13 @@ export default function EarthMcPeople({
   if (playerId)
     return (
       <div className="citizens-page earthmc-people" ref={captureTarget}>
+      <header className="page-header page-banner">
         <button className="citizens-back" onClick={onBack}>
           <span className="material-symbol" aria-hidden="true">
             arrow_back
           </span>
           EarthMC people
         </button>
-        <header className="page-header">
           <div className="minecraft-identity">
             {typeof detail?.player.name === "string" && (
               <MinecraftFace
@@ -229,13 +238,10 @@ export default function EarthMcPeople({
             >
               Refresh
             </button>
-            <PageCapture
-              target={captureTarget}
-              title={
-                typeof detail?.player.name === "string"
-                  ? detail.player.name
-                  : "EarthMC-player"
-              }
+            <EarthMcRecordPdfExport
+              kind="player"
+              record={detail?.player}
+              checkedAt={detail?.checkedAt}
               disabled={detailLoading || !detail}
             />
           </div>
@@ -335,20 +341,23 @@ export default function EarthMcPeople({
     );
   return (
     <div className="citizens-page earthmc-people" ref={captureTarget}>
+      <header className="page-header page-banner">
       <button className="citizens-back" onClick={onCitizens}>
         <span className="material-symbol" aria-hidden="true">
           arrow_back
         </span>
         Citizens
       </button>
-      <header className="page-header">
         <h1 ref={heading} tabIndex={-1}>
           People on EarthMC
         </h1>
         <div className="page-header-actions" data-capture-exclude>
           <button
             disabled={loading}
-            onClick={() => setAttempt((value) => value + 1)}
+            onClick={() => {
+              setAttempt((value) => value + 1);
+              void refreshEarthMcPresence();
+            }}
           >
             Refresh
           </button>
@@ -396,6 +405,20 @@ export default function EarthMcPeople({
           </select>
         </label>
         <label className="earthmc-nation-filter">
+          <span>Status</span>
+          <select
+            aria-label="Filter EarthMC players by online status"
+            value={onlineOnly ? "online" : "all"}
+            onChange={(event) => {
+              setOnlineOnly(event.target.value === "online");
+              setPage(0);
+            }}
+          >
+            <option value="all">All players</option>
+            <option value="online">Online players</option>
+          </select>
+        </label>
+        <label className="earthmc-nation-filter">
           <span>Show</span>
           <select
             aria-label="Players per page"
@@ -434,19 +457,36 @@ export default function EarthMcPeople({
         )}
       </div>
 
+      {presence.error && (
+        <p className="citizens-muted" role="status">
+          {presence.error}{" "}
+          <button onClick={() => void refreshEarthMcPresence()}>
+            Retry online status
+          </button>
+        </p>
+      )}
+      {onlineOnly && !presence.players && !presence.error && (
+        <LoadingStatus>Checking who is online...</LoadingStatus>
+      )}
       {loading && <LoadingStatus>Loading EarthMC people...</LoadingStatus>}
       {error && (
         <section className="card">
           <p role="alert">{error}</p>
-          <button onClick={() => setAttempt((value) => value + 1)}>
+          <button
+            onClick={() => {
+              setAttempt((value) => value + 1);
+              void refreshEarthMcPresence();
+            }}
+          >
             Try again
           </button>
         </section>
       )}
-      {!loading && !error && (
+      {!loading && !error && (!onlineOnly || presence.players !== null) && (
         <>
           <p className="citizens-muted" role="status">
-            {filtered.length.toLocaleString()} players / Page {current + 1} of{" "}
+            {filtered.length.toLocaleString()}{" "}
+            {onlineOnly ? "online players" : "players"} / Page {current + 1} of{" "}
             {pages}
           </p>
           <div className="citizens-grid">
@@ -475,7 +515,9 @@ export default function EarthMcPeople({
           </div>
           {!filtered.length && (
             <section className="card citizens-empty">
-              No matching players.
+              {onlineOnly && !presence.players
+                ? "Online status is unavailable. Please retry."
+                : "No matching players."}
             </section>
           )}
           <div

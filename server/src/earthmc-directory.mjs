@@ -45,6 +45,15 @@ export function createEarthMcDirectory({
       );
       if (!response.ok) throw Error();
       const data = await response.json();
+      if (endpoint === "online") {
+        if (
+          !data ||
+          !Array.isArray(data.players) ||
+          !Number.isFinite(data.count)
+        )
+          throw Error();
+        return data.players;
+      }
       if (!Array.isArray(data)) throw Error();
       return data;
     } catch {
@@ -54,7 +63,7 @@ export function createEarthMcDirectory({
       );
     }
   }
-  async function saved(key, load) {
+  async function saved(key, load, ttl = 60000) {
     const old = cache.get(key);
     if (old && old.expires > now()) return old.data;
     if (pending.has(key)) return pending.get(key);
@@ -62,7 +71,7 @@ export function createEarthMcDirectory({
       throw new ApiError(503, "EarthMC is busy. Please try again shortly.");
     const job = load().then((data) => {
       if (cache.size >= 200) cache.delete(cache.keys().next().value);
-      cache.set(key, { data, expires: now() + 60000 });
+      cache.set(key, { data, expires: now() + ttl });
       return data;
     });
     pending.set(key, job);
@@ -74,6 +83,7 @@ export function createEarthMcDirectory({
   }
   const players = () =>
     saved("players", async () => list(await query("players")));
+  const towns = () => saved("towns", async () => list(await query("towns")));
   const nations = () =>
     saved("nations", async () => list(await query("nations")));
   const allowed = (profile) => {
@@ -84,6 +94,15 @@ export function createEarthMcDirectory({
     )
       throw new ApiError(403, "EarthMC directory access is unavailable.");
   };
+  const townDetail = (id) =>
+    saved("town:" + id.toLowerCase(), async () => {
+      const items = await query("towns", [id]);
+      const town = items.find(
+        (item) => item?.uuid?.toLowerCase() === id.toLowerCase(),
+      );
+      if (!town) throw new ApiError(404, "This EarthMC town is unavailable.");
+      return { town, checkedAt: new Date(now()).toISOString() };
+    });
   return {
     earthmcOverview: async (profile) => {
       allowed(profile);
@@ -174,6 +193,17 @@ export function createEarthMcDirectory({
         };
       });
     },
+    earthmcOnline: async (profile) => {
+      allowed(profile);
+      return saved(
+        "online",
+        async () => ({
+          players: list(await query("online")),
+          checkedAt: new Date(now()).toISOString(),
+        }),
+        20000,
+      );
+    },
     earthmcDirectory: async (profile) => {
       allowed(profile);
       const [people, countries] = await Promise.all([players(), nations()]);
@@ -207,6 +237,77 @@ export function createEarthMcDirectory({
           checkedAt: new Date(now()).toISOString(),
         };
       });
+    },
+    earthmcTownDirectory: async (profile) => {
+      allowed(profile);
+      const [places, countries] = await Promise.all([towns(), nations()]);
+      return {
+        towns: places,
+        nations: countries,
+        checkedAt: new Date(now()).toISOString(),
+      };
+    },
+    earthmcNationTowns: async (profile, id) => {
+      allowed(profile);
+      if (!uuid(id)) throw new ApiError(400, "Invalid nation.");
+      return saved("nation-towns:" + id.toLowerCase(), async () => {
+        const [places, items] = await Promise.all([
+          towns(),
+          query("nations", [id]),
+        ]);
+        const nation = items.find(
+          (item) => item?.uuid?.toLowerCase() === id.toLowerCase(),
+        );
+        if (!nation) throw new ApiError(404, "Nation not found.");
+        if (!Array.isArray(nation.towns))
+          throw new ApiError(503, "EarthMC nation towns are unavailable.");
+        const members = new Set(
+          nation.towns
+            .filter((item) => uuid(item?.uuid))
+            .map((item) => item.uuid.toLowerCase()),
+        );
+        return {
+          towns: places.filter((town) => members.has(town.uuid)),
+          checkedAt: new Date(now()).toISOString(),
+        };
+      });
+    },
+    earthmcTown: async (profile, id) => {
+      allowed(profile);
+      if (!uuid(id)) throw new ApiError(400, "Invalid town.");
+      return townDetail(id);
+    },
+    earthmcTownQuarter: async (profile, townId, quarterId) => {
+      allowed(profile);
+      if (!uuid(townId) || !uuid(quarterId))
+        throw new ApiError(400, "Invalid town or apartment.");
+      const { town } = await townDetail(townId);
+      const belongs =
+        Array.isArray(town.quarters) &&
+        town.quarters.some((item) => {
+          const id = typeof item === "string" ? item : item?.uuid;
+          return uuid(id) && id.toLowerCase() === quarterId.toLowerCase();
+        });
+      if (!belongs)
+        throw new ApiError(404, "This apartment is not listed in this town.");
+      return saved(
+        "quarter:" + townId.toLowerCase() + ":" + quarterId.toLowerCase(),
+        async () => {
+          const items = await query("quarters", [quarterId]);
+          const quarter = items.find(
+            (item) => item?.uuid?.toLowerCase() === quarterId.toLowerCase(),
+          );
+          if (
+            !quarter ||
+            quarter.town?.uuid?.toLowerCase() !== townId.toLowerCase()
+          )
+            throw new ApiError(
+              404,
+              "This apartment is unavailable in this town.",
+            );
+          return { quarter, checkedAt: new Date(now()).toISOString() };
+        },
+      );
     },
     earthmcPlayer: async (profile, id) => {
       allowed(profile);

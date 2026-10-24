@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import {
+  savedMicrosoftLocation,
+  saveMicrosoftLocation,
+  openMicrosoftDesktop,
+  closeMicrosoftDesktop,
+  type MicrosoftLocation,
+} from "../lib/microsoft-window";
 import { Spinner, LoadingStatus } from "./Loading";
 import {
   startMicrosoft,
@@ -82,10 +88,16 @@ export function MicrosoftConfirmation({ ready }: { ready: MicrosoftReady }) {
 export default function MicrosoftVerification({
   mode,
   onActiveChange,
+  buttonLabel,
 }: {
   mode: MicrosoftMode;
+  buttonLabel?: string;
   onActiveChange?: (active: boolean) => void;
 }) {
+  const desktop = isTauri();
+  const [location, setLocation] = useState<MicrosoftLocation>(
+    savedMicrosoftLocation,
+  );
   const [enabled, setEnabled] = useState(false),
     [checking, setChecking] = useState(true),
     [flow, setFlow] = useState<MicrosoftFlow | null>(null),
@@ -114,6 +126,7 @@ export default function MicrosoftVerification({
     return () => {
       mounted = false;
       active.current = false;
+      void closeMicrosoftDesktop().catch(() => {});
     };
   }, []);
   useEffect(() => {
@@ -134,10 +147,12 @@ export default function MicrosoftVerification({
         const result = await pollMicrosoft(flow);
         if (!mounted) return;
         if (result.status === "failed") {
+          void closeMicrosoftDesktop().catch(() => {});
           setError(result.error || "Microsoft verification failed.");
           return;
         }
         if (result.status === "ready") {
+          void closeMicrosoftDesktop().catch(() => {});
           setReady(result);
           if (mode === "login" && !finishing.current) {
             finishing.current = true;
@@ -198,7 +213,7 @@ export default function MicrosoftVerification({
         return;
       }
       setFlow(next);
-      if (isTauri()) await openUrl(url);
+      if (desktop) await openMicrosoftDesktop(url, location);
       else if (windowHandle) windowHandle.location.href = url;
     } catch (e) {
       windowHandle?.close();
@@ -210,7 +225,24 @@ export default function MicrosoftVerification({
       if (active.current) setOpening(false);
     }
   }
+  async function reopen(location: MicrosoftLocation) {
+    if (!flow || opening) return;
+    setError("");
+    setOpening(true);
+    try {
+      await openMicrosoftDesktop(flow.url, location);
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Could not open Microsoft sign-in. Try your default browser.",
+      );
+    } finally {
+      if (active.current) setOpening(false);
+    }
+  }
   async function cancel() {
+    void closeMicrosoftDesktop().catch(() => {});
     if (flow) void cancelMicrosoft(flow).catch(() => {});
     setFlow(null);
     setReady(null);
@@ -270,12 +302,36 @@ export default function MicrosoftVerification({
             <span className="material-symbol" aria-hidden="true">
               verified_user
             </span>
-            {mode === "register"
-              ? "Register with Microsoft"
-              : mode === "link"
-                ? "Link Microsoft account"
-                : "Sign in with Microsoft"}
+            {buttonLabel ??
+              (mode === "register"
+                ? "Register with Microsoft"
+                : mode === "link"
+                  ? "Link Microsoft account"
+                  : "Sign in with Microsoft")}
           </button>
+          {desktop && (
+            <label className="microsoft-location-choice">
+              Open Microsoft sign-in in
+              <select
+                aria-label="Microsoft sign-in location"
+                value={location}
+                disabled={opening}
+                onChange={(event) => {
+                  const next = event.target.value as MicrosoftLocation;
+                  setLocation(next);
+                  saveMicrosoftLocation(next);
+                }}
+              >
+                <option value="app">TRP sign-in window</option>
+                <option value="browser">My default browser</option>
+              </select>
+              <small>
+                {location === "app"
+                  ? "Remembers Microsoft accounts in this app on this device."
+                  : "Uses your browser’s saved Microsoft accounts."}
+              </small>
+            </label>
+          )}
           {!checking && !enabled && (
             <p className="login-note">
               Microsoft verification is not available yet.
@@ -341,13 +397,27 @@ export default function MicrosoftVerification({
           ) : (
             <>
               <LoadingStatus>Waiting for Microsoft verification…</LoadingStatus>
-              <a
-                href={microsoftAuthorizationUrl(flow.url)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open Microsoft sign-in
-              </a>
+              {desktop ? (
+                <div className="microsoft-window-actions">
+                  <button disabled={opening} onClick={() => void reopen("app")}>
+                    Reopen sign-in window
+                  </button>
+                  <button
+                    disabled={opening}
+                    onClick={() => void reopen("browser")}
+                  >
+                    Use my default browser instead
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href={microsoftAuthorizationUrl(flow.url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open Microsoft sign-in
+                </a>
+              )}
             </>
           )}
           <button disabled={busy} onClick={() => void cancel()}>

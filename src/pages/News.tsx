@@ -313,7 +313,7 @@ export function Feed({
   );
   return (
     <div className="news-page">
-      <header className="page-header news-header">
+      <header className="page-header news-header page-banner">
         <h1>News</h1>
         {publisher && (
           <div className="news-header-buttons">
@@ -522,7 +522,7 @@ function Article({
   }
   return (
     <div className="news-page">
-      <div className="news-article-actions">
+      <div className="news-article-actions page-banner">
         <button onClick={() => go("news")}>
           <Icon name="arrow_back" />
           News
@@ -824,13 +824,11 @@ function NewsEditor({
         onCancel={cancelDiscard}
         onConfirm={discard}
       />
-      <div className="news-article-actions">
+      <header className="page-header news-header page-banner">
         <button onClick={() => go(id ? "news:" + id : "news")}>
           <Icon name="arrow_back" />
           {id ? "Article" : "News"}
         </button>
-      </div>
-      <header className="page-header news-header">
         <h1>
           {id ? "Edit News" : meeting ? "Host a meeting" : "Publish News"}
         </h1>

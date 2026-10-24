@@ -108,3 +108,5 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+
+.microsoft-location-choice{display:grid;gap:8px;margin-top:14px;font-size:12px}.microsoft-location-choice select{width:100%;min-width:0;font-size:12px}.microsoft-location-choice small{font-size:11px;line-height:1.6}.microsoft-window-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.microsoft-window-actions button{font-size:12px;white-space:normal}

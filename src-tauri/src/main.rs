@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod database;
+mod microsoft_window;
+use microsoft_window::{open_microsoft_signin, close_microsoft_signin};
 mod updater;
 use database::{database_commit, database_path, database_read};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -244,6 +246,8 @@ fn main() {
             database_path,
             earthmc,
             open_panel,
+            open_microsoft_signin,
+            close_microsoft_signin,
             get_windows_preferences,
             set_startup,
             set_background,
