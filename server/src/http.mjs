@@ -74,6 +74,7 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  else if(req.method==='GET'&&path==='/api/towns/stats')result=await service.townStats(profile);
  else if(req.method==='GET'&&path==='/api/towns/mayor-options')result=await service.mayorOptions(profile);
  else if(/^\/api\/towns\/[^/]+\/edit$/.test(path)&&req.method==='GET')result=await service.townEditAccess(profile,path.split('/')[3]);
+ else if(req.method==='POST'&&/^\/api\/towns\/[^/]+\/photos\/[^/]+$/.test(path))result=await service.updateTownPhoto(profile,path.split('/')[3],path.split('/')[5],body);
  else if(/^\/api\/towns\/[^/]+$/.test(path)&&req.method==='PUT')result=await service.updateTown(profile,path.split('/')[3],body);
  else if(req.method==='POST'&&path==='/api/towns')result=await service.registerTown(profile,body);
  else if(req.method==='GET'&&path==='/api/towns')result=await service.towns(profile);
