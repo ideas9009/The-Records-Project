@@ -19,6 +19,8 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  if(req.method==='GET'&&path==='/api/auth/microsoft/callback'){const result=await service.microsoftCallback(new URL(req.url,'http://api.local').searchParams);res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");res.writeHead(200);res.end('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>The Records Project</title><body style="background:#18181c;color:#fff;font-family:system-ui;padding:40px"><h1>The Records Project</h1><p>'+(result.ok?'Microsoft verification completed. Return to the app to continue.':'Verification could not be completed. Return to the app to retry or use manual registration.')+'</p></body></html>');return}
  const profile=await service.authenticate(token);
  let result;if(req.method==='GET'&&path==='/api/auth/me')result=await service.me(profile);
+ else if(req.method==='GET'&&path==='/api/notifications')result=await service.notifications(profile);
+ else if(req.method==='POST'&&path==='/api/companies/registration-interest')result=await service.requestCompanyRegistration(profile);
  else if(req.method==='POST'&&path==='/api/auth/register/recheck')result=await service.manualRecheck(profile,body);
  else if(req.method==='POST'&&path==='/api/auth/password')result=await service.changePassword(profile,token,body);
  else if(req.method==='POST'&&path==='/api/auth/logout')result=await service.logout(token);
