@@ -460,7 +460,7 @@ export function createMicrosoftAuth(
       tx.remove(path(body.id));
     });
     return {
-      token: await session(resultProfile.uid),
+      token: await session(resultProfile.uid, undefined, body.rememberSession === true),
       account: publicProfile(resultProfile),
     };
   }

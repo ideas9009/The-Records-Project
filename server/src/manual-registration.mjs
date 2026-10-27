@@ -308,7 +308,7 @@ export function createManualRegistration(
       tx.remove(path);
     });
     return {
-      token: await session(uid),
+      token: await session(uid, undefined, body.rememberSession === true),
       account: {
         ...publicProfile(profile),
         ...(await registrationState(profile)),
