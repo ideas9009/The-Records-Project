@@ -1,4 +1,3 @@
-import {checkGoogleNetwork,checkGooglePostControls} from "./google-network-check.mjs";
 import {readFile} from 'node:fs/promises';
 import {initializeApp,applicationDefault} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
@@ -12,19 +11,7 @@ const store=firestoreStore(getFirestore(app));
 await store.get('server_system/connection');
 const sampleTown=JSON.parse(await readFile(new URL('../../src/data/towns.json',import.meta.url),'utf8'))[0];
 const origins=(process.env.ALLOWED_ORIGINS||'http://127.0.0.1:1420,http://localhost:1420,http://tauri.localhost,https://tauri.localhost').split(',').map(value=>value.trim()).filter(Boolean);
-const service=createService(store,{sampleTown});
-let googleNetwork={state:process.env.RENDER?'pending':'disabled'};
-if(process.env.RENDER)void checkGoogleNetwork().then(async result=>{
- googleNetwork=result;
- // Temporary fixed-prompt investigation, disabled after the current debugging window.
- if(Date.now()<Date.parse("2026-10-29T15:30:00Z")){
-  googleNetwork={...result,providerComparison:{state:'pending'}};
-  const providerComparison=await checkGooglePostControls({apiKey:process.env.GEMINI_API_KEY,model:process.env.GEMINI_MODEL});
-  googleNetwork={...result,providerComparison};
- }
-});
-service.rhomaionTransportStatus=()=>googleNetwork;
-const api=createApi(service,{origins,trustRenderProxy:!!process.env.RENDER});
+const api=createApi(createService(store,{sampleTown}),{origins,trustRenderProxy:!!process.env.RENDER});
 api.requestTimeout=30000;api.headersTimeout=10000;
 api.listen(Number(process.env.PORT)||8787,'0.0.0.0',()=>console.log('The Records Project API is ready.'));
 const cleanup=async()=>{try{for(const collection of ['server_oauth','server_registration_receipts']){const expired=await store.expired(collection,Date.now());await Promise.all(expired.map(item=>store.remove(collection+'/'+item.id)))}}catch{console.warn('Expired verification cleanup will retry.')}};void cleanup();const cleanupTimer=setInterval(()=>void cleanup(),10*60000);cleanupTimer.unref();
