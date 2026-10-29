@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {checkGoogleNetwork,compareGoogleApis} from "../src/google-network-check.mjs";
+import {checkGoogleNetwork,compareGoogleApis,compareGoogleGenerationTransport} from "../src/google-network-check.mjs";
 test("a Google missing-key response proves connectivity without sending credentials or doing inference",async()=>{
  let cancelled=false;
  const result=await checkGoogleNetwork({fetchImpl:async(url,options)=>{
@@ -19,4 +19,9 @@ test("provider comparison uses only fixed prompts, disables stored interactions 
  assert.equal(calls.length,3);const interaction=calls.find(c=>c.url.endsWith('/interactions'));
  assert.equal(JSON.parse(interaction.options.body).store,false);assert(!JSON.stringify(result).includes('private'));
  assert.equal(result.modelAccess.httpStatus,200);assert.equal(result.generateContent.httpStatus,200);assert.equal(result.interactions.httpStatus,200);
+});
+
+test("generation transport comparison does not change the configured model or expose provider answers",async()=>{
+ let usedModel;const result=await compareGoogleGenerationTransport({apiKey:'private-key',ipv4Generate:async(key,model,body)=>{usedModel=model;assert.equal(key,'private-key');return {status:200,data:{candidates:[{content:{parts:[{text:'private Hello'}]}}]}}},fetchImpl:async(url)=>{assert(url.includes('gemini-3.7-flash'));return {status:200,json:async()=>({candidates:[{content:{parts:[{text:'private Hello'}]}}]})};}});
+ assert.equal(usedModel,'gemini-3.8-flash');assert(result.directHttps.visibleAnswer);assert(result.otherFlash.visibleAnswer);assert(!JSON.stringify(result).includes('private'));
 });

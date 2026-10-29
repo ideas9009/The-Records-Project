@@ -63,3 +63,35 @@ export async function compareGoogleApis({ apiKey, model = "gemini-3.8-flash", fe
   ]);
   return { state: "complete", model: selected, modelAccess, generateContent, interactions };
 }
+
+export function googleIpv4Generation(apiKey, model, body, timeoutMs = 20000) {
+  if (!/^gemini-[a-zA-Z0-9.-]+$/.test(model)) throw Error("Invalid model");
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(body);
+    const req = https.request("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
+      method: "POST", family: 4, agent: false, signal: AbortSignal.timeout(timeoutMs),
+      headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload), "x-goog-api-key": apiKey },
+    }, response => {
+      let size = 0; const chunks = [];
+      response.on("data", chunk => { size += chunk.length; if (size > 131072) { response.destroy(); reject(Error("Response too large")); } else chunks.push(chunk); });
+      response.once("error", reject);
+      response.once("end", () => { try { resolve({ status: response.statusCode, data: JSON.parse(Buffer.concat(chunks).toString("utf8")) }); } catch { reject(Error("Invalid response")); } });
+    });
+    req.once("error", reject);req.end(payload);
+  });
+}
+export async function compareGoogleGenerationTransport({ apiKey, model = "gemini-3.8-flash", fetchImpl = fetch, ipv4Generate = googleIpv4Generation, timeoutMs = 20000 } = {}) {
+  const selected = /^gemini-[a-zA-Z0-9.-]+$/.test(model) ? model : "gemini-3.8-flash";
+  if (!apiKey) return { state: "skipped", reason: "KEY_NOT_CONFIGURED" };
+  const body = { contents: [{ role: "user", parts: [{ text: "Reply with the single word Hello." }] }], generationConfig: { maxOutputTokens: 512, thinkingConfig: { thinkingLevel: "low" } } };
+  async function run(fn) { const start = Date.now();try { const r = await fn();return { reached: true, httpStatus: r.status, elapsedMs: Date.now() - start,
+    visibleAnswer: !!r.data?.candidates?.[0]?.content?.parts?.some(part => part.text && !part.thought) }; }
+    catch(error) { return { reached: false, error: category(error), elapsedMs: Date.now() - start }; } }
+  const [directHttps, otherFlash] = await Promise.all([
+    run(() => ipv4Generate(apiKey, selected, body, timeoutMs)),
+    run(async () => { const r = await fetchImpl("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent", {
+      method: "POST", redirect: "error", signal: AbortSignal.timeout(timeoutMs), headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, body: JSON.stringify(body),
+    });return { status: r.status, data: await r.json() }; }),
+  ]);
+  return { state: "complete", model: selected, directHttps, otherFlash: { model: "gemini-3.7-flash", ...otherFlash } };
+}
