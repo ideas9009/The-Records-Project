@@ -1,3 +1,4 @@
+import { normalUuid, earthMcApiUuid } from "./earthmc-verification.mjs";
 import { ApiError, approved } from "./security.mjs";
 import { isTownMayor } from "./town-membership.mjs";
 const base = "nations/byzantium",
@@ -152,12 +153,14 @@ export function createTownSuggestions(
     const deadline = Date.now() + 45000;
     const rows = await query(
       "towns",
-      [record.earthmcUuid || record.name],
+      [earthMcApiUuid(record.earthmcUuid) || record.name],
       Math.min(deadline, Date.now() + 18000),
     );
     const own = rows.find((t) =>
       record.earthmcUuid
-        ? t.uuid?.toLowerCase() === record.earthmcUuid.toLowerCase()
+        ? (normalUuid(t.uuid) !== null &&
+            normalUuid(t.uuid) === normalUuid(record.earthmcUuid)) ||
+          t.uuid === record.earthmcUuid
         : t.name?.toLowerCase() === record.name.toLowerCase(),
     );
     if (!own)

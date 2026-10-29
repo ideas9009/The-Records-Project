@@ -174,12 +174,67 @@ test("failed scans are retriable and never turn missing ownership into wildernes
   assert(data.cells.every((c) => c.state === "unknown"));
 });
 
-test('transient gateway failures retry and failed border batches preserve a partial scan',async()=>{
- const store=memoryStore(),profile={uid:'retry',authType:'records',nation:'byzantium',status:'approved',role:'mayor'};
- await store.set('users/retry',profile);await store.set('nations/byzantium/towns/retry',{name:'Example',mayorUid:'retry'});
- let attempts=0;const service=createTownSuggestions(store,{fetchImpl:async(url)=>{
-  if(url.endsWith('/towns')){if(++attempts===1)return {ok:false,status:502};return {ok:true,json:async()=>[own]};}
-  return {ok:false,status:400};
- }});
- const data=await service.townSuggestions(profile,'retry');assert.equal(attempts,2);assert.equal(data.chunks.length,1);assert(data.cells.every(c=>c.state==='unknown'));
+test("transient gateway failures retry and failed border batches preserve a partial scan", async () => {
+  const store = memoryStore(),
+    profile = {
+      uid: "retry",
+      authType: "records",
+      nation: "byzantium",
+      status: "approved",
+      role: "mayor",
+    };
+  await store.set("users/retry", profile);
+  await store.set("nations/byzantium/towns/retry", {
+    name: "Example",
+    mayorUid: "retry",
+  });
+  let attempts = 0;
+  const service = createTownSuggestions(store, {
+    fetchImpl: async (url) => {
+      if (url.endsWith("/towns")) {
+        if (++attempts === 1) return { ok: false, status: 502 };
+        return { ok: true, json: async () => [own] };
+      }
+      return { ok: false, status: 400 };
+    },
+  });
+  const data = await service.townSuggestions(profile, "retry");
+  assert.equal(attempts, 2);
+  assert.equal(data.chunks.length, 1);
+  assert(data.cells.every((c) => c.state === "unknown"));
+});
+
+test("compact stored town UUIDs are hyphenated for EarthMC and matched by normalized identity", async () => {
+  const store = memoryStore(),
+    profile = {
+      uid: "uuid-mayor",
+      authType: "records",
+      nation: "byzantium",
+      status: "approved",
+      role: "mayor",
+    };
+  const compact = "e4a5ee16561647edbb1dc2f0069116b1",
+    formatted = "e4a5ee16-5616-47ed-bb1d-c2f0069116b1";
+  await store.set("users/" + profile.uid, profile);
+  await store.set("nations/byzantium/towns/u", {
+    name: "Old name",
+    earthmcUuid: compact,
+    mayorUid: profile.uid,
+  });
+  const service = createTownSuggestions(store, {
+    fetchImpl: async (url, options) => {
+      if (url.endsWith("/towns")) {
+        assert.deepEqual(JSON.parse(options.body).query, [formatted]);
+        return {
+          ok: true,
+          json: async () => [{ ...own, uuid: formatted, name: "Renamed town" }],
+        };
+      }
+      return { ok: true, json: async () => [] };
+    },
+  });
+  assert.equal(
+    (await service.townSuggestions(profile, "u")).name,
+    "Renamed town",
+  );
 });
