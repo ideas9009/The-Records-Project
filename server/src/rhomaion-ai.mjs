@@ -1,3 +1,4 @@
+import { openRouterCompletion, OPENROUTER_MODEL } from "./openrouter.mjs";
 import { earthMcApiUuid } from "./earthmc-verification.mjs";
 import { randomUUID } from "node:crypto";
 import { ApiError, approved, rolesOf, digest } from "./security.mjs";
@@ -150,8 +151,9 @@ export function createRhomaionAi(
   {
     now = Date.now,
     fetchImpl = fetch,
-    apiKey = process.env.GEMINI_API_KEY || "",
-    model = process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    provider = process.env.RHOMAION_PROVIDER || "gemini",
+    apiKey = (provider === "openrouter" ? process.env.OPENROUTER_API_KEY : process.env.GEMINI_API_KEY) || "",
+    model = provider === "openrouter" ? process.env.OPENROUTER_MODEL || OPENROUTER_MODEL : process.env.GEMINI_MODEL || "gemini-3.8-flash",
   } = {},
 ) {
   const proposals = new Map(),
@@ -159,7 +161,9 @@ export function createRhomaionAi(
     usage = new Map(),
     emcCache = new Map(),
     requests = new Map();
-  const actualModel = /^gemini-[a-zA-Z0-9.-]+$/.test(model)
+  const isOpenRouter = provider === "openrouter";
+  const providerName = isOpenRouter ? "OpenRouter" : "Gemini";
+  const actualModel = isOpenRouter ? (/^[a-zA-Z0-9_~.-]+\/[a-zA-Z0-9_:.-]+$/.test(model) ? model : OPENROUTER_MODEL) : /^gemini-[a-zA-Z0-9.-]+$/.test(model)
     ? model
     : "gemini-3.8-flash";
   async function actor(profile, origin) {
@@ -394,7 +398,7 @@ export function createRhomaionAi(
     if (!apiKey)
       throw new ApiError(
         503,
-        "Rhōmaíōn AI is not connected yet. The server needs GEMINI_API_KEY.",
+        "Rhōmaíōn AI is not connected yet. The server needs " + (isOpenRouter ? "OPENROUTER_API_KEY." : "GEMINI_API_KEY."),
       );
     if (
       !Array.isArray(body.messages) ||
@@ -464,6 +468,11 @@ export function createRhomaionAi(
         if (Date.now() >= deadline) break;
         modelRound = round + 1;
         report("model");
+        let content;
+        if (isOpenRouter) {
+          content = await openRouterCompletion({ apiKey, model: actualModel, system: prompt, contents, tools, fetchImpl, signal: AbortSignal.timeout(Math.max(1, Math.min(45000, deadline - Date.now()))) });
+          report("response");
+        } else {
         const response = await fetchImpl(
           "https://generativelanguage.googleapis.com/v1beta/models/" +
             actualModel +
@@ -513,12 +522,13 @@ export function createRhomaionAi(
           if (["TimeoutError", "AbortError"].includes(error?.name)) throw error;
           throw new ApiError(503, "Google returned an unreadable AI response. Please try again.");
         }
-        const content = result?.candidates?.[0]?.content;
+        content = result?.candidates?.[0]?.content;
         if (!content?.parts?.length)
           throw new ApiError(
             503,
             "Gemini did not return an answer. Try rephrasing the request.",
           );
+        }
         const calls = content.parts.filter((p) => p.functionCall);
         contents.push(content);
         output.text += content.parts
@@ -584,10 +594,10 @@ export function createRhomaionAi(
       // Never return raw fetch errors: they can contain provider URLs or credentials.
       if (["TimeoutError", "AbortError"].includes(error?.name)) {
         console.warn("Rhomaion provider timeout", { stage, round: modelRound, model: actualModel, elapsedMs: Date.now() - startedAt });
-        throw new ApiError(503, "Gemini timed out " + (stage === "response" ? "while sending its response" : "while preparing response " + modelRound) + ". Any page already opened stays open. (RAI_TIMEOUT)");
+        throw new ApiError(503, providerName + " timed out " + (stage === "response" ? "while sending its response" : "while preparing response " + modelRound) + ". Any page already opened stays open. (RAI_TIMEOUT)");
       }
       if (error instanceof TypeError && error.message === "fetch failed")
-        throw new ApiError(503, "The Render server could not connect to Google. Please try again. (RAI_NETWORK)");
+        throw new ApiError(503, "The server could not connect to " + providerName + ". Please try again. (RAI_NETWORK)");
       throw new ApiError(
         503,
         "The AI response could not be processed. Please report RAI_RESPONSE to the app operator.",
@@ -599,9 +609,13 @@ export function createRhomaionAi(
   async function diagnose(profile, origin) {
     const current = await actor(profile, origin);
     if (current.uid !== DEV) throw new ApiError(403, "Only the app developer can run this diagnostic.");
-    if (!apiKey) throw new ApiError(503, "The server needs GEMINI_API_KEY.");
+    if (!apiKey) throw new ApiError(503, "The server needs " + (isOpenRouter ? "OPENROUTER_API_KEY." : "GEMINI_API_KEY."));
     const start = Date.now();
     try {
+      if (isOpenRouter) {
+        await openRouterCompletion({ apiKey, model: actualModel, contents: [{ role: "user", parts: [{ text: "Reply with the single word Hello." }] }], fetchImpl, maxTokens: 64, signal: AbortSignal.timeout(20000) });
+        return { text: "Connection test: OpenRouter answered in " + ((Date.now() - start) / 1000).toFixed(1) + " seconds. Model: " + actualModel + ". No TRP tools, records or chat history were sent.", navigation: [], proposals: [], activity: [], model: actualModel };
+      }
       const response = await fetchImpl("https://generativelanguage.googleapis.com/v1beta/models/" + actualModel + ":generateContent", {
         method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Reply with the single word Hello." }] }],
@@ -617,8 +631,8 @@ export function createRhomaionAi(
     } catch (error) {
       if (error instanceof ApiError) throw error;
       if (["TimeoutError", "AbortError"].includes(error?.name))
-        throw new ApiError(503, "Even the minimal Hello request from Render timed out after 20 seconds. TRP tools and chat instructions were not involved. Model: " + actualModel + ". (RAI_MINIMAL_TIMEOUT)");
-      throw new ApiError(503, "The minimal Google API connection test failed. No TRP tools were involved. (RAI_MINIMAL_CONNECTION)");
+        throw new ApiError(503, "The minimal " + providerName + " request timed out after 20 seconds. No TRP tools were involved. Model: " + actualModel + ". (RAI_MINIMAL_TIMEOUT)");
+      throw new ApiError(503, "The minimal " + providerName + " connection test failed. No TRP tools were involved. (RAI_MINIMAL_CONNECTION)");
     }
   }
   return {
@@ -626,6 +640,7 @@ export function createRhomaionAi(
       const current = await actor(profile, origin);
       return {
         name: AI_NAME,
+        provider: isOpenRouter ? "openrouter" : "gemini",
         configured: !!apiKey,
         model: actualModel,
         effectiveRoles: rolesOf(current),

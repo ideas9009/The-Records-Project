@@ -1,3 +1,4 @@
+import {loadLegacyOpenRouterKey,OPENROUTER_MODEL} from "./openrouter.mjs";
 import {readFile} from 'node:fs/promises';
 import {initializeApp,applicationDefault} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
@@ -11,7 +12,14 @@ const store=firestoreStore(getFirestore(app));
 await store.get('server_system/connection');
 const sampleTown=JSON.parse(await readFile(new URL('../../src/data/towns.json',import.meta.url),'utf8'))[0];
 const origins=(process.env.ALLOWED_ORIGINS||'http://127.0.0.1:1420,http://localhost:1420,http://tauri.localhost,https://tauri.localhost').split(',').map(value=>value.trim()).filter(Boolean);
-const api=createApi(createService(store,{sampleTown}),{origins,trustRenderProxy:!!process.env.RENDER});
+const provider=process.env.RHOMAION_PROVIDER||'openrouter';
+const ai={provider};
+if(provider==='openrouter'){
+ ai.model=process.env.OPENROUTER_MODEL||OPENROUTER_MODEL;
+ ai.apiKey=process.env.OPENROUTER_API_KEY?.trim()||'';
+ if(!ai.apiKey)try{ai.apiKey=await loadLegacyOpenRouterKey()}catch{console.warn('OpenRouter setup could not load. Set OPENROUTER_API_KEY in the server environment.')}
+}
+const api=createApi(createService(store,{sampleTown,ai}),{origins,trustRenderProxy:!!process.env.RENDER});
 api.requestTimeout=30000;api.headersTimeout=10000;
 api.listen(Number(process.env.PORT)||8787,'0.0.0.0',()=>console.log('The Records Project API is ready.'));
 const cleanup=async()=>{try{for(const collection of ['server_oauth','server_registration_receipts']){const expired=await store.expired(collection,Date.now());await Promise.all(expired.map(item=>store.remove(collection+'/'+item.id)))}}catch{console.warn('Expired verification cleanup will retry.')}};void cleanup();const cleanupTimer=setInterval(()=>void cleanup(),10*60000);cleanupTimer.unref();
