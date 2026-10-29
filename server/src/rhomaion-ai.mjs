@@ -458,7 +458,7 @@ export function createRhomaionAi(
               },
             }),
             signal: AbortSignal.timeout(
-              Math.max(1, Math.min(25000, deadline - Date.now())),
+              Math.max(1, Math.min(40000, deadline - Date.now())),
             ),
             redirect: "error",
           },
@@ -469,15 +469,23 @@ export function createRhomaionAi(
               503,
               "Gemini is busy or its quota is exhausted. Try again later.",
             );
-          if ([400, 401, 403, 404].includes(response.status))
-            throw new ApiError(
-              503,
-              "Gemini could not accept the request. Check the server API key, model and API access.",
-            );
+          if (response.status === 401)
+            throw new ApiError(503, "Google rejected the server API key. Check GEMINI_API_KEY in Render.");
+          if (response.status === 403)
+            throw new ApiError(503, "Google denied this API request. Check the key's API restrictions, project access and regional availability.");
+          if (response.status === 404)
+            throw new ApiError(503, "The configured Gemini model is unavailable to this project. Check GEMINI_MODEL in Render.");
+          if (response.status === 400)
+            throw new ApiError(503, "Google rejected the AI request format or configuration. The app operator needs to check the Gemini integration.");
           throw new ApiError(503, "Gemini is temporarily unavailable.");
         }
-        const result = await response.json(),
-          content = result.candidates?.[0]?.content;
+        let result;
+        try {
+          result = await response.json();
+        } catch {
+          throw new ApiError(503, "Google returned an unreadable AI response. Please try again.");
+        }
+        const content = result?.candidates?.[0]?.content;
         if (!content?.parts?.length)
           throw new ApiError(
             503,
@@ -519,7 +527,7 @@ export function createRhomaionAi(
           parts.push({
             functionResponse: {
               name: call.name,
-              ...(call.id ? { id: call.id } : {}),
+              ...(call.call_id ? { call_id: call.call_id } : call.id ? { id: call.id } : {}),
               response,
             },
           });
@@ -543,9 +551,14 @@ export function createRhomaionAi(
       return output;
     } catch (error) {
       if (error instanceof ApiError) throw error;
+      // Never return raw fetch errors: they can contain provider URLs or credentials.
+      if (["TimeoutError", "AbortError"].includes(error?.name))
+        throw new ApiError(503, "Gemini took too long to respond. Please try again. (RAI_TIMEOUT)");
+      if (error instanceof TypeError && error.message === "fetch failed")
+        throw new ApiError(503, "The Render server could not connect to Google. Please try again. (RAI_NETWORK)");
       throw new ApiError(
         503,
-        "The AI request could not finish. Please try again.",
+        "The AI response could not be processed. Please report RAI_RESPONSE to the app operator.",
       );
     } finally {
       busy.delete(current.uid);

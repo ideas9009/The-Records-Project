@@ -52,3 +52,27 @@ test('tool results preserve model thought signatures and call IDs without lettin
  const second=f.fetches[1].body;assert.equal(second.contents[1].parts[0].thoughtSignature,'preserve-me');
  assert.equal(second.contents[2].parts[0].functionResponse.id,'call-0');assert(!JSON.stringify(second).includes('private-test-key'));
 });
+
+
+test('provider failures distinguish timeouts, connection errors, configuration and unreadable responses without exposing secrets',async()=>{
+ const store=memoryStore(),actor=user('actor','citizen');await store.set('users/actor',actor);
+ const cases=[
+  [async()=>{throw new DOMException('private-test-key','TimeoutError')},'RAI_TIMEOUT'],
+  [async()=>{throw new TypeError('fetch failed')},'RAI_NETWORK'],
+  [async()=>({ok:false,status:401}),'API key'],
+  [async()=>({ok:false,status:403}),'denied'],
+  [async()=>({ok:false,status:404}),'model'],
+  [async()=>({ok:false,status:400}),'request format'],
+  [async()=>({ok:false,status:429}),'quota'],
+  [async()=>({ok:true,json:async()=>{throw new SyntaxError('private-test-key')}}),'unreadable'],
+  [async()=>{throw new Error('private-test-key')},'RAI_RESPONSE'],
+ ];
+ for(const [fetchImpl,expected] of cases){const ai=createRhomaionAi(store,{apiKey:'private-test-key',fetchImpl});await assert.rejects(ai.rhomaionChat(actor,{messages:[{role:'user',text:'Hello'}]},origin,token),e=>e.status===503&&e.message.includes(expected)&&!e.message.includes('private-test-key'));}
+});
+
+test('a plain greeting completes without tools, and a later retry can recover from a timeout',async()=>{
+ const store=memoryStore(),actor=user('actor','citizen');await store.set('users/actor',actor);let attempt=0;
+ const ai=createRhomaionAi(store,{apiKey:'private-test-key',fetchImpl:async()=>{if(attempt++===0)throw new DOMException('timed out','TimeoutError');return {ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{text:'Hello from Rhomaion.'}]}}]})};}});
+ const body={messages:[{role:'user',text:'Hello'}]};await assert.rejects(ai.rhomaionChat(actor,body,origin,token),/RAI_TIMEOUT/);
+ const reply=await ai.rhomaionChat(actor,body,origin,token);assert.equal(reply.text,'Hello from Rhomaion.');assert.deepEqual(reply.activity,[]);
+});
