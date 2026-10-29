@@ -151,7 +151,8 @@ export function createRhomaionAi(
   const proposals = new Map(),
     busy = new Set(),
     usage = new Map(),
-    emcCache = new Map();
+    emcCache = new Map(),
+    requests = new Map();
   const actualModel = /^gemini-[a-zA-Z0-9.-]+$/.test(model)
     ? model
     : "gemini-3.8-flash";
@@ -434,7 +435,7 @@ export function createRhomaionAi(
       ". Response style: " +
       (body.preferences?.style === "detailed" ? "detailed" : "concise") +
       ".";
-    const deadline = Date.now() + 55000;
+    const deadline = Date.now() + 180000;
     try {
       for (let round = 0; round < 5; round++) {
         if (Date.now() >= deadline) break;
@@ -458,7 +459,7 @@ export function createRhomaionAi(
               },
             }),
             signal: AbortSignal.timeout(
-              Math.max(1, Math.min(40000, deadline - Date.now())),
+              Math.max(1, Math.min(150000, deadline - Date.now())),
             ),
             redirect: "error",
           },
@@ -482,7 +483,8 @@ export function createRhomaionAi(
         let result;
         try {
           result = await response.json();
-        } catch {
+        } catch (error) {
+          if (["TimeoutError", "AbortError"].includes(error?.name)) throw error;
           throw new ApiError(503, "Google returned an unreadable AI response. Please try again.");
         }
         const content = result?.candidates?.[0]?.content;
@@ -553,7 +555,7 @@ export function createRhomaionAi(
       if (error instanceof ApiError) throw error;
       // Never return raw fetch errors: they can contain provider URLs or credentials.
       if (["TimeoutError", "AbortError"].includes(error?.name))
-        throw new ApiError(503, "Gemini took too long to respond. Please try again. (RAI_TIMEOUT)");
+        throw new ApiError(503, "Gemini did not finish within the longer response limit. Please try again later. (RAI_TIMEOUT)");
       if (error instanceof TypeError && error.message === "fetch failed")
         throw new ApiError(503, "The Render server could not connect to Google. Please try again. (RAI_NETWORK)");
       throw new ApiError(
@@ -576,6 +578,46 @@ export function createRhomaionAi(
       };
     },
     rhomaionChat: chat,
+    rhomaionStart: async (profile, body, origin, token) => {
+      await actor(profile, origin);
+      for (const [key, request] of requests) if (request.expiresAt <= now()) requests.delete(key);
+      const pending = [...requests.values()].filter(request => request.state === "pending");
+      if (pending.some(request => request.uid === profile.uid))
+        throw new ApiError(429, "An AI request is already running. Please wait.");
+      if (pending.length >= 4)
+        throw new ApiError(429, "Rhōmaíōn is handling other requests. Please try again shortly.");
+      // Completed replies are transient and isolated to the originating login session.
+      if (requests.size >= 100) {
+        const oldest = [...requests].find(([, request]) => request.state !== "pending");
+        if (oldest) requests.delete(oldest[0]);
+      }
+      const id = randomUUID(), request = {
+        uid: profile.uid, session: digest(token), expiresAt: now() + 600000, state: "pending",
+      };
+      requests.set(id, request);
+      request.done = chat(profile, body, origin, token).then(reply => {
+        request.reply = reply; request.state = "complete";
+      }, error => {
+        request.error = error instanceof ApiError ? error : new ApiError(503, "The AI request could not finish.");
+        request.state = "failed";
+      });
+      return { requestId: id, state: "pending" };
+    },
+    rhomaionRequest: async (profile, id, origin, token) => {
+      await actor(profile, origin);
+      const request = requests.get(id);
+      if (!request || request.uid !== profile.uid || request.session !== digest(token) || request.expiresAt <= now())
+        throw new ApiError(410, "This AI request expired or belongs to another session. Please send your message again.");
+      if (request.state === "pending") {
+        let timer;
+        try {
+          await Promise.race([request.done, new Promise(resolve => { timer = setTimeout(resolve, 20000); })]);
+        } finally { clearTimeout(timer); }
+        await actor(profile, origin);
+      }
+      if (request.error) throw request.error;
+      return request.state === "complete" ? { state: "complete", reply: request.reply } : { state: "pending" };
+    },
     rhomaionApprove: async (profile, proposalId, body, origin, token) => {
       await actor(profile, origin);
       prune();

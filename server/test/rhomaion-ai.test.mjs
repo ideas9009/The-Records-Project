@@ -1,3 +1,4 @@
+import {createApi} from '../src/http.mjs';
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {createRhomaionAi,effectiveAiProfile,allowAi} from '../src/rhomaion-ai.mjs';import {memoryStore} from './memory-store.mjs';
 const origin='http://tauri.localhost',token='test-session';
@@ -75,4 +76,49 @@ test('a plain greeting completes without tools, and a later retry can recover fr
  const ai=createRhomaionAi(store,{apiKey:'private-test-key',fetchImpl:async()=>{if(attempt++===0)throw new DOMException('timed out','TimeoutError');return {ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{text:'Hello from Rhomaion.'}]}}]})};}});
  const body={messages:[{role:'user',text:'Hello'}]};await assert.rejects(ai.rhomaionChat(actor,body,origin,token),/RAI_TIMEOUT/);
  const reply=await ai.rhomaionChat(actor,body,origin,token);assert.equal(reply.text,'Hello from Rhomaion.');assert.deepEqual(reply.activity,[]);
+});
+
+
+test('background requests return immediately, wait for slow replies, and isolate results to the original account and session',async()=>{
+ const store=memoryStore(),actor=user('actor','citizen'),other=user('other','citizen');await store.set('users/actor',actor);await store.set('users/other',other);
+ let release;const wait=new Promise(resolve=>{release=resolve});
+ const ai=createRhomaionAi(store,{apiKey:'test-key',fetchImpl:async()=>{await wait;return {ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{text:'A slower reply.'}]}}]})};}});
+ const started=await ai.rhomaionStart(actor,{messages:[{role:'user',text:'Hello'}]},origin,token);assert.equal(started.state,'pending');assert(started.requestId);
+ await assert.rejects(ai.rhomaionStart(actor,message,origin,token),e=>e.status===429);
+ await assert.rejects(ai.rhomaionRequest(other,started.requestId,origin,token),e=>e.status===410);
+ await assert.rejects(ai.rhomaionRequest(actor,started.requestId,origin,'other-session'),e=>e.status===410);
+ const pending=ai.rhomaionRequest(actor,started.requestId,origin,token);release();const result=await pending;
+ assert.equal(result.state,'complete');assert.equal(result.reply.text,'A slower reply.');
+});
+
+test('background requests recheck access while waiting and expose provider errors after completion',async()=>{
+ const store=memoryStore(),actor=user('actor','citizen');await store.set('users/actor',actor);
+ let release;const wait=new Promise(resolve=>{release=resolve});
+ const ai=createRhomaionAi(store,{apiKey:'test-key',fetchImpl:async()=>{await wait;return {ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{text:'Hello.'}]}}]})};}});
+ const started=await ai.rhomaionStart(actor,{messages:[{role:'user',text:'Hello'}]},origin,token);
+ const reading=ai.rhomaionRequest(actor,started.requestId,origin,token);
+ await new Promise(resolve=>setImmediate(resolve));await store.set('users/actor',{...actor,status:'disabled'});release();await assert.rejects(reading,e=>e.status===403);
+ await store.set('users/actor',actor);
+ const failing=createRhomaionAi(store,{apiKey:'test-key',fetchImpl:async()=>{throw new DOMException('provider timeout','TimeoutError')}});
+ const request=await failing.rhomaionStart(actor,{messages:[{role:'user',text:'Hello'}]},origin,token);await assert.rejects(failing.rhomaionRequest(actor,request.requestId,origin,token),e=>e.message.includes('RAI_TIMEOUT'));
+});
+
+test('background request results expire instead of keeping server-side chat history',async()=>{
+ const f=await fixture('citizen','mayor',[]);let time=1000;
+ const ai=createRhomaionAi(f.store,{now:()=>time,apiKey:'test-key',fetchImpl:async()=>({ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{text:'Hello.'}]}}]})})});
+ const request=await ai.rhomaionStart(f.actor,{messages:[{role:'user',text:'Hello'}]},origin,token);
+ await ai.rhomaionRequest(f.actor,request.requestId,origin,token);time+=600001;await assert.rejects(ai.rhomaionRequest(f.actor,request.requestId,origin,token),e=>e.status===410);
+});
+
+
+test('HTTP chat jobs return 202 and authenticated reads return the completed reply',async()=>{
+ const store=memoryStore(),actor=user('actor','citizen');await store.set('users/actor',actor);
+ const ai=createRhomaionAi(store,{apiKey:'test-key',fetchImpl:async()=>({ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{text:'HTTP reply.'}]}}]})})});
+ const server=createApi({...ai,authenticate:async supplied=>{assert.equal(supplied,token);return actor;}},{origins:[origin]});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base='http://127.0.0.1:'+server.address().port;
+ try{
+  const headers={Authorization:'Bearer '+token,Origin:origin,'Content-Type':'application/json'};
+  const started=await fetch(base+'/api/ai/requests',{method:'POST',headers,body:JSON.stringify({messages:[{role:'user',text:'Hello'}]})});assert.equal(started.status,202);const request=await started.json();
+  const finished=await fetch(base+'/api/ai/requests/'+request.requestId,{headers});assert.equal(finished.status,200);const result=await finished.json();assert.equal(result.state,'complete');assert.equal(result.reply.text,'HTTP reply.');
+ }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 });
