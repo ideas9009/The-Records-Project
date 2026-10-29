@@ -27,6 +27,42 @@ export function borderChunks(chunks, home, limit = 192) {
   );
   return { points: all.slice(0, limit), total: all.length };
 }
+export function surroundingChunks(chunks, home, radius = 10, limit = 4096) {
+  const owned = new Set(chunks.map(key)),
+    seen = new Set(owned),
+    points = [],
+    distances = new Map();
+  let edge = chunks,
+    limited = false;
+  outer: for (let distance = 1; distance <= radius; distance++) {
+    const next = [];
+    for (const [x, z] of edge)
+      for (let dx = -1; dx <= 1; dx++)
+        for (let dz = -1; dz <= 1; dz++) {
+          if (dx === 0 && dz === 0) continue;
+          const point = [x + dx, z + dz],
+            id = key(point);
+          if (seen.has(id)) continue;
+          if (points.length >= limit) {
+            limited = true;
+            break outer;
+          }
+          seen.add(id);
+          next.push(point);
+          points.push(point);
+          distances.set(id, distance);
+        }
+    edge = next;
+  }
+  points.sort(
+    (a, b) =>
+      distances.get(key(a)) - distances.get(key(b)) ||
+      Math.abs(a[0] - home[0]) +
+        Math.abs(a[1] - home[1]) -
+        (Math.abs(b[0] - home[0]) + Math.abs(b[1] - home[1])),
+  );
+  return { points, total: points.length, distances, limited };
+}
 function separates(chunks, removed) {
   const remaining = new Set(
     chunks.filter((p) => key(p) !== key(removed)).map(key),
@@ -189,36 +225,40 @@ export function createTownSuggestions(
         503,
         "This beta currently supports the Earth world only.",
       );
-    const border = borderChunks(chunks, home),
+    const border = surroundingChunks(chunks, home),
       locations = new Map();
-    for (let i = 0; i < border.points.length; i += 32) {
-      const batch = border.points
-        .slice(i, i + 32)
-        .map(([x, z]) => [x * 16 + 8, z * 16 + 8]);
-      if (Date.now() >= deadline) break;
-      let rows = [];
-      try {
-        rows = await query(
-          "location",
-          batch,
-          Math.min(deadline, Date.now() + 10000),
-        );
-      } catch {
-        continue;
-      }
-      for (const item of rows)
-        if (
-          Number.isSafeInteger(item?.location?.x) &&
-          Number.isSafeInteger(item?.location?.z)
-        )
-          locations.set(
-            key([
-              Math.floor(item.location.x / 16),
-              Math.floor(item.location.z / 16),
-            ]),
-            item,
+    let offset = 0;
+    async function lookupBatches() {
+      while (offset < border.points.length && Date.now() < deadline) {
+        const batch = border.points
+          .slice(offset, offset + 64)
+          .map(([x, z]) => [x * 16 + 8, z * 16 + 8]);
+        offset += 64;
+        let rows = [];
+        try {
+          rows = await query(
+            "location",
+            batch,
+            Math.min(deadline, Date.now() + 10000),
           );
+        } catch {
+          continue;
+        }
+        for (const item of rows)
+          if (
+            Number.isSafeInteger(item?.location?.x) &&
+            Number.isSafeInteger(item?.location?.z)
+          )
+            locations.set(
+              key([
+                Math.floor(item.location.x / 16),
+                Math.floor(item.location.z / 16),
+              ]),
+              item,
+            );
+      }
     }
+    await Promise.all([lookupBatches(), lookupBatches()]);
     const ids = [
       ...new Set(
         [...locations.values()]
@@ -239,6 +279,7 @@ export function createTownSuggestions(
         /* Unknown targets remain blocked. */
       }
     }
+    const chunksSet = new Set(chunks.map(key));
     const cells = border.points.map(([x, z]) => {
       const location = locations.get(key([x, z])),
         other = neighbours.find((t) => t.uuid === location?.town?.uuid);
@@ -246,7 +287,8 @@ export function createTownSuggestions(
         reason = "Ownership could not be verified.";
       if (location?.isWilderness === true && !location.town?.uuid) {
         state = "free";
-        reason = "Reported as wilderness beside your existing claims.";
+        reason =
+          "Reported as wilderness. Claim a connected route from your town before expanding here.";
       } else if (location?.town?.uuid) {
         state = "blocked";
         reason = overclaimReason(own, other, [x, z], now());
@@ -273,8 +315,38 @@ export function createTownSuggestions(
         reason,
         direction,
         owner: location?.town?.name || null,
+        distance: border.distances.get(key([x, z])),
+        adjacent: [
+          [x, z - 1],
+          [x + 1, z],
+          [x, z + 1],
+          [x - 1, z],
+        ].some((p) => chunksSet.has(key(p))),
       };
     });
+    const free = new Map(
+        cells
+          .filter((c) => c.state === "free")
+          .map((c) => [key([c.x, c.z]), c]),
+      ),
+      queue = [...chunks];
+    for (let i = 0; i < queue.length; i++) {
+      const [x, z] = queue[i];
+      for (const point of [
+        [x, z - 1],
+        [x + 1, z],
+        [x, z + 1],
+        [x - 1, z],
+      ]) {
+        const id = key(point),
+          cell = free.get(id);
+        if (cell) {
+          cell.reachable = true;
+          free.delete(id);
+          queue.push(point);
+        }
+      }
+    }
     const targets = neighbours.map((t) => ({
       name: t.name,
       uuid: t.uuid,
@@ -283,7 +355,7 @@ export function createTownSuggestions(
           ? Math.max(0, t.stats.numTownBlocks - t.stats.maxTownBlocks)
           : null,
       potential: cells.filter(
-        (c) => c.owner === t.name && c.state === "potential",
+        (c) => c.owner === t.name && c.state === "potential" && c.adjacent,
       ).length,
       reason:
         cells.find((c) => c.owner === t.name)?.reason ||
@@ -304,6 +376,8 @@ export function createTownSuggestions(
       borderTotal: border.total,
       checkedAt: new Date(now()).toISOString(),
       costPerChunk: 16,
+      scanRadius: 10,
+      coverageLimited: border.limited,
     };
   }
   return {

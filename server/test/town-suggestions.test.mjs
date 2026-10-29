@@ -4,6 +4,7 @@ import { createService } from "../src/service.mjs";
 import {
   createTownSuggestions,
   borderChunks,
+  surroundingChunks,
   overclaimReason,
 } from "../src/town-suggestions.mjs";
 import { memoryStore } from "./memory-store.mjs";
@@ -237,4 +238,16 @@ test("compact stored town UUIDs are hyphenated for EarthMC and matched by normal
     (await service.townSuggestions(profile, "u")).name,
     "Renamed town",
   );
+});
+
+test("surrounding scan reaches ten chunks including corners without claiming more coverage than it scanned", () => {
+  const area = surroundingChunks([[0, 0]], [0, 0]);
+  assert.equal(area.points.length, 440);
+  assert.equal(area.limited, false);
+  assert(area.points.some(([x, z]) => x === 10 && z === 10));
+  assert(!area.points.some(([x, z]) => x === 11));
+  assert.equal(area.distances.get("10,10"), 10);
+  const capped = surroundingChunks([[0, 0]], [0, 0], 10, 64);
+  assert.equal(capped.points.length, 64);
+  assert(capped.limited);
 });
