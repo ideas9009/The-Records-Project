@@ -91,40 +91,70 @@ export function createTownSuggestions(
     requests = 0;
   const cache = new Map(),
     pending = new Map();
-  async function query(endpoint, items) {
-    if (now() - requestWindow >= 60000) {
-      requestWindow = now();
-      requests = 0;
+  async function query(endpoint, items, deadline = Date.now() + 18000) {
+    let last = "EarthMC could not be reached.";
+    for (let attempt = 0; attempt < 3 && Date.now() < deadline; attempt++) {
+      if (now() - requestWindow >= 60000) {
+        requestWindow = now();
+        requests = 0;
+      }
+      if (++requests > 120)
+        throw new ApiError(
+          429,
+          "Scan request limit reached. Try again in a minute.",
+        );
+      try {
+        const response = await fetchImpl(
+          "https://api.earthmc.net/v4/" + endpoint,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: items }),
+            signal: AbortSignal.timeout(
+              Math.max(1, Math.min(6000, deadline - Date.now())),
+            ),
+            redirect: "error",
+          },
+        );
+        if (!response.ok) {
+          last =
+            "EarthMC " +
+            (endpoint === "towns" ? "town lookup" : "border lookup") +
+            " returned HTTP " +
+            response.status +
+            ".";
+          if (response.status === 429)
+            throw new ApiError(
+              503,
+              "EarthMC is rate-limiting requests. Please wait a minute and try again.",
+            );
+          if (response.status < 500)
+            throw new ApiError(503, last + " Please try again later.");
+          await response.body?.cancel();
+        } else {
+          const value = await response.json();
+          if (Array.isArray(value)) return value;
+          last = "EarthMC returned an incomplete " + endpoint + " response.";
+        }
+      } catch (error) {
+        if (error instanceof ApiError) throw error;
+        last =
+          "EarthMC " +
+          (endpoint === "towns" ? "town lookup" : "border lookup") +
+          " timed out or could not connect.";
+      }
+      if (attempt < 2 && Date.now() + 500 < deadline)
+        await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    if (++requests > 120)
-      throw new ApiError(
-        429,
-        "Scan request limit reached. Try again in a minute.",
-      );
-    try {
-      const response = await fetchImpl(
-        "https://api.earthmc.net/v4/" + endpoint,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: items }),
-          signal: AbortSignal.timeout(15000),
-          redirect: "error",
-        },
-      );
-      if (!response.ok) throw Error();
-      const value = await response.json();
-      if (!Array.isArray(value)) throw Error();
-      return value;
-    } catch {
-      throw new ApiError(
-        503,
-        "EarthMC could not complete the scan. Please try again later.",
-      );
-    }
+    throw new ApiError(503, last + " Please try again shortly.");
   }
   async function scan(record) {
-    const rows = await query("towns", [record.earthmcUuid || record.name]);
+    const deadline = Date.now() + 45000;
+    const rows = await query(
+      "towns",
+      [record.earthmcUuid || record.name],
+      Math.min(deadline, Date.now() + 18000),
+    );
     const own = rows.find((t) =>
       record.earthmcUuid
         ? t.uuid?.toLowerCase() === record.earthmcUuid.toLowerCase()
@@ -162,7 +192,17 @@ export function createTownSuggestions(
       const batch = border.points
         .slice(i, i + 32)
         .map(([x, z]) => [x * 16 + 8, z * 16 + 8]);
-      const rows = await query("location", batch);
+      if (Date.now() >= deadline) break;
+      let rows = [];
+      try {
+        rows = await query(
+          "location",
+          batch,
+          Math.min(deadline, Date.now() + 10000),
+        );
+      } catch {
+        continue;
+      }
       for (const item of rows)
         if (
           Number.isSafeInteger(item?.location?.x) &&
@@ -186,7 +226,12 @@ export function createTownSuggestions(
     let neighbours = [];
     if (ids.length) {
       try {
-        neighbours = await query("towns", ids);
+        if (Date.now() < deadline)
+          neighbours = await query(
+            "towns",
+            ids,
+            Math.min(deadline, Date.now() + 10000),
+          );
       } catch {
         /* Unknown targets remain blocked. */
       }
@@ -280,7 +325,12 @@ export function createTownSuggestions(
           "Suggestions need a real EarthMC town, not a test record.",
         );
       const old = cache.get(id);
-      if (old && now() - old.time < 300000) return old.data;
+      if (
+        old &&
+        now() - old.time <
+          (old.data.cells.some((c) => c.state === "unknown") ? 30000 : 300000)
+      )
+        return old.data;
       if (pending.has(id)) return pending.get(id);
       if (pending.size >= 2)
         throw new ApiError(

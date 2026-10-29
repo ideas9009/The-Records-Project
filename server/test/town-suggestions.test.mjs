@@ -173,3 +173,13 @@ test("failed scans are retriable and never turn missing ownership into wildernes
   const data = await service.townSuggestions(owner, "t");
   assert(data.cells.every((c) => c.state === "unknown"));
 });
+
+test('transient gateway failures retry and failed border batches preserve a partial scan',async()=>{
+ const store=memoryStore(),profile={uid:'retry',authType:'records',nation:'byzantium',status:'approved',role:'mayor'};
+ await store.set('users/retry',profile);await store.set('nations/byzantium/towns/retry',{name:'Example',mayorUid:'retry'});
+ let attempts=0;const service=createTownSuggestions(store,{fetchImpl:async(url)=>{
+  if(url.endsWith('/towns')){if(++attempts===1)return {ok:false,status:502};return {ok:true,json:async()=>[own]};}
+  return {ok:false,status:400};
+ }});
+ const data=await service.townSuggestions(profile,'retry');assert.equal(attempts,2);assert.equal(data.chunks.length,1);assert(data.cells.every(c=>c.state==='unknown'));
+});
