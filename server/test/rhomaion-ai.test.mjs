@@ -122,3 +122,35 @@ test('HTTP chat jobs return 202 and authenticated reads return the completed rep
   const finished=await fetch(base+'/api/ai/requests/'+request.requestId,{headers});assert.equal(finished.status,200);const result=await finished.json();assert.equal(result.state,'complete');assert.equal(result.reply.text,'HTTP reply.');
  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 });
+
+
+test('town navigation is published before a slow follow-up and survives a later provider timeout',async()=>{
+ const store=memoryStore(),actor=user('actor','citizen');await store.set('users/actor',actor);
+ await store.set('nations/byzantium/towns/theodoulopolis',{id:'theodoulopolis',name:'Theodoulopolis',type:'settlement',version:4});
+ let release, secondStarted, round=0;const second=new Promise(resolve=>{secondStarted=resolve}),blocked=new Promise(resolve=>{release=resolve});const bodies=[];
+ const ai=createRhomaionAi(store,{apiKey:'test-key',fetchImpl:async(url,options)=>{
+  bodies.push(JSON.parse(options.body));
+  if(round++===0)return {ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{functionCall:{name:'open_town',args:{name:'THEODOULOPOLIS'},id:'navigate-1'},thoughtSignature:'keep-this'}]}}]})};
+  secondStarted();await blocked;throw new DOMException('private-test-key','TimeoutError');
+ }});
+ const request=await ai.rhomaionStart(actor,{messages:[{role:'user',text:'Open Theodoulopolis'}]},origin,token);await second;
+ const progress=await ai.rhomaionRequest(actor,request.requestId,origin,token,-1);
+ assert.equal(progress.state,'pending');assert.equal(progress.progress.phase,'model');assert.equal(progress.progress.round,2);
+ assert.deepEqual(progress.progress.navigation,[{page:'town:theodoulopolis'}]);
+ const functionResult=bodies[1].contents[2].parts[0].functionResponse;
+ assert.equal(functionResult.id,'navigate-1');assert.equal(functionResult.name,'open_town');assert(!('call_id' in functionResult));
+ assert.equal(bodies[1].contents[1].parts[0].thoughtSignature,'keep-this');
+ const waiting=ai.rhomaionRequest(actor,request.requestId,origin,token,progress.version);release();
+ await assert.rejects(waiting,e=>e.message.includes('RAI_TIMEOUT')&&e.message.includes('response 2'));
+ assert.equal((await store.get('nations/byzantium/towns/theodoulopolis')).version,4);
+});
+
+
+test('developer-only minimal diagnostics omit all tools, TRP instructions and user chat history',async()=>{
+ const store=memoryStore(),actor=user('cd9eddda-fd7a-4397-b5f7-2daa8ce7bc67','operator'),other=user('other','operator');await store.set('users/'+actor.uid,actor);await store.set('users/other',other);
+ let sent;const ai=createRhomaionAi(store,{apiKey:'private-key',fetchImpl:async(url,options)=>{sent=JSON.parse(options.body);return {ok:true,json:async()=>({candidates:[{content:{role:'model',parts:[{text:'Hello'}]}}]})};}});
+ await assert.rejects(ai.rhomaionStart(other,{diagnostic:true},origin,token),e=>e.status===403);
+ const started=await ai.rhomaionStart(actor,{diagnostic:true,messages:[{role:'user',text:'Private town information'}]},origin,token);
+ const result=await ai.rhomaionRequest(actor,started.requestId,origin,token);assert.equal(result.state,'complete');assert.match(result.reply.text,/minimal Gemini request answered/);
+ assert(!('tools' in sent));assert(!('systemInstruction' in sent));assert(!JSON.stringify(sent).includes('Private town information'));assert(!JSON.stringify(result).includes('private-key'));
+});

@@ -5,7 +5,7 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  return createServer(async(req,res)=>{res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');const send=(status,data)=>{res.writeHead(status);res.end(JSON.stringify(data))};
  try{const origin=req.headers.origin;if(origin&&!origins.includes(origin))throw new ApiError(403,'This app origin is not allowed.');if(origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');res.setHeader('Access-Control-Allow-Methods','GET, POST, PUT, OPTIONS')}
  if(req.method==='OPTIONS'){res.writeHead(204);res.end();return}const path=new URL(req.url,'http://api.local').pathname;
- if(req.method==='GET'&&path==='/health'){res.setHeader('X-TRP-Features',[typeof service.townSuggestions==='function'?'town-suggestions-beta-range10':null,typeof service.rhomaionStatus==='function'?'rhomaion-ai-beta-requests-v3':null].filter(Boolean).join(','));send(200,{status:'ok'});return}
+ if(req.method==='GET'&&path==='/health'){res.setHeader('X-TRP-Features',[typeof service.townSuggestions==='function'?'town-suggestions-beta-range10':null,typeof service.rhomaionStatus==='function'?'rhomaion-ai-beta-progress-v4':null].filter(Boolean).join(','));send(200,{status:'ok'});return}
  let body={};if(['POST','PUT'].includes(req.method)){if(!req.headers['content-type']?.startsWith('application/json'))throw new ApiError(415,'Use JSON for this request.');let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>8*1024*1024)throw new ApiError(413,'Upload is too large.');chunks.push(chunk)}try{body=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}')}catch{throw new ApiError(400,'Invalid JSON.')}if(!body||Array.isArray(body)||typeof body!=='object')throw new ApiError(400,'Invalid request.')}
  const forwarded=trustRenderProxy?req.headers['x-forwarded-for']?.split(',').at(-1)?.trim():null,ip=forwarded&&isIP(forwarded)?forwarded:req.socket.remoteAddress||'unknown';
  if(req.method==='POST'&&path==='/api/auth/register/lookup'){send(200,await service.manualLookup(body,ip));return}
@@ -20,7 +20,7 @@ export function createApi(service,{origins=[],trustRenderProxy=false,logger=cons
  const profile=await service.authenticate(token);
  let result;if(req.method==='GET'&&path==='/api/ai/status')result=await service.rhomaionStatus(profile,origin);
  else if(req.method==='POST'&&path==='/api/ai/requests'){send(202,await service.rhomaionStart(profile,body,origin,token));return}
- else if(req.method==='GET'&&/^\/api\/ai\/requests\/[a-zA-Z0-9-]+$/.test(path))result=await service.rhomaionRequest(profile,path.split('/')[4],origin,token);
+ else if(req.method==='GET'&&/^\/api\/ai\/requests\/[a-zA-Z0-9-]+$/.test(path))result=await service.rhomaionRequest(profile,path.split('/')[4],origin,token,new URL(req.url,'http://api.local').searchParams.get('after')??undefined);
  else if(req.method==='POST'&&path==='/api/ai/chat')result=await service.rhomaionChat(profile,body,origin,token);
  else if(req.method==='POST'&&/^\/api\/ai\/actions\/[^/]+$/.test(path))result=await service.rhomaionApprove(profile,path.split('/')[4],body,origin,token);
  else if(req.method==='GET'&&path==='/api/auth/me')result=await service.me(profile);
