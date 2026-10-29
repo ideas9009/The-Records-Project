@@ -1,4 +1,4 @@
-import {checkGoogleNetwork,compareGoogleGenerationTransport} from "./google-network-check.mjs";
+import {checkGoogleNetwork,checkGooglePostControls} from "./google-network-check.mjs";
 import {readFile} from 'node:fs/promises';
 import {initializeApp,applicationDefault} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
@@ -19,7 +19,7 @@ if(process.env.RENDER)void checkGoogleNetwork().then(async result=>{
  // Temporary fixed-prompt investigation, disabled after the current debugging window.
  if(Date.now()<Date.parse("2026-10-29T15:30:00Z")){
   googleNetwork={...result,providerComparison:{state:'pending'}};
-  const providerComparison=await compareGoogleGenerationTransport({apiKey:process.env.GEMINI_API_KEY,model:process.env.GEMINI_MODEL});
+  const providerComparison=await checkGooglePostControls({apiKey:process.env.GEMINI_API_KEY,model:process.env.GEMINI_MODEL});
   googleNetwork={...result,providerComparison};
  }
 });

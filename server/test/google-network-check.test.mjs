@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {checkGoogleNetwork,compareGoogleApis,compareGoogleGenerationTransport} from "../src/google-network-check.mjs";
+import {checkGoogleNetwork,compareGoogleApis,compareGoogleGenerationTransport,checkGooglePostControls} from "../src/google-network-check.mjs";
 test("a Google missing-key response proves connectivity without sending credentials or doing inference",async()=>{
  let cancelled=false;
  const result=await checkGoogleNetwork({fetchImpl:async(url,options)=>{
@@ -24,4 +24,10 @@ test("provider comparison uses only fixed prompts, disables stored interactions 
 test("generation transport comparison does not change the configured model or expose provider answers",async()=>{
  let usedModel;const result=await compareGoogleGenerationTransport({apiKey:'private-key',ipv4Generate:async(key,model,body)=>{usedModel=model;assert.equal(key,'private-key');return {status:200,data:{candidates:[{content:{parts:[{text:'private Hello'}]}}]}}},fetchImpl:async(url)=>{assert(url.includes('gemini-3.7-flash'));return {status:200,json:async()=>({candidates:[{content:{parts:[{text:'private Hello'}]}}]})};}});
  assert.equal(usedModel,'gemini-3.8-flash');assert(result.directHttps.visibleAnswer);assert(result.otherFlash.visibleAnswer);assert(!JSON.stringify(result).includes('private'));
+});
+
+test("POST controls keep the credential-free request unauthenticated and never include provider bodies in results",async()=>{
+ const calls=[];const result=await checkGooglePostControls({apiKey:'private-key',fetchImpl:async(url,options)=>{calls.push({url,options});return {status:400,json:async()=>({error:{status:'INVALID_ARGUMENT',message:'private-key'}})};}});
+ assert(!calls[0].options.headers['x-goog-api-key']);assert.equal(calls[0].options.body,'{}');assert.equal(calls[1].options.body,'{}');
+ assert.equal(result.noKeyPost.httpStatus,400);assert(!JSON.stringify(result).includes('private-key'));
 });

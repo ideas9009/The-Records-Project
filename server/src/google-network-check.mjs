@@ -95,3 +95,25 @@ export async function compareGoogleGenerationTransport({ apiKey, model = "gemini
   ]);
   return { state: "complete", model: selected, directHttps, otherFlash: { model: "gemini-3.7-flash", ...otherFlash } };
 }
+
+export async function checkGooglePostControls({ apiKey, model = "gemini-3.8-flash", fetchImpl = fetch, timeoutMs = 10000 } = {}) {
+  const selected = /^gemini-[a-zA-Z0-9.-]+$/.test(model) ? model : "gemini-3.8-flash";
+  const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + selected + ":generateContent";
+  async function run(url, body, key) {
+    const start = Date.now();
+    try {
+      const r = await fetchImpl(url, { method: "POST", redirect: "error", signal: AbortSignal.timeout(timeoutMs),
+        headers: { "Content-Type": "application/json", ...(key ? url.includes("/openai/") ? { Authorization: "Bearer " + key } : { "x-goog-api-key": key } : {}) }, body: JSON.stringify(body) });
+      const data = await r.json();
+      return { reached: true, httpStatus: r.status, elapsedMs: Date.now() - start,
+        ...(data?.error?.status && /^[A-Z_]+$/.test(data.error.status) ? { googleStatus: data.error.status } : {}) };
+    } catch(error) { return { reached: false, error: category(error), elapsedMs: Date.now() - start }; }
+  }
+  const [noKeyPost, invalidBodyPost, compatibilityApi] = await Promise.all([
+    run(endpoint, {}, undefined), run(endpoint, {}, apiKey),
+    run("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+      model: selected, messages: [{ role: "user", content: "Reply with the single word Hello." }], max_tokens: 512,
+    }, apiKey),
+  ]);
+  return { state: "complete", model: selected, noKeyPost, invalidBodyPost, compatibilityApi };
+}
