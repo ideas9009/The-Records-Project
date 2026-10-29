@@ -1,4 +1,4 @@
-import {checkGoogleNetwork} from "./google-network-check.mjs";
+import {checkGoogleNetwork,compareGoogleApis} from "./google-network-check.mjs";
 import {readFile} from 'node:fs/promises';
 import {initializeApp,applicationDefault} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
@@ -14,7 +14,15 @@ const sampleTown=JSON.parse(await readFile(new URL('../../src/data/towns.json',i
 const origins=(process.env.ALLOWED_ORIGINS||'http://127.0.0.1:1420,http://localhost:1420,http://tauri.localhost,https://tauri.localhost').split(',').map(value=>value.trim()).filter(Boolean);
 const service=createService(store,{sampleTown});
 let googleNetwork={state:process.env.RENDER?'pending':'disabled'};
-if(process.env.RENDER)void checkGoogleNetwork().then(result=>{googleNetwork=result});
+if(process.env.RENDER)void checkGoogleNetwork().then(async result=>{
+ googleNetwork=result;
+ // Temporary fixed-prompt investigation, disabled after the current debugging window.
+ if(Date.now()<Date.parse("2026-10-29T15:30:00Z")){
+  googleNetwork={...result,providerComparison:{state:'pending'}};
+  const providerComparison=await compareGoogleApis({apiKey:process.env.GEMINI_API_KEY,model:process.env.GEMINI_MODEL});
+  googleNetwork={...result,providerComparison};
+ }
+});
 service.rhomaionTransportStatus=()=>googleNetwork;
 const api=createApi(service,{origins,trustRenderProxy:!!process.env.RENDER});
 api.requestTimeout=30000;api.headersTimeout=10000;

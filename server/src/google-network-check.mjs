@@ -30,3 +30,36 @@ export async function checkGoogleNetwork({ fetchImpl = fetch, ipv4Probe = google
   ]);
   return { state: "complete", nodeFetch, ipv4Https };
 }
+
+
+export async function compareGoogleApis({ apiKey, model = "gemini-3.8-flash", fetchImpl = fetch, timeoutMs = 20000 } = {}) {
+  const selected = /^gemini-[a-zA-Z0-9.-]+$/.test(model) ? model : "gemini-3.8-flash";
+  if (!apiKey) return { state: "skipped", reason: "KEY_NOT_CONFIGURED" };
+  async function run(url, body) {
+    const start = Date.now();
+    try {
+      const response = await fetchImpl(url, {
+        method: body ? "POST" : "GET", redirect: "error", signal: AbortSignal.timeout(timeoutMs),
+        headers: { "x-goog-api-key": apiKey, ...(body ? { "Content-Type": "application/json" } : {}) },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+      const data = await response.json();
+      // Only status and timing leave the server; no credentials, prompts or generated text.
+      const status = data?.error?.status;
+      const statuses = ["INVALID_ARGUMENT", "UNAUTHENTICATED", "PERMISSION_DENIED", "NOT_FOUND", "RESOURCE_EXHAUSTED", "FAILED_PRECONDITION", "INTERNAL", "UNAVAILABLE", "DEADLINE_EXCEEDED"];
+      return { reached: true, httpStatus: response.status, elapsedMs: Date.now() - start,
+        ...(statuses.includes(status) ? { googleStatus: status } : {}) };
+    } catch (error) { return { reached: false, error: category(error), elapsedMs: Date.now() - start }; }
+  }
+  const base = "https://generativelanguage.googleapis.com/v1beta/";
+  const [modelAccess, generateContent, interactions] = await Promise.all([
+    run(base + "models/" + selected),
+    run(base + "models/" + selected + ":generateContent", {
+      contents: [{ role: "user", parts: [{ text: "Reply with the single word Hello." }] }],
+      generationConfig: { maxOutputTokens: 512, thinkingConfig: { thinkingLevel: "low" } },
+    }),
+    run(base + "interactions", { model: selected, input: "Reply with the single word Hello.", store: false,
+      generation_config: { max_output_tokens: 512, thinking_level: "low" } }),
+  ]);
+  return { state: "complete", model: selected, modelAccess, generateContent, interactions };
+}
