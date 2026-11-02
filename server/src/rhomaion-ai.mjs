@@ -197,7 +197,7 @@ export function createRhomaionAi(
     name = text(name, 80);
     const key = endpoint + ":" + name.toLowerCase(),
       cached = emcCache.get(key);
-    if (cached && now() - cached.time < 60000) return cached.value;
+    if (kind !== "player" && cached && now() - cached.time < 60000) return cached.value;
     const response = await fetchImpl("https://api.earthmc.net/v4/" + endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -207,19 +207,19 @@ export function createRhomaionAi(
     });
     if (!response.ok)
       throw new ApiError(
-        503,
-        "EarthMC lookup failed (HTTP " + response.status + ").",
+        response.status === 404 ? 404 : 503,
+        response.status === 404 && kind === "player" ? "This player has no public EarthMC profile. They may have opted out, or the profile may be unavailable." : "EarthMC lookup failed (HTTP " + response.status + ").",
       );
     const rows = await response.json();
     if (!Array.isArray(rows) || !rows.length)
       throw new ApiError(
         404,
-        "That EarthMC record was not found or is unavailable.",
+        kind === "player" ? "This player has no public EarthMC profile. They may have opted out, or the profile may be unavailable." : "That EarthMC record was not found or is unavailable.",
       );
     // Public data only; trim bulky inventories/history unrelated to advice.
     const value = { checkedAt: new Date(now()).toISOString(), data: rows[0] };
     if (emcCache.size >= 100) emcCache.delete(emcCache.keys().next().value);
-    emcCache.set(key, { time: now(), value });
+    if(kind !== "player")emcCache.set(key, { time: now(), value });
     return value;
   }
   function editableStore(uid) {
@@ -235,6 +235,13 @@ export function createRhomaionAi(
       const action=prepareAiDraft(current,args);output.navigation.push(action);
       return {requestedPage:action.page,prepared:true,saved:false,reviewRequired:true,fields:action.draft.fields,note:"An unsaved editor has been requested. The human must review and save/publish. No record was created."};
     }
+    async function lookupForPreview(kind, name) {
+      try { return await emc(kind,name); }
+      catch(error) {
+        if(kind === 'player' && error?.status === 404) output.previews.push({kind:'player',uuid:earthMcApiUuid(name)||'',name:text(name,80),checkedAt:new Date(now()).toISOString(),record:{},unavailable:true});
+        throw error;
+      }
+    }
     function previewEarthMc(kind, record) {
       const uuid = earthMcApiUuid(record.data.uuid);
       if (!uuid) return;
@@ -246,7 +253,7 @@ export function createRhomaionAi(
     }
     if(name === "open_earthmc") {
       if(!["town","player","nation"].includes(args.kind))throw new ApiError(400,"Choose a town, player or nation.");
-      const record=await emc(args.kind,args.name);const uuid=earthMcApiUuid(record.data.uuid);
+      const record=await lookupForPreview(args.kind,args.name);const uuid=earthMcApiUuid(record.data.uuid);
       if(!uuid)throw new ApiError(503,"EarthMC did not return a valid profile identity.");
       previewEarthMc(args.kind,record);
       const page=args.kind === 'nation' ? null : (args.kind==='town'?'earthmc-town:':'earthmc-player:')+uuid;
@@ -301,7 +308,7 @@ export function createRhomaionAi(
       if (!town) throw new ApiError(404, "Town not found.");
       return townSummary({ ...town, id: args.town_id });
     }
-    if (name === "lookup_earthmc") { const record = await emc(args.kind,args.name); previewEarthMc(args.kind,record); return record; }
+    if (name === "lookup_earthmc") { const record = await lookupForPreview(args.kind,args.name); previewEarthMc(args.kind,record); return record; }
     if (name === "analyse_expansion") {
       let suggestions=suggestionServices.get(current.uid);
       if(!suggestions){

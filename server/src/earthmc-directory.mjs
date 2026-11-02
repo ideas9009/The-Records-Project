@@ -320,7 +320,8 @@ export function createEarthMcDirectory({
     earthmcPlayer: async (profile, id) => {
       allowed(profile);
       if (!uuid(id)) throw new ApiError(400, "Invalid player.");
-      return saved("player:" + id.toLowerCase(), async () => {
+      // Recheck public player availability on every lookup; never fall back to an old profile.
+      return (async () => {
         const items = await query("players", [id]),
           player = items.find(
             (item) => item?.uuid?.toLowerCase() === id.toLowerCase(),
@@ -331,7 +332,7 @@ export function createEarthMcDirectory({
             "This EarthMC player is unavailable or has opted out of the API.",
           );
         return { player, checkedAt: new Date(now()).toISOString() };
-      });
+      })();
     },
   };
 }

@@ -125,3 +125,5 @@ test("upstream errors and invalid payloads are safely reported", async () => {
     );
   }
 });
+
+test('player opt-out is rechecked without returning a formerly cached public profile',async()=>{let calls=0;const service=createEarthMcDirectory({fetchImpl:async()=>({ok:true,json:async()=>++calls===1?[{name:'Example',uuid:a,stats:{balance:99}}]:[]})});assert.equal((await service.earthmcPlayer(viewer,a)).player.stats.balance,99);await assert.rejects(()=>service.earthmcPlayer(viewer,a),error=>error.status===404&&/unavailable|opted out/.test(error.message));assert.equal(calls,2);});
