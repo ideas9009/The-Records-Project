@@ -59,3 +59,14 @@ test('a second navigation cannot clear or replace an unsaved draft prepared in t
  const f=await fixture([{name:'prepare_draft',args:{kind:'materials',title:'Keep this draft',materials:'64x Spruce Logs'}},{name:'open_page',args:{page:'jobs:new:materials'}},{name:'prepare_draft',args:{kind:'task',title:'Another draft'}}]);
  const reply=await f.run();assert.equal(reply.navigation.length,1);assert.equal(reply.navigation[0].draft.fields.title,'Keep this draft');assert.equal(reply.activity.filter(a=>!a.ok).length,2);assert.equal(f.requests.length,1);
 });
+
+
+test('EarthMC lookups stream public side summaries for players, towns and nations',async()=>{
+ for(const kind of ['town','player','nation']){
+ const f=await fixture([{name:'lookup_earthmc',args:{kind,name:'Example'}}],'citizen',async()=>({ok:true,json:async()=>[{name:'Example',uuid,stats:{balance:16},inventory:['excluded'],history:['excluded']}]}));
+ const progress=[];const reply=await f.ai.rhomaionChat(f.actor,{messages:[{role:'user',text:'Show Example'}]},origin,token,p=>progress.push(structuredClone(p)));
+ assert.equal(reply.previews.length,1);assert.equal(reply.previews[0].kind,kind);assert.equal(reply.previews[0].record.stats.balance,16);assert(!('inventory' in reply.previews[0].record));assert(!('history' in reply.previews[0].record));assert(progress.some(p=>p.previews?.length===1));assert.deepEqual(reply.navigation,[]);
+ }
+});
+
+test('opening a nation shows its summary without inventing a player page',async()=>{const f=await fixture([{name:'open_earthmc',args:{kind:'nation',name:'Example'}}],'citizen',async()=>({ok:true,json:async()=>[{name:'Example',uuid}]}));const reply=await f.run();assert.deepEqual(reply.navigation,[]);assert.equal(reply.previews[0].kind,'nation');const result=f.requests[1].messages.find(m=>m.role==='tool');assert(!JSON.parse(result.content).requestedPage);});

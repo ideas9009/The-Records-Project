@@ -34,3 +34,17 @@ test('OpenRouter connection diagnostics send the key only to OpenRouter and excl
  const ai=createRhomaionAi(store,{provider:'openrouter',apiKey:key,model:'deepseek/deepseek-chat',fetchImpl:async(url,options)=>{assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');const body=JSON.parse(options.body);assert(!body.tools);assert(!JSON.stringify(body).includes('private history'));return {ok:true,json:async()=>({choices:[{message:{role:'assistant',content:'Hello'}}]})};}});
  const request=await ai.rhomaionStart(developer,{diagnostic:true,messages:[{role:'user',text:'private history'}]},origin,token);const result=await ai.rhomaionRequest(developer,request.requestId,origin,token);assert.match(result.reply.text,/OpenRouter answered/);
 });
+
+
+test('recovers the provider lookup token from the screenshot as a real read-only call',async()=>{
+ const message={role:'assistant',content:'Here is the profile:\njson 准备function< | tool_sep | >open_earthmc json {"kind":"player","name":"akbaj"}'};
+ const reply=await openRouterCompletion({apiKey:key,contents:[],tools:[{name:'open_earthmc',parameters:{type:'OBJECT'}}],fetchImpl:async()=>({ok:true,json:async()=>({choices:[{message}]})})});
+ assert.equal(reply.parts[0].text,'Here is the profile:');assert.equal(reply.parts[1].functionCall.name,'open_earthmc');assert.deepEqual(reply.parts[1].functionCall.args,{kind:'player',name:'akbaj'});
+ assert.equal(reply.openRouterMessage.tool_calls[0].id,reply.parts[1].functionCall.id);assert(!JSON.stringify(reply).includes('tool_sep'));
+});
+test('textual edits, undeclared lookups, malformed arguments and mixed tool calls cannot be recovered',async()=>{
+ for(const content of ['<|tool_sep|>propose_town_edit json {"town_id":"town","name":"Changed"}','<|tool_sep|>open_earthmc json {"kind":"player","name":"akbaj","admin":true}','<|tool_sep|>open_earthmc json invalid']){
+ await assert.rejects(openRouterCompletion({apiKey:key,contents:[],tools:[{name:'open_earthmc',parameters:{}}],fetchImpl:async()=>({ok:true,json:async()=>({choices:[{message:{role:'assistant',content}}]})})}),/invalid lookup command/);
+ }
+ await assert.rejects(openRouterCompletion({apiKey:key,contents:[],fetchImpl:async()=>({ok:true,json:async()=>({choices:[{message:{content:'<|tool_sep|>open_earthmc json {"kind":"player","name":"akbaj"}'}}]})})}),/invalid lookup command/);
+});

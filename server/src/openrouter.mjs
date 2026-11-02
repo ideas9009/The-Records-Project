@@ -48,6 +48,22 @@ export async function openRouterCompletion({ apiKey, model = OPENROUTER_MODEL, s
   catch (error) { if (["TimeoutError", "AbortError"].includes(error?.name)) throw error; throw new ApiError(503, "OpenRouter returned an unreadable response."); }
   const message = data?.choices?.[0]?.message;
   if (!message || message.refusal) throw new ApiError(503, "OpenRouter did not return an answer. Try rephrasing your request.");
+  // Some providers incorrectly serialize native tool tokens into assistant text.
+  // Recover only a single declared, read-only EarthMC lookup; never textual edits.
+  if (typeof message.content === "string" && /<\s*\|\s*tool_sep\s*\|\s*>/.test(message.content)) {
+    const match = message.content.match(/<\s*\|\s*tool_sep\s*\|\s*>\s*(open_earthmc|lookup_earthmc)\s*(?:json\s*)?(\{[^\n]*\})\s*(?:```)?\s*$/);
+    let args;
+    try { args = match && JSON.parse(match[2]); } catch {}
+    if (!match || message.tool_calls?.length || !tools.some(t => t.name === match[1]) ||
+        !args || Object.keys(args).sort().join(',') !== 'kind,name' ||
+        !['player','town','nation'].includes(args.kind) || typeof args.name !== 'string' ||
+        !/^[A-Za-z0-9_ .'-]{1,80}$/.test(args.name))
+      throw new ApiError(503, "The AI returned an invalid lookup command. Please try again.");
+    const start = message.content.lastIndexOf('\n', match.index) + 1;
+    message.content = message.content.slice(0, start).trim();
+    message.tool_calls = [{ id: 'lookup_' + crypto.randomUUID(), type: 'function',
+      function: { name: match[1], arguments: JSON.stringify(args) } }];
+  }
   const parts = [];
   if (typeof message.content === "string" && message.content) parts.push({ text: message.content });
   else if (Array.isArray(message.content)) for (const part of message.content) if (part.type === "text" && typeof part.text === "string") parts.push({ text: part.text });

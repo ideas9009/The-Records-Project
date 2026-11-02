@@ -67,7 +67,7 @@ const tools = [
   declaration("prepare_draft", "Prepare an UNSAVED editor in the main app. The human must review and save/publish. No database writes.", {
     kind:{type:"STRING",enum:["news","task","materials","shop","bulk"]}, title:string("Draft title"), subtitle:string("News subtitle"), body:string("News markdown body"), description:string("Task/listing description"), materials:string("Material lines, for example 64x Spruce Logs"), town:string("Shop or pickup town, only if supplied"), items:string("Shop/bulk items, one per line"), priceGold:{type:"NUMBER",description:"Gold amount only if supplied by user"}, shopType:{type:"STRING",enum:["stall","small_shop","medium_shop","big_shop","market","mall"]}
   },["kind","title"]),
-  declaration("open_earthmc", "Look up and OPEN a live EarthMC town/player profile in the main window instead of just describing it in chat.",{kind:{type:"STRING",enum:["town","player"]},name:string("Exact EarthMC town or Minecraft username")},["kind","name"]),
+  declaration("open_earthmc", "Show a verified EarthMC town/player/nation summary beside the chat. Towns and players also open in the main window. Call the real tool, never print tool syntax or JSON as chat text.",{kind:{type:"STRING",enum:["town","player","nation"]},name:string("Exact EarthMC town or Minecraft username")},["kind","name"]),
   declaration("search_records", "Search public news, tasks, material requests, shops and bulk listings. Returns page IDs to open; does not read private hiring conversations.",{kind:{type:"STRING",enum:["news","task","materials","shop","bulk"]},query:string("Search words; omit for recent records")},["kind"]),
   declaration("show_expansion_route", "Analyse an owned town, open its Suggestions map and highlight the best verified connected wilderness route. Never claims chunks or spends gold.",{town_id:string("Registered TRP town ID"),direction:{type:"STRING",enum:["North","East","South","West"]}},["town_id"]),
   declaration(
@@ -235,12 +235,22 @@ export function createRhomaionAi(
       const action=prepareAiDraft(current,args);output.navigation.push(action);
       return {requestedPage:action.page,prepared:true,saved:false,reviewRequired:true,fields:action.draft.fields,note:"An unsaved editor has been requested. The human must review and save/publish. No record was created."};
     }
+    function previewEarthMc(kind, record) {
+      const uuid = earthMcApiUuid(record.data.uuid);
+      if (!uuid) return;
+      const source = record.data, data = {};
+      for (const key of ['name','town','nation','mayor','king','capital','board','title','surname','stats','status'])
+        if (source[key] !== undefined) data[key] = source[key];
+      for (const key of ['allies','enemies']) if (Array.isArray(source[key])) data[key] = source[key].slice(0,100).map(item=>({name:item.name}));
+      output.previews.push({kind,uuid,name:source.name,checkedAt:record.checkedAt,record:data});
+    }
     if(name === "open_earthmc") {
-      if(!["town","player"].includes(args.kind))throw new ApiError(400,"Choose a town or player.");
+      if(!["town","player","nation"].includes(args.kind))throw new ApiError(400,"Choose a town, player or nation.");
       const record=await emc(args.kind,args.name);const uuid=earthMcApiUuid(record.data.uuid);
       if(!uuid)throw new ApiError(503,"EarthMC did not return a valid profile identity.");
-      const page=(args.kind==='town'?'earthmc-town:':'earthmc-player:')+uuid;
-      output.navigation.push({page});return {requestedPage:page,name:record.data.name,uuid,checkedAt:record.checkedAt,data:record.data};
+      previewEarthMc(args.kind,record);
+      const page=args.kind === 'nation' ? null : (args.kind==='town'?'earthmc-town:':'earthmc-player:')+uuid;
+      if(page) output.navigation.push({page});return {...(page?{requestedPage:page}:{}),name:record.data.name,uuid,checkedAt:record.checkedAt,data:record.data};
     }
     if(name === "search_records") {
       const query=args.query===undefined||args.query===''?'':text(args.query,100).toLowerCase();let rows;
@@ -291,7 +301,7 @@ export function createRhomaionAi(
       if (!town) throw new ApiError(404, "Town not found.");
       return townSummary({ ...town, id: args.town_id });
     }
-    if (name === "lookup_earthmc") return emc(args.kind, args.name);
+    if (name === "lookup_earthmc") { const record = await emc(args.kind,args.name); previewEarthMc(args.kind,record); return record; }
     if (name === "analyse_expansion") {
       let suggestions=suggestionServices.get(current.uid);
       if(!suggestions){
@@ -477,6 +487,7 @@ export function createRhomaionAi(
     const output = {
       text: "",
       navigation: [],
+      previews: [],
       proposals: [],
       activity: [],
       model: actualModel,
@@ -492,7 +503,7 @@ export function createRhomaionAi(
     const report = (phase, name) => {
       stage = phase;
       notify({ phase, ...(name ? { tool: name } : {}), round: modelRound,
-        elapsedMs: Date.now() - startedAt, navigation: output.navigation.map(action => ({ ...action })) });
+        elapsedMs: Date.now() - startedAt, previews: output.previews, navigation: output.navigation.map(action => ({ ...action })) });
     };
     const prompt =
       RHOMAION_APP_INSTRUCTIONS + "\n\n" +
