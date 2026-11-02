@@ -63,7 +63,7 @@ const declaration = (name, description, properties = {}, required = []) => ({
 });
 const string = (description) => ({ type: "STRING", description });
 const tools = [
-  declaration("get_app_guide", "Read TRP page names, features, workflows and permission rules.", {topic:string("Optional topic: overview, towns, earthmc, news, tasks, materials, shops, bulk, people, settings, other, permissions")}),
+  declaration("get_app_guide", "Answer questions about TRP user-facing pages and how to use them. Excludes privileged screens, sign-in and registration. Omit topic for the complete guide.", {topic:string("Optional topic: overview, towns, suggestions, earthmc, earthmc_towns, earthmc_people, news, tasks, materials, available, hiring, shops, bulk, people, profile, companies, expansions, settings, appearance, account, smartsync, widgets, ai, windows, map, notifications, about, changelog, permissions")}),
   declaration("prepare_draft", "Prepare an UNSAVED editor in the main app. The human must review and save/publish. No database writes.", {
     kind:{type:"STRING",enum:["news","task","materials","shop","bulk"]}, title:string("Draft title"), subtitle:string("News subtitle"), body:string("News markdown body"), description:string("Task/listing description"), materials:string("Material lines, for example 64x Spruce Logs"), town:string("Shop or pickup town, only if supplied"), items:string("Shop/bulk items, one per line"), priceGold:{type:"NUMBER",description:"Gold amount only if supplied by user"}, shopType:{type:"STRING",enum:["stall","small_shop","medium_shop","big_shop","market","mall"]}
   },["kind","title"]),

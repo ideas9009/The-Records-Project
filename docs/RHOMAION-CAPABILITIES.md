@@ -30,3 +30,11 @@ Private hiring conversations, passwords, authentication codes and provider keys 
 - “Open my town’s Suggestions and highlight an eastward route.”
 
 Native navigation payload changes require a rebuilt/restarted Tauri development app. There is no MSI/version bump in this change.
+
+## App questions and beginner tutorial
+
+The guide covers signed-in user pages, nested EarthMC profiles, availability/hiring, town Suggestions and settings categories. It explains real paths and controls, ownership/publishing limits and Windows-only features. Explanations do not navigate unless the user asks to open a page. Administration, developer-only screens, sign-in and registration are excluded.
+
+The separate built-in tutorial offers first-run guidance for approved accounts, with a spotlight on the control to click and an explanation after navigation. It never submits forms, links accounts, installs packs or changes settings. Skip/Escape dismisses it; Settings → Start tutorial replays it. Completion is stored locally per account and platform; it does not require an AI request or database polling. Keyboard users can Tab between the highlighted control and tutorial buttons.
+
+The tutorial allows normal background hover while restricting clicks to its current navigation control and its own buttons. It tracks sidebar expansion and scrolling, and excludes Notifications/About utility buttons. Their help remains available in AI explanations.
