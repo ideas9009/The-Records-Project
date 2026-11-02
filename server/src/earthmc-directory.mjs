@@ -309,6 +309,14 @@ export function createEarthMcDirectory({
         },
       );
     },
+    earthmcNation: async (profile,id) => {
+      allowed(profile);if(!uuid(id))throw new ApiError(400,'Invalid nation.');
+      return saved('nation-detail:'+id.toLowerCase(),async()=>{
+        const items=await query('nations',[id]);const nation=items.find(item=>item?.uuid?.toLowerCase()===id.toLowerCase());
+        if(!nation)throw new ApiError(404,'This EarthMC nation is unavailable.');
+        return {nation,checkedAt:new Date(now()).toISOString()};
+      });
+    },
     earthmcPlayer: async (profile, id) => {
       allowed(profile);
       if (!uuid(id)) throw new ApiError(400, "Invalid player.");
