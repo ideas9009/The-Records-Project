@@ -6,12 +6,14 @@ import {
   setConnectionStage,
   subscribeConnection,
 } from "../src/lib/connection-progress";
-it("shows tracked connection progress without the old card or app title", () => {
+it("shows the custom loading circle and a tip without visible connection text or progress", () => {
   const html = renderToStaticMarkup(<ConnectionScreen stage="reading" />);
-  expect(html).toContain("Connecting…");
-  expect(html).toContain("Reading your account details…");
-  expect(html).toContain('aria-valuenow="2"');
-  expect(html).toContain('role="progressbar"');
+  expect(html).toContain("connection-loader");
+  expect(html).toContain("Helpful tip");
+  expect(html).not.toContain("Connecting…");
+  expect(html).not.toContain("Reading your account details…");
+  expect(html).not.toContain("Waiting for the sign-in service");
+  expect(html).not.toContain('role="progressbar"');
   expect(html).not.toContain('class="card');
   expect(html).not.toContain("The Records Project");
 });

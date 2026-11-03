@@ -1,3 +1,8 @@
+import { isTauri } from "@tauri-apps/api/core";
+import {
+  operatorSmartSyncAllowed,
+  smartSyncAvailable,
+} from "../lib/platform-access";
 import { startBackgroundPolling } from "../lib/background-polling";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useAuth } from "../lib/auth-context";
@@ -28,8 +33,11 @@ export function SmartSyncManager() {
   const prefs = smartSyncSettings(),
     pages = prefs.pages.join(",");
   useEffect(() => {
-    if (!account || !prefs.enabled) return;
-    return startBackgroundPolling(()=>syncSelectedPages(), Math.max(10,prefs.interval) * 60000);
+    if (!account || !smartSyncAvailable(account) || !prefs.enabled) return;
+    return startBackgroundPolling(
+      () => syncSelectedPages(),
+      Math.max(10, prefs.interval) * 60000,
+    );
   }, [
     account?.uid,
     account?.role,
@@ -42,8 +50,9 @@ export function SmartSyncManager() {
   return null;
 }
 export function SyncStatus({ path }: { path: string }) {
+  const { account } = useAuth();
   useSyncRevision();
-  if (!smartSyncSettings().enabled) return null;
+  if (!smartSyncAvailable(account) || !smartSyncSettings().enabled) return null;
   const state = syncState(path);
   if (!state || (!state.error && state.source === "live")) return null;
   return (
@@ -59,6 +68,22 @@ export function SyncStatus({ path }: { path: string }) {
   );
 }
 export default function SmartSyncSettingsPanel() {
+  const { account } = useAuth();
+  const [open, setOpen] = useState(false);
+  const operator = operatorSmartSyncAllowed(account);
+  if (!isTauri() && !(operator && open))
+    return (
+      <section className="card setting-card">
+        <h2>SmartSync</h2>
+        <p>SmartSync is only available in the desktop app.</p>
+        {operator && (
+          <button onClick={() => setOpen(true)}>Open SmartSync</button>
+        )}
+      </section>
+    );
+  return <SmartSyncControls />;
+}
+function SmartSyncControls() {
   useSyncRevision();
   const prefs = smartSyncSettings(),
     run = useSyncExternalStore(subscribeSyncRun, syncRunStatus, syncRunStatus);
@@ -211,10 +236,11 @@ export default function SmartSyncSettingsPanel() {
         <p className="smart-sync-note">
           Saved copies expire after 24 hours. Sign-in checks stay online.
           Offline viewing pauses after 15 minutes without account verification.
-          Shop Search saves shops and bulk listings. Task Board saves listing summaries, including Available; hiring
-          conversations, private offers, proof images and actions require a
-          connection. Drafts and administration are excluded. Background syncing
-          pauses when the app is hidden.
+          Shop Search saves shops and bulk listings. Task Board saves listing
+          summaries, including Available; hiring conversations, private offers,
+          proof images and actions require a connection. Drafts and
+          administration are excluded. Background syncing pauses when the app is
+          hidden.
         </p>
       </section>
       {(error || run.error) && <p role="alert">{error || run.error}</p>}

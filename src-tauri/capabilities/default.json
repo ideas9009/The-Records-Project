@@ -2,7 +2,14 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Local application windows only",
-  "windows": ["main", "panel-*"],
+  "windows": [
+    "main",
+    "panel-*",
+    "desktop-widget-*",
+    "rhomaion-ai",
+    "quick-search",
+    "rhomaion-prompt"
+  ],
   "permissions": [
     "core:default",
     {
@@ -12,6 +19,11 @@
           "url": "https://*"
         }
       ]
-    }
+    },
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-close",
+    "core:window:allow-is-maximized"
   ]
 }

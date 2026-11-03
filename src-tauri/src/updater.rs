@@ -48,8 +48,7 @@ fn command(path: PathBuf) -> Command {
     // runtime rejects that executable path before main() can emit any JSON.
     #[cfg(windows)]
     let path = match path.to_str() {
-        Some(text) if text.starts_with(r"\\?\UNC\") =>
-            PathBuf::from(format!(r"\\{}", &text[8..])),
+        Some(text) if text.starts_with(r"\\?\UNC\") => PathBuf::from(format!(r"\\{}", &text[8..])),
         Some(text) if text.starts_with(r"\\?\") => PathBuf::from(&text[4..]),
         _ => path,
     };
@@ -75,7 +74,12 @@ pub fn desktop_update_status(
     main_window(&window)?;
     Ok(state.status.lock().unwrap().clone())
 }
-pub fn run(app: &tauri::AppHandle, action: &str, mode: &str, build_number: u32) -> Result<Value, String> {
+pub fn run(
+    app: &tauri::AppHandle,
+    action: &str,
+    mode: &str,
+    build_number: u32,
+) -> Result<Value, String> {
     let state = app.state::<DesktopUpdater>();
     if state.busy.swap(true, Ordering::SeqCst) {
         return Err("An update operation is already running.".into());

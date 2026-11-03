@@ -7,12 +7,12 @@
 .town-search input { background:transparent; border:0; padding:12px 0; border-radius:0; }
 .town-search input:focus-visible { outline:none; }
 .town-result-count { font-size:12px; color:var(--muted); white-space:nowrap; }
-.town-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr)); align-items:start; gap:20px; }
-.town-registry .town-tile { display:block; position:relative; isolation:isolate; padding:22px; width:100%; max-width:480px; min-width:0; min-height:190px; overflow:hidden; text-align:left; cursor:pointer; }
+.town-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr)); align-items:stretch; gap:20px; }
+.town-registry .town-tile { display:block; position:relative; isolation:isolate; padding:22px; width:100%; max-width:none; min-width:0; min-height:210px; overflow:hidden; text-align:left; cursor:pointer; }
 .town-tile:hover { border-color:#00b8e655; background:var(--surface); }
 .town-tile:focus-visible { outline:2px solid #00b8e6; outline-offset:3px; }
-.town-cover { position:absolute; z-index:-1; inset:0 0 0 auto; width:54%; height:100%; object-fit:cover; object-position:center; mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.2) 24%,#000 72%); -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.2) 24%,#000 72%); pointer-events:none; }
-.town-summary-content { width:70%; min-width:0; }
+.town-cover { position:absolute; z-index:-1; inset:0 0 0 auto; width:32%; height:100%; object-fit:cover; object-position:center; mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.65) 25%,#000 65%); -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.65) 25%,#000 65%); pointer-events:none; }
+.town-summary-content { width:calc(68% - 12px); min-width:0; }
 .town-tile-heading { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
 .town-emblem { display:grid; place-items:center; width:36px; height:36px; flex:0 0 36px; border-radius:11px; background:#00b8e61a; color:#54d5f5; }
 .town-emblem .material-symbol { font-size:23px; font-variation-settings:"FILL" 1,"wght" 400,"GRAD" 0,"opsz" 24; }
@@ -49,7 +49,7 @@
 :root[data-potato="true"] .town-emblem { background:#4a4a4d; color:#f5f5f5; }
 :root[data-potato="true"] .town-test-label,:root[data-potato="true"] .town-open-icon { background:#454548; }
 @media(max-width:650px) { .town-detail-grid { grid-template-columns:1fr; } }
-@media(max-width:480px) { .town-registry .town-tile { padding:18px; } .town-summary-content { width:76%; } .town-cover { width:50%; } .town-title h2 { font-size:18px; } .town-statistics dt { font-size:10px; } .town-statistics dd { font-size:15px; } .town-test-label { right:12px; top:12px; } }
+@media(max-width:480px) { .town-registry .town-tile { padding:18px; } .town-summary-content { width:calc(68% - 8px); } .town-cover { width:32%; } .town-title h2 { font-size:18px; } .town-statistics dt { font-size:10px; } .town-statistics dd { font-size:15px; } .town-test-label { right:12px; top:12px; } }
 
 .town-gallery { margin-top:20px; }
 .town-gallery-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
@@ -82,3 +82,17 @@
 .town-photo-confirm button { margin-right:8px; }
 .town-photo-dialog:has(.town-photo-actions) > img { max-height:65dvh; }
 .town-photo-dialog:has(.town-photo-actions) { overflow:auto; }
+
+/* Registry text stays in its own column, clear of the cover image. */
+.town-registry .town-tile .town-statistics dt { min-width:0; color:var(--muted); font-size:12px; }
+.town-registry .town-tile .town-statistics dd { flex:0 0 auto; }
+.town-registry .town-tile .town-statistics dt .material-symbol { flex:0 0 16px; }
+.town-registry .town-tile .town-tile-heading { align-items:flex-start; }
+.town-registry .town-tile .town-title h2 { line-height:1.25; }
+
+.town-detail-hero > .town-cover { width:54%; }
+.town-hero-title { position:relative; display:flex; align-items:center; gap:16px; width:65%; min-width:0; padding:6px 0; }
+.town-hero-title .town-emblem { width:48px; height:48px; flex-basis:48px; }
+.town-hero-title > div { min-width:0; }
+.town-hero-title h1 { font-size:clamp(26px,3vw,40px); line-height:1.2; overflow-wrap:anywhere; }
+@media(max-width:650px) { .town-hero-title { width:85%; gap:12px; } }

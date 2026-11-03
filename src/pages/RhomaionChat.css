@@ -1,0 +1,447 @@
+@font-face{font-family:Records;src:url('/fonts/SpotifyMix-Regular.ttf');font-display:swap}@font-face{font-family:Records;src:url('/fonts/SpotifyMix-Bold.ttf');font-weight:700;font-display:swap}
+html[data-rhomaion="true"],
+html[data-rhomaion="true"] body,
+html[data-rhomaion="true"] #root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #17191f;
+  color: #eef0f6;
+  overflow: hidden;
+  font-family: Records, "Segoe UI", sans-serif;
+}
+html[data-rhomaion="true"] body::before,
+html[data-rhomaion="true"] body::after {
+  display: none !important;
+}
+.rhomaion-chat {
+  --ai-accent: #c8b4f2;
+  --ai-line: #ffffff12;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 500px;
+  min-width: 0;
+  background: #17191f;
+  color: #eef0f6;
+  border: 1px solid var(--ai-line);
+  border-radius: 14px;
+  overflow: hidden;
+  font:
+    14px Records,
+    "Segoe UI",
+    sans-serif;
+}
+.rhomaion-chat * {
+  box-sizing: border-box;
+}
+.rhomaion-chat button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--ai-line);
+  border-radius: 9px;
+  background: #ffffff08;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 11px;
+}
+.rhomaion-chat button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.rhomaion-chat button:hover:not(:disabled) {
+  background: #ffffff12;
+}
+.rhomaion-chat button:focus-visible,
+.rhomaion-chat textarea:focus-visible {
+  outline: 2px solid var(--ai-accent);
+  outline-offset: 2px;
+}
+.rhomaion-window-header {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 9px 12px 16px;
+  border-bottom: 1px solid var(--ai-line);
+  flex: none;
+}
+.rhomaion-drag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  user-select: none;
+}
+.rhomaion-drag > svg {
+  color: var(--ai-accent);
+  flex: none;
+}
+.rhomaion-drag strong {
+  font-size: 14px;
+  display: block;
+}
+.rhomaion-drag small {
+  font-size: 10px;
+  color: #949aa9;
+  display: block;
+  margin-top: 3px;
+}
+.rhomaion-window-header > button {
+  padding: 5px;
+  min-width: 28px;
+  width: 28px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+}
+.rhomaion-permissions {
+  font-size: 10px;
+  padding: 8px 16px;
+  color: #aaa6b6;
+  border-bottom: 1px solid var(--ai-line);
+  flex: none;
+  text-transform: capitalize;
+}
+.rhomaion-messages {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 16px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff20 transparent;
+}
+.rhomaion-welcome {
+  padding: 28px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.rhomaion-welcome > span {
+  padding: 15px;
+  background: #c8b4f211;
+  border-radius: 18px;
+  color: var(--ai-accent);
+}
+.rhomaion-welcome h1 {
+  font-size: 25px;
+  margin: 8px 0 0;
+}
+.rhomaion-welcome p {
+  font-size: 13px;
+  color: #a5aaba;
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
+.rhomaion-welcome button {
+  font-size: 12px;
+  text-align: left;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 12px;
+}
+.rhomaion-welcome small {
+  font-size: 10px;
+  color: #858c9d;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+.rhomaion-message {
+  margin-bottom: 24px;
+  overflow-wrap: anywhere;
+}
+.rhomaion-message.user {
+  margin-left: 30px;
+  padding: 12px 14px;
+  background: #c8b4f210;
+  border: 1px solid #c8b4f21a;
+  border-radius: 14px;
+}
+.rhomaion-speaker {
+  display: block;
+  font-size: 10px;
+  color: #b9a2e4;
+  margin-bottom: 9px;
+}
+.rhomaion-message-text {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.rhomaion-message-text > :first-child {
+  margin-top: 0;
+}
+.rhomaion-message-text > :last-child {
+  margin-bottom: 0;
+}
+.rhomaion-message-text p {
+  margin: 0 0 10px;
+}
+.rhomaion-message-text ul,
+.rhomaion-message-text ol {
+  padding-left: 22px;
+}
+.rhomaion-message-text pre {
+  white-space: pre-wrap;
+  background: #0003;
+  padding: 10px;
+  border-radius: 8px;
+}
+.rhomaion-message-text table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.rhomaion-message-text td,
+.rhomaion-message-text th {
+  padding: 7px;
+  border: 1px solid var(--ai-line);
+}
+.rhomaion-message-text a {
+  color: var(--ai-accent);
+  text-decoration: underline;
+}
+.rhomaion-activity {
+  font-size: 10px;
+  color: #9298a7;
+  margin-top: 12px;
+}
+.rhomaion-activity summary {
+  cursor: pointer;
+}
+.rhomaion-activity div {
+  padding: 5px 0;
+}
+.rhomaion-thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ai-accent);
+  padding: 8px;
+}
+.rhomaion-approval {
+  padding: 15px;
+  border: 1px solid #eac58055;
+  border-radius: 12px;
+  background: #eac58008;
+  margin-top: 14px;
+}
+.rhomaion-approval > strong {
+  font-size: 13px;
+  color: #eac580;
+}
+.rhomaion-approval p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #b8b9c3;
+}
+.rhomaion-approval dl {
+  margin: 12px 0;
+}
+.rhomaion-approval dt {
+  font-size: 10px;
+  color: #959aa8;
+}
+.rhomaion-approval dd {
+  margin: 5px 0 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.rhomaion-approval del {
+  color: #b8969b;
+}
+.rhomaion-approval > div {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.rhomaion-approval button:first-child {
+  background: #d7bd87;
+  color: #201c13;
+}
+.rhomaion-approval button {
+  font-size: 11px;
+}
+.rhomaion-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 0 12px 6px;
+  padding: 9px;
+  border: 1px solid #ffffff20;
+  border-radius: 14px;
+  background: #ffffff05;
+  flex: none;
+}
+.rhomaion-composer textarea {
+  resize: none;
+  min-height: 52px;
+  max-height: 120px;
+  height: 65px;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: 13px/1.6 inherit;
+  padding: 4px;
+  outline: none;
+}
+.rhomaion-composer > button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: var(--ai-accent);
+  color: #241b35;
+  flex: none;
+}
+.rhomaion-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px 9px;
+  gap: 5px;
+  font-size: 9px;
+  color: #7f8798;
+  flex: none;
+}
+.rhomaion-footer > button {
+  padding: 4px;
+  border: 0;
+  background: transparent;
+}
+.rhomaion-error {
+  margin: 5px 14px 12px;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 9px 11px;
+  border: 1px solid #e7b67f33;
+  border-radius: 9px;
+  color: #e7be91;
+  flex: none;
+}
+.rhomaion-error button {
+  font-size: 10px;
+  margin-left: 8px;
+  padding: 4px 7px;
+}
+.rhomaion-history {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 16px;
+}
+.rhomaion-history h2 {
+  font-size: 17px;
+  margin: 20px 0;
+}
+.rhomaion-history p {
+  font-size: 12px;
+  color: #9ba2b3;
+}
+.rhomaion-history-row {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ai-line);
+  padding: 8px 0;
+  gap: 6px;
+}
+.rhomaion-history-row > button:first-child {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: transparent;
+  border: 0;
+}
+.rhomaion-history-row strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.rhomaion-history-row small {
+  font-size: 10px;
+  color: #9299a9;
+}
+.rhomaion-history-row > button:last-of-type {
+  border: 0;
+  background: transparent;
+}
+.rhomaion-delete-confirm {
+  flex-basis: 100%;
+  font-size: 11px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.rhomaion-text-button {
+  font-size: 11px !important;
+}
+.rhomaion-unavailable {
+  padding: 30px;
+  color: #aeb4c5;
+  line-height: 1.7;
+}
+.rhomaion-unavailable h1 {
+  font-size: 24px;
+}
+html[data-rhomaion="true"] .rhomaion-chat {
+  height: 100dvh;
+  min-height: 0;
+  border-radius: 0;
+  border: 0;
+}
+
+.rhomaion-composer textarea{font-family:inherit;font-size:13px;line-height:1.6}
+
+.rhomaion-diagnostic{align-self:flex-start;margin:0 16px 8px;padding:7px 10px;font-size:11px!important;color:#c8b4f2!important}
+
+.rhomaion-workspace{height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);color:#eef0f6;font-family:Records,"Segoe UI",sans-serif}
+.rhomaion-workspace.has-summary{grid-template-columns:minmax(300px,1fr) minmax(260px,340px)}
+.rhomaion-workspace>.rhomaion-chat{min-height:0;height:100%;min-width:0}
+.rhomaion-summary{min-width:0;min-height:0;display:flex;flex-direction:column;background:rgba(22,24,32,.75);border:1px solid #ffffff18;border-radius:16px;overflow:hidden;animation:rhomaion-summary-in .22s ease-out}
+.rhomaion-summary header{display:flex;justify-content:space-between;align-items:center;padding:15px;border-bottom:1px solid #ffffff15;font-size:12px}
+.rhomaion-summary header span{display:flex;align-items:center;gap:8px;color:#c8b4f2}
+.rhomaion-summary button{font:inherit;color:inherit;background:#ffffff08;border:1px solid #ffffff15;border-radius:9px;padding:7px;cursor:pointer}
+.rhomaion-summary nav{display:flex;gap:6px;padding:10px;overflow-x:auto;flex-shrink:0}
+.rhomaion-summary nav button{white-space:nowrap;font-size:12px}
+.rhomaion-summary nav button[aria-pressed=true]{background:#c8b4f22a;border-color:#c8b4f2}
+.rhomaion-summary-body{overflow-y:auto;padding:20px;min-height:0}
+.rhomaion-summary-body>small{text-transform:capitalize;color:#c8b4f2}
+.rhomaion-summary h2{font-size:23px;margin:7px 0 24px;overflow-wrap:anywhere}
+.rhomaion-summary dl{margin:0}.rhomaion-summary dl>div{padding:12px 0;border-bottom:1px solid #ffffff12}
+.rhomaion-summary dt{font-size:12px;color:#a6aabb}.rhomaion-summary dd{margin:5px 0 0;font-size:14px;overflow-wrap:anywhere;line-height:1.5}
+.rhomaion-summary-source{font-size:11px;line-height:1.6;color:#9da3b4;margin-top:24px}
+@keyframes rhomaion-summary-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@media(max-width:620px){.rhomaion-workspace.has-summary{grid-template-columns:minmax(0,1fr)}.rhomaion-workspace.has-summary>.rhomaion-chat{display:none}}
+@media(prefers-reduced-motion:reduce){.rhomaion-summary{animation:none}}
+
+.rhomaion-summary-identity{display:flex;align-items:center;gap:12px;margin-bottom:20px}.rhomaion-summary-identity img{width:48px;height:48px;image-rendering:pixelated;border-radius:8px}.rhomaion-summary-identity h2{margin:4px 0 0}.rhomaion-summary-identity small{color:#c8b4f2;text-transform:capitalize}
+
+/* Small transform/opacity animations keep activity visible without blurring the UI. */
+.rhomaion-thinking{gap:12px;min-height:64px;margin:12px 0;padding:12px 14px;border:1px solid #c8b4f21c;border-radius:14px;background:#c8b4f209;flex-shrink:0}
+.rhomaion-working-star{position:relative;display:grid;place-items:center;width:34px;height:34px;flex:none;color:var(--ai-accent,#c8b4f2)}
+.rhomaion-working-star:before{content:"";position:absolute;inset:0;border:1.5px solid #c8b4f223;border-top-color:#c8b4f2;border-right-color:#c8b4f277;border-radius:50%;animation:rhomaion-orbit 2s linear infinite}
+.rhomaion-working-star svg{animation:rhomaion-breathe 1.8s ease-in-out infinite}
+.rhomaion-working-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px;line-height:1.4}
+.rhomaion-working-copy strong{color:#e4d8fa;font-size:12px;font-weight:700}
+.rhomaion-working-copy>span{color:#b0adc1;font-size:11px;overflow-wrap:anywhere;animation:rhomaion-status-in .2s ease-out}
+.rhomaion-working-wave{display:flex;align-items:center;gap:3px;height:20px;flex:none}
+.rhomaion-working-wave i{display:block;width:3px;height:14px;border-radius:3px;background:var(--ai-accent,#c8b4f2);transform:scaleY(.35);animation:rhomaion-wave 1.1s ease-in-out infinite}
+.rhomaion-working-wave i:nth-child(2){animation-delay:.15s}.rhomaion-working-wave i:nth-child(3){animation-delay:.3s}
+@keyframes rhomaion-orbit{to{transform:rotate(360deg)}}
+@keyframes rhomaion-breathe{0%,100%{transform:scale(.9);opacity:.65}50%{transform:scale(1.08);opacity:1}}
+@keyframes rhomaion-wave{0%,100%{transform:scaleY(.35);opacity:.4}50%{transform:scaleY(1);opacity:1}}
+@keyframes rhomaion-status-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.rhomaion-working-star:before,.rhomaion-working-star svg,.rhomaion-working-copy>span,.rhomaion-working-wave i{animation:none}.rhomaion-working-wave i{transform:scaleY(.65)}}

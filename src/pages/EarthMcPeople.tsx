@@ -235,7 +235,7 @@ export default function EarthMcPeople({
             <button
               disabled={detailLoading}
               onClick={() => setDetailAttempt((value) => value + 1)}
-            >
+             data-page-refresh>
               Refresh
             </button>
             <EarthMcRecordPdfExport
@@ -358,7 +358,7 @@ export default function EarthMcPeople({
               setAttempt((value) => value + 1);
               void refreshEarthMcPresence();
             }}
-          >
+           data-page-refresh>
             Refresh
           </button>
           <PageCapture

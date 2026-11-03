@@ -115,7 +115,7 @@ export default function Citizens({
           {citizenId ? citizen?.username || "Citizen Profile" : "Citizens"}
         </h1>
         {!citizenId && (
-          <button onClick={onEarthMc}>
+          <button data-tour="earthmc-people" onClick={onEarthMc}>
             <Icon name="public" />
             View people on EarthMC
           </button>

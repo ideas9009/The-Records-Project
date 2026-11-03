@@ -1,3 +1,4 @@
+import {useAiDraft,AiDraftNotice} from "../lib/ai-actions";
 import { useEffect, useState } from "react";
 import { apiRequest, watchResource } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
@@ -292,12 +293,13 @@ function Editor({
   initial?: ShopListing;
   go: (p: string) => void;
 }) {
-  const [title, setTitle] = useState(initial?.title || ""),
-    [town, setTown] = useState(initial?.town || ""),
-    [items, setItems] = useState(initial?.items.join("\n") || ""),
-    [shopType, setShopType] = useState(initial?.shopType || "stall"),
-    [description, setDescription] = useState(initial?.description || ""),
-    [price, setPrice] = useState(initial?.priceGold?.toString() || ""),
+  const draft=useAiDraft(kind);
+  const [title, setTitle] = useState(initial?.title || draft?.fields.title || ""),
+    [town, setTown] = useState(initial?.town || draft?.fields.town || ""),
+    [items, setItems] = useState(initial?.items.join("\n") || draft?.fields.items || ""),
+    [shopType, setShopType] = useState(initial?.shopType || (draft?.fields.shopType as keyof typeof shopTypes) || "stall"),
+    [description, setDescription] = useState(initial?.description || draft?.fields.description || ""),
+    [price, setPrice] = useState(initial?.priceGold?.toString() || draft?.fields.priceGold || ""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const original = JSON.stringify([
@@ -335,6 +337,7 @@ function Editor({
               : "Sell in Bulk"}
         </h1>
       </header>
+      <AiDraftNotice/>
       <form
         className="card shop-form"
         onSubmit={async (e) => {

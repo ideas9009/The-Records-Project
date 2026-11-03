@@ -1,0 +1,11 @@
+import {beforeEach,afterEach,it,expect,vi} from 'vitest';
+vi.mock('../src/lib/session-storage',()=>({storedSession:()=> 'test-token',storeSession:vi.fn()}));
+vi.mock('../src/lib/smart-sync',()=>({cacheEpoch:()=>0,cacheAllowed:()=>false,cachedData:async()=>null,saveCachedData:vi.fn(),setSyncIdentity:vi.fn(),markSync:vi.fn(),syncState:()=>null,invalidateCache:vi.fn()}));
+vi.mock('../src/lib/connection-progress',()=>({setConnectionStage:vi.fn()}));vi.mock('../src/lib/request-activity',()=>({beginRequest:()=>()=>{}}));
+import {watchResource} from '../src/lib/api';
+const stops:(()=>void)[]=[];const settle=()=>new Promise(r=>setTimeout(r,20));
+beforeEach(()=>{vi.stubGlobal('window',new EventTarget());const doc=new EventTarget();Object.assign(doc,{visibilityState:'hidden'});vi.stubGlobal('document',doc);vi.stubGlobal('navigator',{onLine:true});vi.stubGlobal('fetch',vi.fn().mockImplementation(async()=>new Response(JSON.stringify({account:{uid:'user',status:'approved'}}),{headers:{'Content-Type':'application/json'}})));});
+afterEach(()=>{stops.splice(0).forEach(stop=>stop());vi.unstubAllGlobals();});
+it('checks hidden prompt authentication once, reconnects on internet return, and stops on disposal',async()=>{const next=vi.fn(),error=vi.fn();const stop=watchResource('/api/auth/me',next,error,{eager:true});stops.push(stop);await vi.waitFor(()=>expect(next).toHaveBeenCalledTimes(1));expect(fetch).toHaveBeenCalledTimes(1);expect(error).not.toHaveBeenCalled();window.dispatchEvent(new Event('online'));await vi.waitFor(()=>expect(next).toHaveBeenCalledTimes(2));stop();window.dispatchEvent(new Event('online'));await settle();expect(fetch).toHaveBeenCalledTimes(2);});
+it('normal hidden pages still make no background requests',async()=>{stops.push(watchResource('/api/auth/me',vi.fn(),vi.fn()));await settle();expect(fetch).not.toHaveBeenCalled();});
+it('does not send the preload request while offline',async()=>{vi.stubGlobal('navigator',{onLine:false});stops.push(watchResource('/api/auth/me',vi.fn(),vi.fn(),{eager:true}));await settle();expect(fetch).not.toHaveBeenCalled();});

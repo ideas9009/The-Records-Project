@@ -1,3 +1,4 @@
+import AuthTips from "../components/AuthTips";
 import AuthWallpapers from "../components/AuthWallpapers";
 import { APP_RELEASE_LABEL } from "../lib/app-release";
 import ManualRegistration, {
@@ -43,7 +44,7 @@ export default function Login({
     }
   }
   return (
-    <div className="app login-screen login-stage auth-screen">
+    <div className={"app login-screen login-stage auth-screen"+(mode === "login" ? " has-auth-tips" : "")}>
       <AuthWallpapers />
       <section
         className={
@@ -180,6 +181,7 @@ export default function Login({
           <p className="login-note login-version">{APP_RELEASE_LABEL}</p>
         )}
       </section>
+      {mode === "login" && <AuthTips/>}
     </div>
   );
 }

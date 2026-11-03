@@ -62,3 +62,7 @@ it("shows distinct mayor, waiting-citizen and completed states", () => {
   expect(complete).toContain("Full access enabled");
   expect(complete).not.toContain("Link Microsoft account");
 });
+
+it('shows the update preview control only in the desktop Developer Tools',()=>{
+ auth.account=owner;const oldWindow=globalThis.window;vi.stubGlobal('window',{});expect(renderToStaticMarkup(<DeveloperTools/>)).not.toContain('Preview update prompt');vi.stubGlobal('window',{__TAURI_INTERNALS__:{}});const html=renderToStaticMarkup(<DeveloperTools/>);expect(html).toContain('Preview update prompt');expect(html).toContain('Preview update reminder');vi.stubGlobal('window',oldWindow);
+});

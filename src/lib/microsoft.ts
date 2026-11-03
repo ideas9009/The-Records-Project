@@ -1,3 +1,4 @@
+import { sessionRequestOptions } from "./session-storage";
 import { apiRequest, setSession } from "./api";
 export type MicrosoftMode = "login" | "register" | "link";
 export type MicrosoftFlow = {
@@ -57,6 +58,7 @@ export async function finishMicrosoft(
       id: flow.id,
       secret: flow.secret,
       confirmationDigest: digest,
+      ...sessionRequestOptions(),
       ...(password ? { password } : {}),
     },
   });

@@ -1,3 +1,4 @@
+vi.mock("@tauri-apps/api/core",()=>({isTauri:()=>true}));
 import "fake-indexeddb/auto";
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 import {
@@ -386,4 +387,16 @@ it("caches Overview snapshots but excludes personal friend lookups", async () =>
  expect(cacheAllowed("/api/overview/friends")).toBe(false);
  await saveCachedData("/api/overview", {nation:{name:"Byzantium"},towns:[]}, cacheEpoch());
  expect((await cachedData<any>("/api/overview"))?.data.nation.name).toBe("Byzantium");
+});
+
+it("explicit resync works with caching disabled without bypassing access rules", async () => {
+ await saveSmartSyncSettings({enabled:false,pages:["towns","news"],interval:10});
+ setSyncIdentity({uid:"forced-member",role:"citizen",status:"approved"});
+ expect(cacheAllowed("/api/towns")).toBe(false);
+ expect(cacheAllowed("/api/towns",true)).toBe(true);
+ expect(cacheAllowed("/api/news",true)).toBe(true);
+ expect(cacheAllowed("/api/news/manage",true)).toBe(false);
+ expect(smartSyncSettings().enabled).toBe(false);
+ setSyncIdentity({uid:"forced-pending",role:"citizen",status:"pending"});
+ expect(cacheAllowed("/api/task-board",true)).toBe(false);
 });

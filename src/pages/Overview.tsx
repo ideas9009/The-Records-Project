@@ -431,7 +431,7 @@ export default function Overview({ go }: { go: (page: string) => void }) {
             onClick={() => setAttempt((x) => x + 1)}
             aria-label="Refresh Overview"
             title="Refresh Overview"
-          >
+           data-page-refresh>
             <Icon name="refresh" />
           </button>
           {error && (

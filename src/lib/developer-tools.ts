@@ -1,7 +1,9 @@
 import type { Account } from "./cloud-auth";
 // Account identity is supplied by the authenticated session, never by a name or role.
 export const DEVELOPER_ACCOUNT_UID = "cd9eddda-fd7a-4397-b5f7-2daa8ce7bc67";
-export function canUseDeveloperTools(account: Account | null | undefined) {
+export function canUseDeveloperTools(
+  account: (Pick<Account, "status"> & { uid?: string }) | null | undefined,
+) {
   return (
     account?.uid === DEVELOPER_ACCOUNT_UID && account.status === "approved"
   );

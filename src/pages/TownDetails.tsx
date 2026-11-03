@@ -1,3 +1,5 @@
+import type { AiRoute } from "../lib/ai-actions";
+import TownSuggestions from "./TownSuggestions";
 import { SyncStatus } from "../components/SmartSync";
 import { LoadingStatus } from "../components/Loading";
 import { apiRequest } from "../lib/api";
@@ -12,12 +14,17 @@ import "./TownRegistry.css";
 export default function TownDetails({
   townId,
   onBack,
+  initialSuggestions = false,
+  initialRoute,
 }: {
   townId: string;
+  initialSuggestions?: boolean;
+  initialRoute?: AiRoute;
   onBack: () => void;
 }) {
   const [revision, setRevision] = useState(0),
-    [editing, setEditing] = useState(false);
+    [editing, setEditing] = useState(false),
+    [suggestions, setSuggestions] = useState(initialSuggestions);
   const [access, setAccess] = useState({
     canEdit: false,
     canManageMayors: false,
@@ -41,7 +48,16 @@ export default function TownDetails({
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-  }, [townId, town]);
+  }, [townId, town, editing]);
+  const isMayor =
+    !!account &&
+    account.status === "approved" &&
+    !!town &&
+    (town.mayorUid === account.uid || town.mayorUids?.includes(account.uid));
+  if (suggestions && isMayor)
+    return (
+      <TownSuggestions initialRoute={initialRoute} townId={townId} onBack={() => setSuggestions(false)} />
+    );
   return (
     <div className="town-detail-page">
       <div className="town-page-actions page-banner">
@@ -51,7 +67,11 @@ export default function TownDetails({
             Town Registry
           </button>
         )}
-        {!editing && town && <h1 ref={heading} tabIndex={-1}>{town.name}</h1>}
+        {!editing && isMayor && (
+          <button onClick={() => setSuggestions(true)}>
+            Suggestions <span className="badge">Beta</span>
+          </button>
+        )}
         {!editing && access.canEdit && (
           <button className="town-edit" onClick={() => setEditing(true)}>
             <TownIcon name="edit" />
@@ -83,6 +103,17 @@ export default function TownDetails({
       ) : (
         <>
           <div className="card town-detail-hero">
+            <div className="town-hero-title">
+              <span className="town-emblem">
+                <TownIcon name="location_city" />
+              </span>
+              <div>
+                <span className="badge">{townTypeLabel(town.type)}</span>
+                <h1 ref={heading} tabIndex={-1}>
+                  {town.name}
+                </h1>
+              </div>
+            </div>
             <img
               className="town-cover"
               src={town.image}

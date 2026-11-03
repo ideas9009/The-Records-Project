@@ -1,0 +1,113 @@
+.auth-tips {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  justify-self: center;
+  align-self: end;
+  box-sizing: border-box;
+  width: min(820px, 100%);
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 1px solid #ffffff12;
+  border-radius: 16px;
+  background: rgba(20, 24, 31, 0.52);
+  color: #e4e9f0;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+.auth-tips > svg {
+  flex: none;
+  color: #dfc992;
+}
+.auth-tip-label {
+  flex: none;
+  font-size: 10px;
+  letter-spacing: 0.2px;
+  font-weight: 700;
+  color: #dfc992;
+}
+.auth-tip-copy {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  animation: auth-tip-in 0.25s ease-out;
+}
+.auth-tips kbd {
+  display: inline-block;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f4f6fc;
+  background: #ffffff10;
+  border: 1px solid #ffffff24;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.app.login-stage.has-auth-tips {
+  grid-template-rows: minmax(min-content, 1fr) auto;
+  gap: 26px;
+  padding-bottom: 24px;
+}
+.has-auth-tips .login-entry.login-signin {
+  min-height: min(620px, calc(100dvh - 184px));
+}
+:root[data-theme="light"] .auth-tips {
+  background: rgba(250, 252, 255, 0.8);
+  border-color: #24364b16;
+  color: #354559;
+}
+:root[data-theme="light"] .auth-tips :is(svg, .auth-tip-label) {
+  color: #805e27;
+}
+:root[data-theme="light"] .auth-tips kbd {
+  background: #18324a08;
+  color: #24415e;
+  border-color: #18324a25;
+}
+@keyframes auth-tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 620px) {
+  .auth-tips {
+    flex-wrap: wrap;
+    gap: 5px 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+  .auth-tip-copy {
+    flex-basis: 100%;
+  }
+  .app.login-stage.has-auth-tips {
+    gap: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-tip-copy {
+    animation: none;
+  }
+}
+:root[data-potato="true"] .auth-tip-copy {
+  animation: none;
+}
+
+@media (max-height: 760px) {
+  .app.login-stage.has-auth-tips {
+    padding-top: 24px;
+    gap: 20px;
+  }
+  .has-auth-tips .login-entry.login-signin {
+    padding: 28px;
+  }
+}

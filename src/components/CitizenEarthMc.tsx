@@ -67,7 +67,7 @@ export default function CitizenEarthMc({ uid }: { uid: string }) {
           disabled={loading}
           onClick={() => setAttempt((value) => value + 1)}
           aria-label="Refresh EarthMC profile"
-        >
+         data-page-refresh>
           <span className="material-symbol" aria-hidden="true">
             refresh
           </span>

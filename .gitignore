@@ -26,3 +26,7 @@ windows-build/
 /updater/.dart_tool/
 /src-tauri/resources/updater/*.exe
 *.pem
+
+# Local diagnostics and browser test profiles are never release source.
+/tmp/
+/output/

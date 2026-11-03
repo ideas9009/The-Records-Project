@@ -158,7 +158,7 @@ export default function EarthMcTowns({
             <button
               disabled={detailLoading}
               onClick={() => setDetailAttempt((value) => value + 1)}
-            >
+             data-page-refresh>
               Refresh
             </button>
             <EarthMcRecordPdfExport kind="town" record={detail?.town} checkedAt={detail?.checkedAt} disabled={detailLoading || !detail}/>
@@ -209,7 +209,7 @@ export default function EarthMcTowns({
           <button
             disabled={loading}
             onClick={() => setAttempt((value) => value + 1)}
-          >
+           data-page-refresh>
             Refresh
           </button>
           <PageCapture

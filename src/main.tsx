@@ -1,30 +1,43 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import {AuthProvider} from "./lib/auth-context";
-import "./styles.css";
-import "./legacy.css";
-import "./sidebar.css";
-import "./settings.css";
-import "./surfaces.css";
-import "./page-banners.css";
-import "./viewport.css";
-import "./page-scroll.css";
-import { applyAppearance } from "./lib/appearance";
-import { restoreWallpaper } from "./lib/wallpaper";
-document.addEventListener("contextmenu", (event) => event.preventDefault(), { capture: true });
-applyAppearance();
-void restoreWallpaper().catch(console.error);
-window.addEventListener("storage", (e) => {
-  if (e.key === null || ["records-zoom", "records-potato"].includes(e.key)) {
-    applyAppearance();
-    void restoreWallpaper().catch(console.error);
+import { showRhomaionStartupError } from "./lib/rhomaion-startup";
+import { isTauri } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { widgetKind } from "./lib/desktop-widgets";
+if (
+  isTauri() &&
+  getCurrentWindow().label === "rhomaion-prompt" &&
+  new URLSearchParams(location.search).get("rhomaion-prompt") === "1"
+) {
+  document.documentElement.dataset.rhomaionPrompt = "true";
+  void import("./rhomaion-prompt-main").then((m) => m.mountRhomaionPrompt());
+} else if (
+  isTauri() &&
+  getCurrentWindow().label === "quick-search" &&
+  new URLSearchParams(location.search).get("quick-search") === "1"
+) {
+  document.documentElement.dataset.quickSearch = "true";
+  void import("./quick-search-main").then((m) => m.mountQuickSearch());
+} else bootMain();
+function bootMain() {
+  const requested = new URLSearchParams(location.search).get("desktop-widget");
+  if (
+    isTauri() &&
+    getCurrentWindow().label === "rhomaion-ai" &&
+    new URLSearchParams(location.search).get("rhomaion-ai") === "1"
+  ) {
+    document.documentElement.dataset.rhomaion = "true";
+    void import("./rhomaion-main")
+      .then(({ mountRhomaion }) => mountRhomaion())
+      .catch(showRhomaionStartupError);
+  } else if (
+    isTauri() &&
+    widgetKind(requested) &&
+    getCurrentWindow().label === "desktop-widget-" + requested
+  ) {
+    document.documentElement.dataset.desktopWidget = "true";
+    void import("./widget-main").then(({ mountWidget }) =>
+      mountWidget(requested),
+    );
+  } else {
+    void import("./app-main");
   }
-  if (e.key === "records-wallpaper" || e.key === "records-wallpaper-name")
-    void restoreWallpaper().catch(console.error);
-});
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <AuthProvider><App /></AuthProvider>
-  </React.StrictMode>,
-);
+}

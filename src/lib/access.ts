@@ -1,3 +1,5 @@
+import { canUseDeveloperTools } from "./developer-tools";
+import { isTauri } from "@tauri-apps/api/core";
 export const roleNames = {
   operator: "Operator",
   leader: "Leader",
@@ -76,6 +78,15 @@ const pendingPages = [
 ];
 export function canAccessPage(account: Account | null, page: string) {
   if (!account || account.status === "disabled") return false;
+  if (page === "expansions" || page.startsWith("expansions:"))
+    return isTauri() && account.status === "approved";
+  if (page === "settings:widgets")
+    return isTauri() && account.status === "approved";
+  if (page === "rhomaion")
+    return (
+      account.status === "approved" &&
+      (isTauri() || canUseDeveloperTools(account))
+    );
   if (page === "admin") return canReview(account);
   if (page === "changelog" || page.startsWith("changelog:"))
     return account.status === "approved" || account.status === "pending";
@@ -110,7 +121,17 @@ export function canPerform(
 export const canRemoveRecords = (account: Account | null) =>
   hasRole(account, ["operator", "leader", "prime_minister"]);
 
-export function canControlAccount(actor: (Account & {uid:string}) | null,target:Account & {uid:string}){
- if(!actor || actor.uid===target.uid || !canReview(actor))return false;
- return hasRole(actor,["operator"]) || (!accountRoles(target).includes("operator") && (canManageRoles(actor) || accountRoles(target).every(role=>["citizen","army"].includes(role))));
+export function canControlAccount(
+  actor: (Account & { uid: string }) | null,
+  target: Account & { uid: string },
+) {
+  if (!actor || actor.uid === target.uid || !canReview(actor)) return false;
+  return (
+    hasRole(actor, ["operator"]) ||
+    (!accountRoles(target).includes("operator") &&
+      (canManageRoles(actor) ||
+        accountRoles(target).every((role) =>
+          ["citizen", "army"].includes(role),
+        )))
+  );
 }

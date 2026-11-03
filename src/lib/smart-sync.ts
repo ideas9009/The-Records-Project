@@ -1,3 +1,4 @@
+import {smartSyncAvailable} from "./platform-access";
 export const smartSyncPages = [
   {
     id: "overview",
@@ -146,8 +147,8 @@ export const cacheScope = () =>
       identity.status
     : "";
 export const cacheEpoch = () => epoch;
-export function cacheAllowed(path: string) {
-  if (!identity || !smartSyncSettings().enabled) return false;
+export function cacheAllowed(path: string, force = false) {
+  if (!identity || !smartSyncAvailable(identity) || (!force && !smartSyncSettings().enabled)) return false;
   if (path === "/api/towns/mayor-options") return false;
   if (
     path === "/api/overview" &&
@@ -344,4 +345,4 @@ export async function savedDataStats() {
   };
 }
 export const canRetainOfflineSession = (lastVerified: number) =>
-  smartSyncSettings().enabled && Date.now() - lastVerified < 15 * 60 * 1000;
+  smartSyncAvailable(identity) && smartSyncSettings().enabled && Date.now() - lastVerified < 15 * 60 * 1000;

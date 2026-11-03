@@ -340,3 +340,9 @@
   margin-top: 2px;
   opacity: .8;
 }
+.notifications-panel { max-height: min(600px, calc(100% - 80px)); overflow-y: auto; overscroll-behavior: contain; }
+.notifications-refresh { min-height: 36px; font-size: 12px; margin-bottom: 12px; }
+.notification-item { border-top: 1px solid var(--line); padding: 16px 0; }
+.notification-item h3 { font-size: 14px; margin: 0 0 8px; }
+.notification-item p { font-size: 13px; line-height: 1.5; }
+.notification-item time { display: block; font-size: 11px; color: var(--muted); margin-top: 10px; }

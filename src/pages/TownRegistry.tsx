@@ -66,7 +66,7 @@ export default function TownRegistry({
       <header className="page-header page-banner">
         <h1>Town Registry</h1>
         <div className="page-header-actions">
-          <button onClick={onEarthMc}>
+          <button data-tour="earthmc-towns" onClick={onEarthMc}>
             <TownIcon name="public" />
             View towns on EarthMC
           </button>

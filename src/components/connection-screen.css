@@ -1,10 +1,13 @@
 .app.connection-screen {
   display: grid;
+  grid-template-rows: minmax(min-content, 1fr) auto;
   place-items: center;
+  gap: 28px;
   min-height: 100%;
-  padding: 32px;
+  padding: 32px 32px 24px;
   background: transparent;
   box-sizing: border-box;
+  overflow: auto;
 }
 .connection-content {
   width: min(100%, 380px);
@@ -12,6 +15,60 @@
   background: none;
   border: 0;
   box-shadow: none;
+}
+.connection-loading-content {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+}
+.connection-loader {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+}
+.connection-loader-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #c9d8ff18, transparent 67%);
+}
+.connection-loader svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.connection-loader circle {
+  fill: none;
+  stroke-width: 2;
+  transform-origin: 40px 40px;
+  stroke-linecap: round;
+}
+.connection-ring-track {
+  stroke: #d3defa25;
+}
+.connection-orbit-outer {
+  stroke: #c8d9ff;
+  stroke-dasharray: 50 164;
+  animation: connection-orbit 1.8s linear infinite;
+}
+.connection-orbit-inner {
+  stroke: #a9e2dc;
+  stroke-width: 1.5 !important;
+  stroke-dasharray: 28 129;
+  animation: connection-orbit 3s linear infinite reverse;
+}
+.connection-loader img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: connection-core 2.4s ease-in-out infinite;
 }
 .connection-heading {
   display: flex;
@@ -21,31 +78,8 @@
   font-weight: 700;
   letter-spacing: -0.35px;
 }
-.connection-heading .loading-spinner {
-  width: 28px;
-  height: 28px;
-  border-width: 3px;
-}
 .connection-heading > .material-symbol {
   font-size: 28px;
-}
-.connection-detail {
-  margin: 30px 0 12px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
-}
-.connection-progress {
-  height: 4px;
-  width: 100%;
-  background: color-mix(in srgb, var(--text) 14%, transparent);
-  overflow: hidden;
-}
-.connection-progress > span {
-  display: block;
-  height: 100%;
-  background: var(--text);
-  transition: width 220ms ease-out;
 }
 .connection-error {
   margin: 24px 0;
@@ -53,29 +87,63 @@
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
+.connection-help {
+  margin: -8px 0 24px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
 :root[data-wallpaper="true"]:not([data-potato="true"]) .connection-content {
   text-shadow: 0 1px 5px #000c;
 }
 :root[data-wallpaper="true"][data-theme="light"] .connection-content {
   text-shadow: 0 1px 5px #fffc;
 }
+:root[data-theme="light"] .connection-orbit-outer {
+  stroke: #42678f;
+}
+:root[data-theme="light"] .connection-orbit-inner {
+  stroke: #387c79;
+}
+:root[data-theme="light"] .connection-ring-track {
+  stroke: #42678f25;
+}
 .developer-preview:has(.connection-screen) {
   background-image: inherit;
   background-size: cover;
   background-position: center;
 }
-@media (prefers-reduced-motion: reduce) {
-  .connection-progress > span {
-    transition: none;
+@keyframes connection-orbit {
+  to {
+    transform: rotate(360deg);
   }
 }
-:root[data-potato="true"] .connection-progress > span {
-  transition: none;
+@keyframes connection-core {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .connection-loader :is(circle, img) {
+    animation: none;
+  }
+}
+:root[data-potato="true"] .connection-loader img {
+  animation: none;
 }
 
-.connection-help {
- margin: -8px 0 24px;
- color: var(--muted);
- font-size: 13px;
- line-height: 1.7;
+/* Lightweight ring rotations override the Potato mode animation reset. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-potato="true"] .connection-orbit-outer {
+    animation: connection-orbit 1.8s linear infinite !important;
+  }
+  :root[data-potato="true"] .connection-orbit-inner {
+    animation: connection-orbit 3s linear infinite reverse !important;
+  }
 }

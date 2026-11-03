@@ -1,3 +1,5 @@
+import { APP_BUILD } from "../lib/app-build";
+import { desktop, useDesktopUpdate, updateBusy, previewDesktopUpdate, dismissUpdatePreview } from "../lib/desktop-updates";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../lib/auth-context";
@@ -178,6 +180,7 @@ export default function DeveloperTools({
   go?: (page: string) => void;
 }) {
   const { account } = useAuth();
+  const update = useDesktopUpdate();
   const [screen, setScreen] = useState<DeveloperScreen | null>(null);
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState<string>("town:");
@@ -203,6 +206,22 @@ export default function DeveloperTools({
           />
         </label>
       </section>
+      {desktop() && <section className="card">
+        <h2>Update previews</h2>
+        <p>Internal build: {APP_BUILD}</p>
+        <p>Preview the update reminder in the sidebar, or open the full prompt with simulated progress. Nothing is downloaded or installed.</p>
+        <div className="developer-tool-grid">
+          <button disabled={updateBusy(update) || (!update.demo && update.stage === 'ready')} onClick={()=>previewDesktopUpdate(account,"reminder")}>
+            <span className="material-symbol" aria-hidden="true">notifications_active</span>
+            Preview update reminder
+          </button>
+          <button disabled={updateBusy(update) || (!update.demo && update.stage === 'ready')} onClick={()=>previewDesktopUpdate(account)}>
+            <span className="material-symbol" aria-hidden="true">system_update_alt</span>
+            Preview update prompt
+          </button>
+          {update.demo && <button onClick={dismissUpdatePreview}>End update preview</button>}
+        </div>
+      </section>}
       <section className="card">
         <h2>Screen previews</h2>
         <p>

@@ -1,118 +1,77 @@
-# Nostra · 2 | Phase 2
+# Nostra-2
 
-**Release:** Build 4 · MSI 1.4.2  
-**Last updated:** 24 October 2026
+**Release:** Nostra-2
+**Last updated:** 3 November 2026
 
-Phase 2 continues the transition from Flutter to React. These notes cover Phase 2 only. Published Phase 1 notes are preserved in the Changelog.
+## Companies
 
-## My Profile
+- Added a Register your company button that sends a private in-app notification to Sumeitideas. Repeated clicks do not create duplicate requests.
+- Company profiles and registration forms remain planned.
 
-- Replaced the placeholder page with a personal profile summary, a 3D Minecraft character, role badges and membership details.
-- Added registered town memberships with shortcuts to town pages and a View public profile button.
-- Added a Connected accounts section with Microsoft account linking for existing TRP members. Server activation and the initial live verification/linking test have been completed.
-- Added a direct shortcut to Account settings for password management, plus a sign-out action.
-- Discord linking and profile customization remain planned for future updates.
-- Pending registrations retain their separate approval screen.
+## Feedback
 
-## About and Changelog
+- About includes a suggestion and bug-report form. Reports go privately to Sumeitideas’s notifications with the sender and app version.
 
-- Updated the current phase label to Phase 2.
-- Started fresh Phase 2 release notes and archived the original notes for Phase 1 builds 2 and 3.
-- Added a separate Changelog button in About. Browse versions and open a release to read its own notes.
-- Included saved Phase 1 notes for offline browsing. The version list also checks GitHub for newly published releases.
+## Notifications
 
-## Account verification
+- Added a saved notifications inbox, loaded when opened, with a manual Refresh button.
+- Published Phase 2 release notes are preserved in the Changelog.
 
-- Minecraft API application approval has been received. Microsoft verification and linking have been enabled and tested with the owner’s account.
+## SmartSync and sign-in
 
-## Developer Tools
+- The website shows an app-only SmartSync message; approved Operators can open its controls for testing. Normal website accounts do not run SmartSync caching.
+- App sign-ins are remembered across restarts and use persistent server sessions. Website sessions remain temporary. Signing out removes the session; account disabling and revocation remain enforced.
 
-- Added an account-only Developer Tools section in Settings with safe previews of sign-in, manual registration, approval, Microsoft confirmation and connection screens.
-- Added shortcuts to publishing forms, hidden pages and specific records. Real page actions retain their usual permissions.
+- Sign-in and loading screens show rotating discovery tips. The connection screen uses a custom loading circle without progress bars or service-status text.
 
-## Sign in
+## Windows window controls
 
-- Simplified the sign-in heading, placed account creation and Microsoft sign-in side by side, and centered the version label.
-- Improved spacing, keyboard focus and the main sign-in button, with a show/hide password control.
+- Replaced the main Windows titlebar with custom React window controls, update checking, notifications and page refresh.
+- Ctrl-clicking Refresh reloads the app and requests a fresh data sync after sign-in is restored. Normal refresh reloads the current page, with unsaved-change prompts retained.
+- Existing page refresh buttons remain visible on the website.
 
-- Adapted Sign in to a left-side panel on desktop, with the logo beside the heading, secondary actions near the bottom, and a centered mobile layout.
+## Desktop Widgets expansion
 
-## Registration
+- Added Desktop Widgets beta as an included pack, enabled or disabled in Expansion Packs. No separate executable is downloaded in this version.
+- Added VoteParty, Nation Balance, and online nation-player widgets with Minecraft faces.
+- Widgets support desktop-only or always-on-top overlay mode, 1×1 through 3×3 sizing in half-unit steps, optional padded snapping, saved positions and startup restoration.
+- Expansion Packs is hidden and blocked on the website, including for Operators.
+- Enabled widgets keep TRP running in the tray when the main window closes.
 
-- Matched registration to the Sign in panel. Creating an account expands the panel to the right and guides users through EMC lookup, profile confirmation and password setup.
-- Added a numbered progress rail, clearer step headings and a Back to profile action. The flow fits narrow screens and respects reduced-motion preferences.
-- Developer Tools now supports entering the sample registration flow directly from its Sign in preview.
+- Widget customization now lives in Settings → Desktop Widgets. Sizes are adjusted only by dragging.
+- Typography, Minecraft faces and controls scale together with the shared widget size multiplier.
+- Added shared locking, blur and tint controls, per-widget placement, and following a selected app window’s corner.
 
-- Registration pending now continues the same panel layout, with a compact profile summary, review progress and the existing EMC recheck and sign-out controls.
+- Fixed native titlebars and disappearing desktop widgets by applying window changes together on the UI thread; mouse interaction restores correctly after locking and mode changes.
 
-## Connecting
+- Rebuilt widget tiles with consistent spacing, SVG icons, compact edit controls and responsive numbers. Resizing is continuous and snaps to the half-unit grid on release.
+- Widgets use a separate frontend entry, skip wallpaper setup and duplicate player-presence polling, and stop automatic scrolling while hidden or when the list fits.
+- Widget windows suppress native frames throughout their message lifecycle, including delayed theme and style changes. Placement settings now combine desktop, always-on-top and following an app window into one choice.
 
-- Replaced the connection card with a simple loading circle, current connection activity and a progress bar driven by session and account-loading milestones. Connection failures retain a retry action.
+## Town Suggestions beta
 
-- Sign-in, registration and connection screens now cycle wallpapers every three seconds with a fade. The slideshow uses smaller background images, pauses when hidden, respects reduced motion and Potato Mode, and leaves the saved app wallpaper unchanged.
+- Added mayor-only Suggestions with a border chunk map, expansion direction comparison, potential adjacent overclaim information, and a 16-gold-per-chunk calculator.
+- The page warns that beta suggestions are not 100% accurate and can make mistakes. Unknown ownership is never treated as wilderness; overclaim opportunities require in-game verification.
+- Scans run on demand, share a five-minute cache, and check up to 4,096 surrounding chunks within ten chunks of the town. API permissions are checked before scans and cached results are returned.
 
-## Microsoft sign-in window
+- Suggestions maps now survey ten surrounding chunks in every direction, label nearby towns, fit the surveyed area automatically, and keep selected claim routes connected. Large scans clearly report coverage limits.
 
-- Added a dedicated desktop Microsoft sign-in window with persistent browser data to remember Microsoft accounts between app launches.
-- Added a saved choice to use the default browser, plus an option to switch to it during sign-in. Verification and profile confirmation continue through the existing server flow.
-- The native window closes on verification or cancellation while retaining Microsoft cookies. The packaged Windows build includes this sign-in window.
+## Quick Search and Rhōmaíōn AI beta
 
-## EarthMC towns
+- Alt+Q opens Quick Search for public EarthMC players, towns and nations, with keyboard selection and profile summaries.
+- Alt+Shift+Q opens Quick Rhōmaíōn with saved local conversations and the latest exchange above the prompt bar. The prompt preloads after sign-in and stays ready between openings.
+- Rhōmaíōn can explain public app pages, open permitted pages, search EarthMC, plan town expansion routes and prepare unsaved news, task, material, shop and bulk drafts.
+- AI permissions follow the signed-in user and are capped at Admin for Operators. Town changes require explicit approval; drafts require review and saving in the normal editor.
+- Profile summaries appear beside the conversation. Player profiles are checked against the public API, with clear unavailable states for missing or opted-out records.
+- Animated activity indicators show progress in both chat modes. Chats can be saved locally, exported or cleared in Settings.
 
-- Added View towns on EarthMC to Town Registry, matching the public people directory.
-- Browse public towns with search, nation filters, a Byzantium shortcut, pagination and page capture.
-- Open town information for its mayor, residents, nation, claims, bank balance, spawn and detailed EarthMC records. Resident and mayor buttons open their public player profiles.
-- EarthMC browsing remains separate from registered TRP towns and test data.
+## Update experience
 
-- Organized EarthMC town information into Overview, Residents, Trusted players, Apartments/Quarters, Claimed plots and More details.
-- Added searchable face-and-name player buttons, named apartment detail views with owners, boundaries and public records, and readable multi-world plot locations.
-- Ordinary plot names and individual plot owners are not exposed by EarthMC’s public API; the plot view clearly identifies the available location information.
+- Added a glowing update reminder and a floating panel beside the sidebar, with public release names, release notes, download sizes, progress and retry controls.
+- Closing the panel keeps the reminder and download progress. Installation still requires choosing Install and restart, with unsaved-work protection.
+- Developer Tools includes app-only reminder and prompt previews with simulated progress. Previews cannot download or install updates.
 
-- Replaced screenshot actions on selected EarthMC town and player pages with plain, paginated PDF reports containing the full loaded record and available Minecraft faces. Town reports omit individual apartments/quarters and include every town section regardless of which tab is open.
+## Known beta limitations
 
-- Added an Online players filter to People on EarthMC, combining with username search and nation filters.
-- Online players now have a green status dot on their Minecraft faces throughout the app. Status uses EarthMC's public online list, refreshes automatically, and clears when unavailable or stale.
-
-- Connection failures now explain that the server may be restarting and ask users to wait a few minutes before contacting @sumeitideas on Discord.
-
-## Account access
-
-- Added reversible account disabling and enabling in Administration, following existing moderation permissions and protecting self-access and Operator accounts.
-- Disabling invalidates sessions, blocks password and Microsoft access and prevents new registration with the disabled Minecraft identity, including after a Minecraft username change.
-- Phase 1 receives an account-not-found response. Its legacy Restore action cannot enable a disabled account. The new Phase 2 Administration action restores the previous status without approving pending registrations.
-
-## Background syncing
-
-- Reduced automatic background syncing to every 10 minutes, paused hidden/offline requests, and removed repeated focus refreshes. Older 1/5-minute SmartSync settings now use 10 minutes. Hiring chat includes a manual Refresh messages button.
-
-## Image storage
-
-- Town covers now fit within 1280 × 720 pixels, keep their proportions, and are compressed to a smaller storage budget without enlarging small images.
-- Town gallery uploads retain their original pixel dimensions. Images that cannot fit the existing storage limit are rejected rather than resized.
-- Mayors can replace or permanently remove individual gallery images. Replacement overwrites the same record, removal deletes it, and stale edits cannot erase newer images.
-- Removing a custom town cover restores the bundled default. Replaced cover, news thumbnail and task-proof data is overwritten rather than kept as unused upload copies.
-
-- Lightened the sidebar wordmark to Telegraf Regular and marked Companies and Expansion Packs as coming soon in future updates.
-
-- Added solid rounded page headers using each section's sidebar colours, with dark buttons and light button labels/icons. Sign-in and registration screens retain their existing styling.
-
-
-## Window scrolling
-
-- Prevented scrolling past the app viewport and exposing empty space beneath the wallpaper in WebView2. Content, dialogs, and authentication screens retain their own scrolling.
-
-- Kept page title banners, search fields, and filters visible during scrolling. Tiles now soften at the top and bottom boundaries without blurring the wallpaper; screenshots/PDF content remain unmasked.
-
-## UI performance
-
-- Limited glass blur and page transition effects to visible and nearby tiles, including long EarthMC directories.
-- Batched scroll measurements before visual updates and stopped rebuilding scroll observers for face images and text changes.
-- Kept page titles, search and filters pinned beneath the expanded sidebar, with soft tile edges while scrolling.
-
-- Fixed the Task Board and Shop Search page sliders jumping back to the previous page before completing a click or drag navigation.
-
-- Updated both page sliders with an animated solid selection pill and clipped label colours that follow the pill during clicks and dragging.
-
-- Fixed sidebar wheel scrolling over navigation buttons while retaining window overscroll protection.
-
-- Tidied Administration with grouped section navigation, consistent search controls, clearer account status badges and player faces, and cleaner review panels.
+- Desktop widget blur edges and desktop placement may render differently across Windows versions. Blur Off avoids the known blur-corner artifacts.
+- AI advice and town expansion suggestions can be inaccurate; verify claims, costs and eligibility in Minecraft before acting.

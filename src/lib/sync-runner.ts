@@ -14,10 +14,10 @@ function update(next: typeof status) {
   status = next;
   listeners.forEach((listener) => listener());
 }
-export function syncSelectedPages() {
+export function syncSelectedPages(force = false) {
   if (current) return current;
   const settings = smartSyncSettings();
-  if (!settings.enabled) return Promise.resolve();
+  if (!settings.enabled && !force) return Promise.resolve();
   const paths = settings.pages
     .flatMap((page) => {
       const definition = smartSyncPages.find((item) => item.id === page)!;
@@ -26,7 +26,7 @@ export function syncSelectedPages() {
         label: definition.label,
       }));
     })
-    .filter((item) => cacheAllowed(item.path));
+    .filter((item) => cacheAllowed(item.path, force));
   if (!paths.length) return Promise.resolve();
   update({ running: true, error: "" });
   const work = (async () => {

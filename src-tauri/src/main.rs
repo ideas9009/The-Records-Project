@@ -1,7 +1,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod rhomaion;
+mod quick_search;
+mod widgets;
+use widgets::{
+    widgets_data, widgets_drag, widgets_install, widgets_open_main, widgets_set, widgets_snap, widgets_preferences,
+    widgets_state, widgets_windows, Widgets,
+};
+
 mod database;
 mod microsoft_window;
-use microsoft_window::{open_microsoft_signin, close_microsoft_signin};
+use microsoft_window::{close_microsoft_signin, open_microsoft_signin};
 mod updater;
 use database::{database_commit, database_path, database_read};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -226,7 +234,10 @@ fn notify_vote_party(app: tauri::AppHandle, remaining: u32) -> Result<(), String
 }
 fn main() {
     tauri::Builder::default()
+        .manage(quick_search::QuickSearchState::default())
         .manage(DesktopUpdater::default())
+        .manage(Widgets::default())
+        .manage(rhomaion::RhomaionState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
@@ -236,6 +247,27 @@ fn main() {
             background: AtomicBool::new(false),
         })
         .invoke_handler(tauri::generate_handler![
+            quick_search::quick_search_open,
+            quick_search::quick_search_prepare_ai,
+            quick_search::quick_search_layout,
+            quick_search::quick_search_close,
+            quick_search::quick_search_show_main,
+            quick_search::quick_search_shortcut_status,
+            rhomaion::rhomaion_open,
+            rhomaion::rhomaion_set_context,
+            rhomaion::rhomaion_context,
+            rhomaion::rhomaion_navigate,
+            rhomaion::rhomaion_refresh,
+            rhomaion::rhomaion_export,
+            widgets_windows,
+            widgets_state,
+            widgets_install,
+            widgets_set,
+            widgets_snap,
+            widgets_preferences,
+            widgets_drag,
+            widgets_open_main,
+            widgets_data,
             desktop_update_status,
             desktop_update_check,
             desktop_update_download,
@@ -277,17 +309,37 @@ fn main() {
                     }
                 }
                 if window.label() == "main"
-                    && window
+                    && (window
                         .state::<Preferences>()
                         .background
                         .load(Ordering::Relaxed)
+                        || widgets::has_open(window.app_handle())
+                        || window.app_handle().get_webview_window("rhomaion-prompt").is_some_and(|w|w.is_visible().unwrap_or(false))
+                        || window.app_handle().get_webview_window("quick-search").is_some_and(|w|w.is_visible().unwrap_or(false))
+                        || window
+                            .app_handle()
+                            .get_webview_window("rhomaion-ai")
+                            .is_some_and(|w| w.is_visible().unwrap_or(false)))
                 {
                     api.prevent_close();
                     let _ = window.hide();
+                } else if window.label() == "main" {
+                    // Hidden preloaded prompts must not keep an otherwise closed app running.
+                    for label in ["rhomaion-prompt", "quick-search"] {
+                        if let Some(prompt) = window.app_handle().get_webview_window(label) {
+                            if !prompt.is_visible().unwrap_or(false) { let _ = prompt.destroy(); }
+                        }
+                    }
                 }
             }
         })
         .setup(|app| {
+            quick_search::register(app.handle().clone());
+            widgets::start_following(app.handle().clone());
+            let widget_app = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                widgets::restore(widget_app).await;
+            });
             if std::env::args().any(|a| a == "--minimized") {
                 if let Some(w) = app.get_webview_window("main") {
                     let _ = w.hide();

@@ -42,6 +42,7 @@ Future<Map<String, dynamic>> release(String mode, String current) async {
   final r = response.data as Map<String, dynamic>;
   if (r['draft'] != false || r['prerelease'] != false)
     throw const FormatException('This is not a stable release.');
+  final displayName = releaseDisplayName(r['name']);
   final tag = r['tag_name'] as String;
   final version = tag,
       latest = buildNumber(tag),
@@ -52,6 +53,7 @@ Future<Map<String, dynamic>> release(String mode, String current) async {
   if (mode != 'reinstall' && latest <= installed)
     return {
       'stage': 'up_to_date',
+      'releaseName': displayName,
       'current': current,
       'message': 'You are up to date.'
     };
@@ -65,6 +67,7 @@ Future<Map<String, dynamic>> release(String mode, String current) async {
         'The signed installer does not match the release asset.');
   return {
     'stage': 'available',
+    'releaseName': displayName,
     'version': version,
     'current': current,
     'notes': (r['body'] ?? '')
@@ -87,14 +90,14 @@ Future<void> verifyFile(Directory dir, Map<String, dynamic> job) async {
 }
 
 List<String> installerArguments(Directory dir, String mode) => [
-    '/i',
-    '${dir.path}${Platform.pathSeparator}update.msi',
-    '/passive',
-    '/norestart',
-    '/L*v',
-    '${dir.path}${Platform.pathSeparator}install.log',
-    if (mode == 'reinstall') ...['REINSTALL=ALL', 'REINSTALLMODE=vomus']
-  ];
+      '/i',
+      '${dir.path}${Platform.pathSeparator}update.msi',
+      '/passive',
+      '/norestart',
+      '/L*v',
+      '${dir.path}${Platform.pathSeparator}install.log',
+      if (mode == 'reinstall') ...['REINSTALL=ALL', 'REINSTALLMODE=vomus']
+    ];
 
 Future<void> install(Directory dir, int parent, String exe) async {
   final job = jsonDecode(await File('${dir.path}/job.json').readAsString())
@@ -126,7 +129,9 @@ Future<void> install(Directory dir, int parent, String exe) async {
   }
   final system = Platform.environment['SystemRoot'] ?? r'C:\Windows';
   final args = installerArguments(dir, job['mode'] as String);
-  final result = await Process.run('$system${Platform.pathSeparator}System32${Platform.pathSeparator}msiexec.exe', args);
+  final result = await Process.run(
+      '$system${Platform.pathSeparator}System32${Platform.pathSeparator}msiexec.exe',
+      args);
   if (result.exitCode != 0 && result.exitCode != 3010) {
     await File('${dir.path}/error.txt').writeAsString(
         'Windows Installer failed (${result.exitCode}). See install.log.');
@@ -177,12 +182,17 @@ Future<void> main(List<String> args) async {
           emit({
             'stage': 'downloading',
             'version': info['version'],
+            'releaseName': info['releaseName'],
             'received': received,
             'total': manifest['size']
           });
         }
       });
-      emit({'stage': 'verifying', 'version': info['version']});
+      emit({
+        'stage': 'verifying',
+        'version': info['version'],
+        'releaseName': info['releaseName']
+      });
       if (await partial.length() != manifest['size'] ||
           await hashStream(partial.openRead()) != manifest['sha256'])
         throw const FormatException(
@@ -198,6 +208,7 @@ Future<void> main(List<String> args) async {
       }));
       emit({
         'stage': 'ready',
+        'releaseName': info['releaseName'],
         'version': info['version'],
         'message': 'Verified and ready to install.',
         'reinstall': mode == 'reinstall'

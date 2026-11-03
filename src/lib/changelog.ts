@@ -1,3 +1,4 @@
+import build4Notes from "../../release-notes/archive/nostra-2-phase-2-build-4.md?raw";
 import currentNotes from "../../RELEASE-NOTES.md?raw";
 import build2Notes from "../../release-notes/archive/nostra-2-phase-1-build-2.md?raw";
 import build3Notes from "../../release-notes/archive/nostra-2-phase-1-build-3.md?raw";
@@ -15,14 +16,24 @@ export type ReleaseEntry = {
 };
 export const savedChangelog: ReleaseEntry[] = [
   {
-    id: "4",
+    id: "5",
+    build: 5,
+    version: "1.4.3",
+    url: `https://github.com/${repository}/releases/tag/5`,
     title: APP_RELEASE_LABEL,
+    date: "2026-11-03",
+    status: "released",
+    notes: currentNotes,
+  },
+  {
+    id: "4",
+    title: "Nostra · 2 | Phase 2",
     build: 4,
     version: "1.4.2",
     url: `https://github.com/${repository}/releases/tag/4`,
     date: "2026-10-24",
     status: "released",
-    notes: currentNotes,
+    notes: build4Notes,
   },
   {
     id: "3",
@@ -57,7 +68,7 @@ export function mergePublishedReleases(
       r.draft !== false ||
       typeof r.tag_name !== "string" ||
       !r.tag_name ||
-      r.tag_name === "phase-2" ||
+      ["phase-2", "phase-3"].includes(r.tag_name) ||
       typeof r.published_at !== "string" ||
       !Number.isFinite(Date.parse(r.published_at))
     )

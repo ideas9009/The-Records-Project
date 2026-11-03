@@ -23,7 +23,7 @@ const AuthContext = createContext<{
   error: string;
   retry: () => void;
 }>({ account: null, loading: true, error: "", retry: () => {} });
-function ServerAuthProvider({ children }: { children: ReactNode }) {
+function ServerAuthProvider({ children, preload = false }: { children: ReactNode; preload?: boolean }) {
   const [account, setAccount] = useState<Account | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
@@ -58,15 +58,19 @@ function ServerAuthProvider({ children }: { children: ReactNode }) {
           if (denied || !canRetainOfflineSession(verifiedAt))
             setError(reason.message);
         },
+        {eager:preload},
       );
     };
     connect();
     window.addEventListener("records-session", connect);
+    const storage=(event:StorageEvent)=>{if(event.key==="records-desktop-session")connect()};
+    window.addEventListener("storage",storage);
     return () => {
       stop?.();
       window.removeEventListener("records-session", connect);
+      window.removeEventListener("storage",storage);
     };
-  }, [attempt]);
+  }, [attempt, preload]);
   return (
     <AuthContext.Provider
       value={{
@@ -97,7 +101,7 @@ export function ConnectionStatus() {
   );
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, preload = false }: { children: ReactNode; preload?: boolean }) {
   return PREVIEW_MODE ? (
     <AuthContext.Provider
       value={{
@@ -110,6 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   ) : (
-    <ServerAuthProvider>{children}</ServerAuthProvider>
+    <ServerAuthProvider preload={preload}>{children}</ServerAuthProvider>
   );
 }

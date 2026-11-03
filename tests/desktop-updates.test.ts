@@ -102,3 +102,27 @@ it("does not call desktop commands from the website", async () => {
   expect(u.showUpdatePrompt(u.updateSnapshot())).toBe(false);
   stop();
 });
+
+it('developer preview opens the prompt, simulates progress and cannot download or install',async()=>{
+ const u=await import('../src/lib/desktop-updates');const owner={uid:'cd9eddda-fd7a-4397-b5f7-2daa8ce7bc67',status:'approved'} as import('../src/lib/cloud-auth').Account;
+ const opened=vi.fn();window.addEventListener('records-open-update',opened);
+ vi.useFakeTimers();try{expect(u.previewDesktopUpdate(owner)).toBe(true);expect(opened).toHaveBeenCalledOnce();expect(u.updateSnapshot().demo).toBe(true);await u.downloadDesktopUpdate();await vi.advanceTimersByTimeAsync(5000);expect(u.updateSnapshot().stage).toBe('ready');u.installDesktopUpdate({} as HTMLElement);expect(mock.invoke).not.toHaveBeenCalled();u.dismissUpdatePreview();expect(u.updateSnapshot().stage).toBe('idle');expect(u.updateSnapshot().demo).toBeFalsy();}finally{u.dismissUpdatePreview();vi.useRealTimers();}
+});
+it('preview requires the exact approved developer account in the app',async()=>{
+ const u=await import('../src/lib/desktop-updates');const owner={uid:'cd9eddda-fd7a-4397-b5f7-2daa8ce7bc67',status:'approved'} as import('../src/lib/cloud-auth').Account;
+ expect(u.previewDesktopUpdate()).toBe(false);expect(u.previewDesktopUpdate({...owner,uid:'another-operator'})).toBe(false);expect(u.previewDesktopUpdate({...owner,status:'pending'})).toBe(false);
+ vi.stubGlobal('window',new EventTarget());expect(u.previewDesktopUpdate(owner)).toBe(false);expect(u.updateSnapshot().stage).toBe('idle');expect(mock.invoke).not.toHaveBeenCalled();
+});
+it('ending a preview restores the real update and does not replace a ready installer',async()=>{
+ const u=await import('../src/lib/desktop-updates');const owner={uid:'cd9eddda-fd7a-4397-b5f7-2daa8ce7bc67',status:'approved'} as import('../src/lib/cloud-auth').Account;
+ await u.checkDesktopUpdates();const real=u.updateSnapshot();expect(u.previewDesktopUpdate(owner)).toBe(true);u.dismissUpdatePreview();expect(u.updateSnapshot()).toEqual(real);
+ await u.downloadDesktopUpdate();expect(u.updateSnapshot().stage).toBe('ready');expect(u.previewDesktopUpdate(owner)).toBe(false);expect(u.updateSnapshot().demo).toBeFalsy();
+});
+
+it('reminder preview shows availability without opening the expanded prompt or calling the updater',async()=>{
+ const u=await import('../src/lib/desktop-updates');const owner={uid:'cd9eddda-fd7a-4397-b5f7-2daa8ce7bc67',status:'approved'} as import('../src/lib/cloud-auth').Account;
+ const reminder=vi.fn(),prompt=vi.fn();window.addEventListener('records-preview-update-reminder',reminder);window.addEventListener('records-open-update',prompt);
+ expect(u.previewDesktopUpdate(owner,'reminder')).toBe(true);expect(reminder).toHaveBeenCalledOnce();expect(prompt).not.toHaveBeenCalled();expect(u.showUpdatePrompt(u.updateSnapshot())).toBe(true);expect(u.updateSnapshot().stage).toBe('available');expect(mock.invoke).not.toHaveBeenCalled();u.dismissUpdatePreview();
+});
+
+it('keeps public release names through progress events while numeric tags stay internal',async()=>{const u=await import('../src/lib/desktop-updates');const stop=u.startDesktopUpdates();try{await vi.waitFor(()=>expect(u.updateSnapshot().stage).toBe('available'));mock.callback!({payload:{stage:'available',version:'5',releaseName:'Nostra-2'}});for(const stage of ['downloading','verifying','ready']){mock.callback!({payload:{stage,version:'5'}});expect(u.updateSnapshot().releaseName).toBe('Nostra-2');expect(u.updateSnapshot().version).toBe('5');}}finally{stop();}});

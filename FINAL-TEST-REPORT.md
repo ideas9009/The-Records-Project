@@ -1,3 +1,33 @@
+# Build 5 verification — 3 November 2026
+
+Release: **Nostra-2**. Internal build: **5**. MSI version: **1.4.3**.
+
+| Check | Result |
+| --- | --- |
+| React/client tests | 310 passed across 61 files |
+| API/server tests | 274 passed |
+| Dart analysis | No issues |
+| Dart updater tests | 9 passed |
+| Native Rust tests | 23 passed; 4 live/desktop probes ignored |
+| Production frontend and Windows MSI builds | Passed |
+| Signed updater metadata and MSI SHA-256 | Verified, including the copied release folder |
+| MSI administrative extraction | Passed; this extracts files without installing the product |
+| Extracted updater helper | Byte-for-byte match with the newly compiled Dart helper |
+| Extracted app executable | Matches the production executable except Tauri's three-byte bundle marker (UNK → MSI) |
+| Installer identity | The Records Project 1.4.3; existing upgrade family retained |
+
+Automated suites passed **616 tests**. The main installed app was not replaced and live TRP records were not modified by these checks. A fresh production installation/elevation cycle was not performed in this run; previous isolated updater installation tests are recorded below. Desktop Widgets remains beta because Windows blur can show corner artifacts.
+
+Prepared MSI: The-Records-Project_1.4.3_x64_en-US.msi, **42,991,616 bytes**.
+
+SHA-256: c65b91c016ce3fb974b29d8cfb0593401ef48a91f01cd14841417eee8c325d42.
+
+The metadata signature authenticates updater assets; it is separate from Windows Authenticode signing. Publication and a download from the published feed are verified separately by the release workflow.
+
+---
+
+## Historical verification
+
 # Final verification — 20 October 2026
 
 Result: automated checks and the isolated Windows updater cycle passed. No GitHub release was created or edited, no live TRP records were removed, and the main installed app was not changed.

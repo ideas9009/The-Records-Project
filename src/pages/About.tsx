@@ -1,3 +1,4 @@
+import FeedbackButton from "../components/FeedbackForm";
 import { AboutUpdater } from "../components/DesktopUpdater";
 import ReleaseNotes from "../components/ReleaseNotes";
 import { APP_RELEASE_LABEL } from "../lib/app-release";
@@ -6,12 +7,6 @@ import releaseNotes from "../../RELEASE-NOTES.md?raw";
 export default function About({ go }: { go?: (page: string) => void } = {}) {
   return (
     <div className="about-page">
-      <header className="page-header page-banner">
-        <div>
-          <h1>About</h1>
-          <p>The Records Project</p>
-        </div>
-      </header>
       <section
         className="card about-management"
         aria-label="Project management"
@@ -27,20 +22,12 @@ export default function About({ go }: { go?: (page: string) => void } = {}) {
           </svg>
           <h2>The Records Project</h2>
         </div>
-        <div className="about-management-credit">
-          <span>managed by</span>
-          <img
-            src="/branding/byzantine-republic.svg"
-            alt="The Byzantine Republic"
-            width="360"
-            height="73"
-          />
-        </div>
+        <FeedbackButton/>
       </section>
       <section className="card about-version" aria-label="App version">
         <h2>{APP_RELEASE_LABEL}</h2>
         {go && (
-          <button onClick={() => go("changelog")}>
+          <button data-tour="changelog" onClick={() => go("changelog")}>
             <span className="material-symbol" aria-hidden="true">
               history
             </span>
@@ -50,7 +37,7 @@ export default function About({ go }: { go?: (page: string) => void } = {}) {
       </section>
       <AboutUpdater />
       <section className="card release-notes">
-        <h2>Phase 2 release notes</h2>
+        <h2>Release notes</h2>
         <ReleaseNotes notes={releaseNotes} />
       </section>
       <section className="card">

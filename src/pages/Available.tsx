@@ -637,7 +637,7 @@ export function HiringChat({ id, go }: { id: string; go: Go }) {
           Hiring inbox
         </button>
         <h1>{other || "Hiring conversation"}</h1>
-        <button onClick={()=>void load().catch(error=>setError(reason(error)))}><Icon name="refresh"/>Refresh messages</button>
+        <button onClick={()=>void load().catch(error=>setError(reason(error)))} data-page-refresh><Icon name="refresh"/>Refresh messages</button>
       </header>
       {loading && <LoadingStatus>Loading conversation...</LoadingStatus>}
       {error && <p role="alert">{error}</p>}

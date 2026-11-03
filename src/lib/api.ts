@@ -1,3 +1,4 @@
+import { storedSession, storeSession } from "./session-storage";
 import { startBackgroundPolling } from "./background-polling";
 import { setConnectionStage } from "./connection-progress";
 import { beginRequest } from "./request-activity";
@@ -11,7 +12,7 @@ import {
   syncState,
   invalidateCache,
 } from "./smart-sync";
-const tokenKey = "records-server-session";
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -37,11 +38,10 @@ export function apiBase() {
   }
   return "";
 }
-export const session = () => sessionStorage.getItem(tokenKey);
+export const session = storedSession;
 export function setSession(token: string | null) {
   setSyncIdentity(null);
-  if (token) sessionStorage.setItem(tokenKey, token);
-  else sessionStorage.removeItem(tokenKey);
+  storeSession(token);
   window.dispatchEvent(new Event("records-session"));
 }
 type Options = { method?: string; body?: unknown; networkOnly?: boolean };
@@ -106,7 +106,8 @@ async function request<T>(path: string, options: Options): Promise<T> {
       setSession(null);
     if ([403, 404].includes(response.status) && cacheAllowed(path))
       await invalidateCache(path).catch(() => {});
-    if (path === "/api/auth/me" && response.ok && token === session()) setConnectionStage("reading");
+    if (path === "/api/auth/me" && response.ok && token === session())
+      setConnectionStage("reading");
     let data: any;
     try {
       data = await response.json();
@@ -210,6 +211,7 @@ export function watchResource<T>(
   path: string,
   next: (value: T) => void,
   error: (reason: Error) => void,
+  options: { eager?: boolean } = {},
 ) {
   let active = true,
     busy = false;
@@ -226,6 +228,10 @@ export function watchResource<T>(
       busy = false;
     }
   };
+  // A preloaded prompt needs one account check even while its webview is hidden.
+  // Reconnect events may retry it, but regular hidden-window polling stays off.
+  const eagerRefresh = () => { if(typeof navigator === "undefined" || navigator.onLine !== false)void refresh(); };
+  if(options.eager)window.addEventListener("online",eagerRefresh);
   let stopPolling: (() => void) | undefined;
   void cachedData<T>(path)
     .then((cached) => {
@@ -240,10 +246,14 @@ export function watchResource<T>(
     })
     .catch(() => {})
     .finally(() => {
-      if (active) stopPolling = startBackgroundPolling(refresh);
+      if (active) {
+        if(options.eager)eagerRefresh();
+        stopPolling = startBackgroundPolling(refresh);
+      }
     });
   return () => {
     active = false;
     stopPolling?.();
+    if(options.eager)window.removeEventListener("online",eagerRefresh);
   };
 }

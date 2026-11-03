@@ -1,3 +1,4 @@
+import {useAiDraft,AiDraftNotice} from "../lib/ai-actions";
 import Available, {
   AvailabilityEditor,
   HirePerson,
@@ -218,7 +219,7 @@ function BoardFeed({ kind, go }: { kind: BoardKind; go: Go }) {
           aria-label="Refresh Task Board"
           busy={loading}
           onClick={() => setRefresh((value) => value + 1)}
-        >
+         data-page-refresh>
           <Icon name="refresh" />
         </Action>
       </div>
@@ -294,10 +295,11 @@ function BoardFeed({ kind, go }: { kind: BoardKind; go: Go }) {
   );
 }
 function BoardEditor({ kind, go }: { kind: BoardKind; go: Go }) {
-  const [title, setTitle] = useState(""),
-    [description, setDescription] = useState(""),
-    [materials, setMaterials] = useState(""),
-    [price, setPrice] = useState(""),
+  const draft=useAiDraft(kind);
+  const [title, setTitle] = useState(draft?.fields.title||""),
+    [description, setDescription] = useState(draft?.fields.description||""),
+    [materials, setMaterials] = useState(draft?.fields.materials||""),
+    [price, setPrice] = useState(draft?.fields.priceGold||""),
     [deadline, setDeadline] = useState(""),
     [approval, setApproval] = useState(true),
     [busy, setBusy] = useState(false),
@@ -394,6 +396,7 @@ function BoardEditor({ kind, go }: { kind: BoardKind; go: Go }) {
         </button>
         <h1>{kind === "task" ? "Publish Task" : "Request Materials"}</h1>
       </header>
+      <AiDraftNotice/>
       <form className="card board-form" onSubmit={submit}>
         <label>
           Title
@@ -590,7 +593,7 @@ function BoardDetails({ id, go }: { id: string; go: Go }) {
           busy={loading}
           disabled={busy}
           onClick={() => setRefresh((value) => value + 1)}
-        >
+         data-page-refresh>
           <Icon name="refresh" />
         </Action>
       </div>

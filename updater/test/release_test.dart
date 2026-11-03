@@ -4,6 +4,14 @@ import 'package:test/test.dart';
 import '../lib/release.dart';
 
 void main() {
+  test('public display names omit internal-only build labels', () {
+    expect(releaseDisplayName('Nostra-2'), 'Nostra-2');
+    expect(releaseDisplayName('1.4.3'), '1.4.3');
+    expect(releaseDisplayName(' Build 5 – Nostra-2 '), 'Nostra-2');
+    for (final value in [null, 5, '', '5', 'Build 5']) {
+      expect(releaseDisplayName(value), isNull);
+    }
+  });
   test('signed metadata pins version, platform, repository, size and digest',
       () async {
     final alg = Ed25519(),

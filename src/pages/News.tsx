@@ -1,3 +1,4 @@
+import {useAiDraft,AiDraftNotice} from "../lib/ai-actions";
 import { SyncStatus } from "../components/SmartSync";
 import { Spinner, LoadingStatus } from "../components/Loading";
 import ExpandingConfirmation from "../components/ExpandingConfirmation";
@@ -617,6 +618,7 @@ function NewsEditor({
   meeting?: boolean;
   onPublished: (article: NewsArticle) => void;
 }) {
+  const draft=useAiDraft("news");
   const { account } = useAuth();
   const [kind, setKind] = useState<"article" | "meeting">(
       meeting ? "meeting" : "article",
@@ -625,13 +627,13 @@ function NewsEditor({
       "https://meet.google.com/aeb-wzei-sjd",
     );
   const [article, setArticle] = useState<NewsArticle | null>(null),
-    [title, setTitle] = useState(meeting ? "Meeting" : ""),
-    [subtitle, setSubtitle] = useState(""),
+    [title, setTitle] = useState(draft?.fields.title || (meeting ? "Meeting" : "")),
+    [subtitle, setSubtitle] = useState(draft?.fields.subtitle || ""),
     [text, setText] = useState(
-      meeting ? "Join the meeting using the button below." : "",
+      draft?.fields.body || (meeting ? "Join the meeting using the button below." : ""),
     ),
     [thumbnail, setThumbnail] = useState(""),
-    [format, setFormat] = useState<"markdown" | "discord">("discord"),
+    [format, setFormat] = useState<"markdown" | "discord">(draft ? "markdown" : "discord"),
     [publication, setPublication] = useState("now"),
     [schedule, setSchedule] = useState(""),
     [preview, setPreview] = useState(false),
@@ -639,7 +641,7 @@ function NewsEditor({
     [busy, setBusy] = useState(false),
     [processing, setProcessing] = useState(false),
     [error, setError] = useState(""),
-    [dirty, setDirty] = useState(false);
+    [dirty, setDirty] = useState(!!draft);
   const picker = useRef<HTMLInputElement>(null),
     unsaved = useRef(false),
     pendingNavigation = useRef<null | (() => void)>(null);
@@ -842,6 +844,7 @@ function NewsEditor({
           {preview ? "Back to editor" : "Preview"}
         </button>
       </header>
+      <AiDraftNotice/>
       {error && (
         <p role="alert" className="news-error">
           {error}

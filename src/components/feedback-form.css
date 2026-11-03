@@ -1,0 +1,165 @@
+.about-feedback-button {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  white-space: normal;
+  text-align: center;
+}
+.about-feedback-button svg {
+  flex: none;
+}
+.feedback-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  padding: 26px;
+  border: 1px solid var(--line, #ffffff20);
+  border-radius: 24px;
+  background: var(--surface, #20242a);
+  color: var(--text, #f1f3f8);
+  box-sizing: border-box;
+  overflow: auto;
+  font:
+    14px Records,
+    "Segoe UI",
+    sans-serif;
+}
+.feedback-dialog::backdrop {
+  background: #080b13a6;
+}
+.feedback-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.feedback-eyebrow {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--muted, #aeb9c6);
+}
+.feedback-dialog h2 {
+  font-size: 26px;
+  letter-spacing: -0.5px;
+  margin: 7px 0 0;
+}
+.feedback-dialog button {
+  font: inherit;
+  cursor: pointer;
+  min-height: 40px;
+  border: 1px solid var(--line, #ffffff20);
+  border-radius: 11px;
+  padding: 9px 14px;
+  color: inherit;
+  background: var(--soft, #ffffff09);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.feedback-dialog .feedback-close {
+  width: 34px;
+  min-height: 34px;
+  padding: 6px;
+  border-color: transparent;
+  background: transparent;
+}
+.feedback-dialog form,
+.feedback-dialog label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.feedback-dialog form {
+  gap: 18px;
+}
+.feedback-dialog label {
+  font-size: 12px;
+  font-weight: 700;
+}
+.feedback-dialog :is(input, textarea, select) {
+  font: inherit;
+  font-weight: 400;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  color: var(--text, #f1f3f8);
+  border: 1px solid var(--line, #ffffff20);
+  border-radius: 11px;
+  background: var(--canvas, #171a20);
+  min-height: 44px;
+}
+.feedback-dialog textarea {
+  resize: vertical;
+  min-height: 136px;
+  line-height: 1.6;
+  max-height: 40vh;
+}
+.feedback-dialog :is(input, textarea, select, button):focus-visible {
+  outline: 2px solid var(--accent, #a4c7ff);
+  outline-offset: 2px;
+}
+.feedback-dialog button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.feedback-intro {
+  font-size: 12px;
+  color: var(--muted, #aeb9c6);
+  line-height: 1.6;
+  margin: 0;
+}
+.feedback-context {
+  font-size: 11px;
+  color: var(--muted, #aeb9c6);
+  line-height: 1.5;
+  margin: 0;
+}
+.feedback-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 2px;
+}
+.feedback-dialog .feedback-submit {
+  background: var(--text, #f1f3f8);
+  color: var(--canvas, #171a20);
+  font-weight: 700;
+}
+.feedback-error {
+  color: #dc745d;
+  line-height: 1.6;
+  font-size: 12px;
+  margin: 0;
+}
+.feedback-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 14px 4px 6px;
+}
+.feedback-success > svg {
+  color: #75b79b;
+}
+.feedback-success p {
+  line-height: 1.7;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .about-feedback-button {
+    width: 100%;
+    margin-left: 0;
+  }
+  .feedback-dialog {
+    padding: 20px;
+  }
+}
+.notification-item p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

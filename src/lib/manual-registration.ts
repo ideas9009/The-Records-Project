@@ -1,3 +1,4 @@
+import { sessionRequestOptions } from "./session-storage";
 import { apiRequest, setSession } from "./api";
 export type ManualProfile = {
   username: string;
@@ -32,6 +33,7 @@ export async function submitManualRegistration(
       username: confirmation.profile.username,
       receipt: confirmation.receipt,
       confirmed: true,
+      ...sessionRequestOptions(),
       password,
     },
   });

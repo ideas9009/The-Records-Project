@@ -46,3 +46,16 @@ Future<Map<String, dynamic>> verifyManifest(
 
 Future<String> hashStream(Stream<List<int>> bytes) async =>
     (await crypto.sha256.bind(bytes).first).toString();
+
+// Display-only GitHub title. Numeric tags remain the sole update ordering input.
+String? releaseDisplayName(dynamic value) {
+  if (value is! String) return null;
+  final name = value
+      .replaceAll(RegExp(r'[\x00-\x1f]'), ' ')
+      .trim()
+      .replaceFirst(
+          RegExp(r'^build\s+\d+\b[\s·:|–—-]*', caseSensitive: false), '')
+      .trim();
+  if (name.isEmpty || RegExp(r'^\d+$').hasMatch(name)) return null;
+  return name.substring(0, name.length.clamp(0, 200));
+}

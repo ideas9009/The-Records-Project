@@ -1,8 +1,12 @@
+import { canUseDeveloperTools } from "./developer-tools";
+import type { Account } from "./cloud-auth";
+import { APP_RELEASE_LABEL } from "./app-release";
 import { APP_BUILD } from "./app-build";
 import { useSyncExternalStore } from "react";
 export type DesktopUpdate = {
   stage: string;
-  version?: string;
+  version?: string; // Internal numeric tag; never used as the public release name.
+  releaseName?: string;
   current?: string;
   notes?: string;
   message?: string;
@@ -18,8 +22,13 @@ const listeners = new Set<() => void>();
 export const desktop = () =>
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 const update = (next: DesktopUpdate) => {
-  state = { ...next, reinstall: next.reinstall ?? state.reinstall };
+  const continuing = ["downloading", "verifying", "ready", "installing", "error"].includes(next.stage) && (!next.version || next.version === state.version);
+  state = { ...next, releaseName: next.releaseName ?? (continuing ? state.releaseName : undefined), reinstall: next.reinstall ?? state.reinstall };
   listeners.forEach((fn) => fn());
+};
+const receiveNativeUpdate = (next: DesktopUpdate) => {
+  if(state.demo){beforePreview={...next};if(next.installationFailed)engagedBeforePreview=true;return;}
+  update(next);
 };
 export const updateSnapshot = () => state;
 export const updateSubscribe = (fn: () => void) => {
@@ -63,7 +72,7 @@ export function startDesktopUpdates() {
       const { listen } = await import("@tauri-apps/api/event");
       if (!active) return;
       unlisten = await listen<DesktopUpdate>("desktop-update", (event) => {
-        if (active) update(event.payload);
+        if (active) receiveNativeUpdate(event.payload);
       });
       if (!active) {
         unlisten();
@@ -71,7 +80,7 @@ export function startDesktopUpdates() {
       }
       try {
         const initial = await command("desktop_update_status");
-        update(initial);
+        receiveNativeUpdate(initial);
         if (initial.installationFailed) engaged = true;
       } catch {}
       if (active && !state.installationFailed) online();
@@ -88,23 +97,29 @@ export function startDesktopUpdates() {
   };
 }
 let demoTimer: ReturnType<typeof setInterval> | undefined;
-export function previewDesktopUpdate() {
-  if (!import.meta.env.DEV || updateBusy(state)) return;
+let beforePreview: DesktopUpdate | null = null, engagedBeforePreview = false;
+export function previewDesktopUpdate(account?: Account | null, mode: "reminder" | "prompt" = "prompt") {
+  if (!desktop() || !canUseDeveloperTools(account) || updateBusy(state) || (!state.demo && state.stage === "ready")) return false;
+  if(!state.demo){beforePreview={...state};engagedBeforePreview=engaged;}
   engaged = false;
   update({
     stage: "available",
     version: String(APP_BUILD + 1),
     current: String(APP_BUILD),
-    notes: "Preview of the sidebar update prompt. No update will be installed.",
+    releaseName: APP_RELEASE_LABEL.replace(/\s*\|\s*Phase\s*3\s*$/i, ""),
+    notes: "A preview of the new update experience.\n\n- See the current and upcoming release names.\n- Try the download progress and ready-to-install state.\n- End the preview to restore the real updater.\n\nNothing is downloaded or installed in this preview.",
     demo: true,
   });
+  window.dispatchEvent(new Event(mode === "reminder" ? "records-preview-update-reminder" : "records-open-update"));
+  return true;
 }
 export function dismissUpdatePreview() {
   if (!state.demo) return;
   if (demoTimer) clearInterval(demoTimer);
   demoTimer = undefined;
-  update({ stage: "idle" });
-  engaged = false;
+  update(beforePreview || { stage: "idle" });
+  beforePreview = null;
+  engaged = engagedBeforePreview;
 }
 export async function downloadDesktopUpdate(reinstall = false) {
   if (updateBusy(state) || state.stage === "ready") return;
@@ -112,14 +127,15 @@ export async function downloadDesktopUpdate(reinstall = false) {
   if (state.demo) {
     const info = { ...state };
     let received = 0;
-    update({ ...info, stage: "downloading", received: 0, total: 100 });
+    const total = 100 * 1024 * 1024;
+    update({ ...info, stage: "downloading", received: 0, total });
     demoTimer = setInterval(() => {
       received += 5;
       update({
         ...info,
         stage: received >= 100 ? "ready" : "downloading",
-        received,
-        total: 100,
+        received: Math.min(received,100) / 100 * total,
+        total,
       });
       if (received >= 100) {
         clearInterval(demoTimer);

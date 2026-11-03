@@ -1,3 +1,6 @@
+import {startTutorial} from "../lib/app-tutorial";
+import RhomaionSettings from "../components/RhomaionSettings";
+import WidgetSettings from "../components/WidgetSettings";
 import DeveloperTools from "./DeveloperTools";
 import { canUseDeveloperTools } from "../lib/developer-tools";
 import { useAuth } from "../lib/auth-context";
@@ -26,7 +29,7 @@ export default function Settings({
   initialTab = "appearance",
   go,
 }: {
-  initialTab?: "appearance" | "account";
+  initialTab?: "appearance" | "account" | "widgets" | "ai";
   go?: (page: string) => void;
 } = {}) {
   const { account } = useAuth();
@@ -134,9 +137,10 @@ export default function Settings({
         <div>
           <h1>Settings</h1>
         </div>
-        <span className="save-feedback" role="status">
-          {message}
-        </span>
+        <div className="settings-header-actions">
+          <span className="save-feedback" role="status">{message}</span>
+          <button type="button" onClick={startTutorial} disabled={account?.status!=="approved"}>Start tutorial</button>
+        </div>
       </header>
       <div className="settings-layout">
         <div
@@ -148,6 +152,8 @@ export default function Settings({
             ["appearance", "Appearance", "wallpaper"],
             ["account", "Account", "manage_accounts"],
             ["smartsync", "SmartSync", "sync"],
+            ["ai", "Rhōmaíōn AI", "auto_awesome"],
+            ...(desktop ? [["widgets", "Desktop Widgets", "widgets"]] : []),
             ["windows", "Windows behaviour", "desktop_windows"],
             ...(developer
               ? [["developer", "Developer Tools", "developer_mode"]]
@@ -186,6 +192,10 @@ export default function Settings({
             <DeveloperTools go={go} />
           ) : tab === "account" ? (
             <AccountSettings />
+          ) : tab === "ai" ? (
+            <RhomaionSettings go={go} />
+          ) : tab === "widgets" && desktop ? (
+            <WidgetSettings go={go} />
           ) : tab === "smartsync" ? (
             <SmartSyncSettingsPanel />
           ) : tab === "appearance" ? (

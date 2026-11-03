@@ -369,3 +369,5 @@
 @media(max-width:600px) { .about-management-credit { width:100%; } .about-management-credit img { width:min(100%,300px); } }
 
 .about-version h2 { margin:0; font-size:21px; }
+
+.settings-header-actions { margin-left:auto; display:flex; align-items:center; justify-content:flex-end; gap:16px; }

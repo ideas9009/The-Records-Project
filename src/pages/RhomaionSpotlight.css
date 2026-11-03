@@ -1,0 +1,127 @@
+html[data-rhomaion-prompt="true"],
+html[data-rhomaion-prompt="true"] body,
+html[data-rhomaion-prompt="true"] #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  color: #eef0f6;
+  font-family: Records, "Segoe UI", sans-serif;
+}
+.rhomaion-spotlight {
+  min-height: 0;
+  border-radius: 20px;
+  background: rgba(22, 24, 32, 0.75);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.rhomaion-spotlight .rhomaion-window-header {
+  order: 0;
+}
+.rhomaion-spotlight .rhomaion-permissions {
+  order: 1;
+}
+.rhomaion-spotlight .rhomaion-composer {
+  order: 3;
+  flex: none;
+  margin: 12px 16px;
+  background: #12131b80;
+  border: 1px solid #ffffff23;
+  border-radius: 14px;
+}
+.rhomaion-spotlight[data-expanded="false"] .rhomaion-composer {
+  order: 2;
+}
+.rhomaion-spotlight .rhomaion-composer textarea {
+  min-height: 54px;
+  max-height: 110px;
+}
+.rhomaion-spotlight .rhomaion-messages {
+  order: 2;
+  flex: 1;
+  animation: rhomaion-answer-reveal 260ms 90ms both;
+}
+.rhomaion-spotlight .rhomaion-error,
+.rhomaion-spotlight .rhomaion-diagnostic {
+  order: 4;
+  flex: none;
+}
+.rhomaion-spotlight .rhomaion-footer {
+  order: 6;
+  flex: none;
+}
+.rhomaion-spotlight-history {
+  order: 4;
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+  padding: 6px 16px;
+}
+.rhomaion-spotlight-history > button {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  justify-content: flex-start;
+  text-align: left;
+  margin-bottom: 4px;
+  gap: 10px;
+}
+.rhomaion-spotlight-history > button[aria-selected="true"] {
+  background: #c5b3ff25;
+}
+.rhomaion-spotlight-history > button > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rhomaion-spotlight-history small {
+  font-size: 10px;
+  color: #b5b0c5;
+}
+.rhomaion-spotlight-history p {
+  font-size: 12px;
+  color: #b5b0c5;
+  padding: 8px;
+}
+.rhomaion-spotlight .rhomaion-welcome {
+  padding: 8px;
+}
+.rhomaion-spotlight .rhomaion-welcome > span {
+  display: none;
+}
+.rhomaion-spotlight .rhomaion-message {
+  max-width: 100%;
+}
+.rhomaion-spotlight .rhomaion-unavailable {
+  background: transparent;
+}
+@keyframes rhomaion-answer-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rhomaion-spotlight .rhomaion-messages {
+    animation: none;
+  }
+}
+
+.rhomaion-spotlight .rhomaion-message {
+  animation: rhomaion-answer-reveal 240ms 90ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rhomaion-spotlight .rhomaion-message {
+    animation: none;
+  }
+}
+
+html[data-rhomaion-prompt="true"] .rhomaion-workspace.has-summary { column-gap: 12px; }
