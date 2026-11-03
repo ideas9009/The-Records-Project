@@ -54,7 +54,7 @@ export function createCompanyInterest(store, { now = Date.now } = {}) {
       ? store.inboxRows(path)
       : store.list(path, null, 100));
     return rows
-      .filter((row) => row.type === "company-registration")
+      .filter((row) => ["company-registration", "feedback-bug", "feedback-suggestion"].includes(row.type))
       .map((row) => ({
         id: row.id,
         title: row.title,
