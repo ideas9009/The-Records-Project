@@ -120,7 +120,12 @@ export function createEarthMcDirectory({
     .map((item) => typeof item === "string" ? item : item?.uuid)
     .filter(uuid)
     .map((id) => id.toLowerCase()))];
-  const hasPlayer = (items, id) => idsOf(items).includes(id);
+  const hasPlayer = (items, player) => Array.isArray(items) && items.some((item) => {
+    const id = typeof item === "string" ? item : item?.uuid;
+    if (uuid(id)) return id.toLowerCase() === player.uuid.toLowerCase();
+    const name = typeof item === "string" ? item : item?.name;
+    return typeof name === "string" && name.toLowerCase() === player.name.toLowerCase();
+  });
   async function scan(ids, load) {
     const batches = [];
     for (let start = 0; start < ids.length; start += 50)
@@ -153,21 +158,62 @@ export function createEarthMcDirectory({
         matches.records.every((enemy) => Array.isArray(enemy.residents)),
     };
   }
+  const worldTrust = { towns: new Map(), quarters: new Map(), checkedAt: null, running: false, complete: false };
+  function refreshWorldTrust() {
+    if (worldTrust.running || (worldTrust.checkedAt !== null && now() - worldTrust.checkedAt < 600000)) return;
+    worldTrust.running = true;
+    void (async () => {
+      // One shared scan for all Overview viewers, with room for normal API traffic.
+      const [townIds, quarterIds] = await Promise.all([
+        towns().then(idsOf),
+        query("quarters").then(idsOf),
+      ]);
+      let complete = true;
+      for (const [endpoint, ids, fields] of [
+        ["towns", townIds, { uuid: true, name: true, trusted: true, outlaws: true }],
+        ["quarters", quarterIds, { uuid: true, name: true, town: true, trusted: true }],
+      ]) {
+        const next = new Map();
+        for (let start = 0; start < ids.length; start += 50) {
+          const batch = ids.slice(start, start + 50);
+          try {
+            const records = await query(endpoint, batch, fields);
+            for (const record of records) {
+              const id = record?.uuid?.toLowerCase();
+              if (batch.includes(id)) next.set(id, record);
+            }
+          } catch {
+            complete = false;
+          }
+          if (start + 50 < ids.length)
+            await new Promise((resolve) => setTimeout(resolve, 850).unref());
+        }
+        if (next.size !== ids.length) complete = false;
+        worldTrust[endpoint] = next;
+      }
+      worldTrust.complete = complete;
+    })().catch(() => {
+      worldTrust.complete = false;
+    }).finally(() => {
+      worldTrust.checkedAt = now();
+      worldTrust.running = false;
+    });
+  }
   async function personalAccess(profile, nation) {
     if (!/^[A-Za-z0-9_]{3,16}$/.test(profile.username || "")) return null;
     const players = await query("players", [profile.username], { name: true, uuid: true, town: true });
     const player = players.find((item) => item?.name?.toLowerCase() === profile.username.toLowerCase());
     if (!uuid(player?.uuid)) return null;
-    const playerId = player.uuid.toLowerCase();
+    refreshWorldTrust();
     const homeId = uuid(player.town?.uuid) ? player.town.uuid.toLowerCase() : null;
     const nationIds = idsOf(nation.towns);
     const townIds = [...new Set([...nationIds.slice(0, 150), ...(homeId ? [homeId] : [])])];
     const scanned = await scan(townIds, overviewTownBatch);
-    const towns = list(scanned.records.filter((town) => townIds.includes(town.uuid?.toLowerCase())));
+    const localTowns = list(scanned.records.filter((town) => townIds.includes(town.uuid?.toLowerCase())));
     const records = new Map(scanned.records.filter((town) => uuid(town?.uuid))
       .map((town) => [town.uuid.toLowerCase(), town]));
     const home = records.get(homeId);
-    const quarterIds = idsOf(towns.flatMap((town) => {
+    const quarterIds = idsOf(localTowns.flatMap((town) => {
       const quarters = records.get(town.uuid)?.quarters;
       return Array.isArray(quarters) ? quarters : [];
     }));
@@ -176,21 +222,25 @@ export function createEarthMcDirectory({
         query("quarters", ids, { uuid: true, name: true, town: true, trusted: true }),
       ),
     );
+    const allTowns = new Map([...worldTrust.towns, ...records]);
+    const allQuarters = new Map(worldTrust.quarters);
+    for (const quarter of quarters.records) {
+      if (uuid(quarter?.uuid) && quarterIds.includes(quarter.uuid.toLowerCase()))
+        allQuarters.set(quarter.uuid.toLowerCase(), quarter);
+    }
     return {
+      scanning: worldTrust.running,
       homeTown: home?.name || player.town?.name || null,
       homeOutlaws: Array.isArray(home?.outlaws) ? list(home.outlaws) : null,
-      trustedTowns: towns.filter((town) => hasPlayer(records.get(town.uuid)?.trusted, playerId)),
-      outlawedTowns: towns.filter((town) => hasPlayer(records.get(town.uuid)?.outlaws, playerId)),
-      trustedQuarters: quarters.records.filter((quarter) =>
-        uuid(quarter?.uuid) && quarterIds.includes(quarter.uuid.toLowerCase()) &&
-        hasPlayer(quarter.trusted, playerId),
-      ).map((quarter) => ({
+      trustedTowns: list([...allTowns.values()].filter((town) => hasPlayer(town.trusted, player))),
+      outlawedTowns: list([...allTowns.values()].filter((town) => hasPlayer(town.outlaws, player))),
+      trustedQuarters: [...allQuarters.values()].filter((quarter) => hasPlayer(quarter.trusted, player)).map((quarter) => ({
         uuid: quarter.uuid.toLowerCase(),
         name: typeof quarter.name === "string" && quarter.name ? quarter.name : "Unnamed quarter",
         town: typeof quarter.town?.name === "string" ? quarter.town.name : null,
       })),
-      townsComplete: Array.isArray(nation.towns) && scanned.complete && nationIds.length <= 150,
-      quartersComplete: quarters.complete && quarterIds.length <= 200,
+      townsComplete: worldTrust.complete,
+      quartersComplete: worldTrust.complete,
     };
   }
   return {

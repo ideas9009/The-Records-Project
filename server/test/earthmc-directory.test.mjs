@@ -185,3 +185,34 @@ test("overview keeps missing personal and outlaw data distinct from an empty ene
     access: null,
   });
 });
+
+test("world trust includes towns outside Byzantium and matches username-only lists case-insensitively", async () => {
+  const outside = { uuid: b, name: "Outside town" };
+  let directoryReads = 0;
+  const service = createEarthMcDirectory({
+    fetchImpl: async (url, options) => {
+      const endpoint = url.split("/").at(-1);
+      let data = [];
+      if (endpoint === "nations") data = [{ name: "Byzantium", towns: [], enemies: [] }];
+      if (endpoint === "players") data = [{ uuid: a, name: "Viewer" }];
+      if (endpoint === "towns" && options.method === "GET") {
+        directoryReads++;
+        data = [outside];
+      }
+      if (endpoint === "towns" && options.method === "POST")
+        data = [{ ...outside, trusted: ["vIeWeR"] }];
+      if (endpoint === "quarters" && options.method === "GET") data = [{ uuid: n, name: null }];
+      if (endpoint === "quarters" && options.method === "POST")
+        data = [{ uuid: n, town: outside, trusted: [{ name: "VIEWER" }] }];
+      return { ok: true, json: async () => data };
+    },
+  });
+  const profile = { ...viewer, username: "Viewer" };
+  await service.earthmcOverviewCommunity(profile);
+  await new Promise(setImmediate);
+  const { access } = await service.earthmcOverviewCommunity(profile);
+  assert.deepEqual(access.trustedTowns, [outside]);
+  assert.deepEqual(access.trustedQuarters, [{ uuid: n, name: "Unnamed quarter", town: outside.name }]);
+  assert.equal(access.townsComplete, true);
+  assert.equal(directoryReads, 1);
+});
