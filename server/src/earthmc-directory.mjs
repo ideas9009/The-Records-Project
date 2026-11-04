@@ -21,7 +21,7 @@ export function createEarthMcDirectory({
     pending = new Map();
   let windowStart = now(),
     requests = 0;
-  async function query(endpoint, ids) {
+  async function query(endpoint, ids, template) {
     if (now() - windowStart >= 60000) {
       windowStart = now();
       requests = 0;
@@ -36,7 +36,7 @@ export function createEarthMcDirectory({
           ...(ids
             ? {
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query: ids }),
+                body: JSON.stringify({ query: ids, ...(template && { template }) }),
               }
             : {}),
           signal: AbortSignal.timeout(15000),
@@ -103,19 +103,114 @@ export function createEarthMcDirectory({
       if (!town) throw new ApiError(404, "This EarthMC town is unavailable.");
       return { town, checkedAt: new Date(now()).toISOString() };
     });
+  const overviewNation = () => saved("overview-nation", async () => {
+    const matches = await query("nations", ["Byzantium"]);
+    const nation = matches.find((item) => item?.name?.toLowerCase() === "byzantium");
+    if (!nation) throw new ApiError(503, "Byzantium is currently unavailable on EarthMC.");
+    return nation;
+  });
+  const overviewTownBatch = (ids) => saved("overview-towns:" + ids.join(","), () =>
+    query("towns", ids, { uuid: true, name: true, nation: true, stats: true, trusted: true, outlaws: true, quarters: true }),
+  );
+  const onlinePlayers = () => saved("online", async () => ({
+    players: list(await query("online")),
+    checkedAt: new Date(now()).toISOString(),
+  }), 20000);
+  const idsOf = (items) => [...new Set((Array.isArray(items) ? items : [])
+    .map((item) => typeof item === "string" ? item : item?.uuid)
+    .filter(uuid)
+    .map((id) => id.toLowerCase()))];
+  const hasPlayer = (items, id) => idsOf(items).includes(id);
+  async function scan(ids, load) {
+    const batches = [];
+    for (let start = 0; start < ids.length; start += 50)
+      batches.push(load(ids.slice(start, start + 50)));
+    const results = await Promise.allSettled(batches);
+    const records = results.flatMap((result) => result.status === "fulfilled" ? result.value : []);
+    const found = new Set(idsOf(records));
+    return { records, complete: ids.every((id) => found.has(id)) };
+  }
+  async function enemyPresence(nation) {
+    if (!Array.isArray(nation.enemies)) return null;
+    const allIds = idsOf(nation.enemies);
+    if (!allIds.length) return { players: [], complete: nation.enemies.length === 0 };
+    const [online, matches] = await Promise.all([
+      onlinePlayers(),
+      scan(allIds.slice(0, 100), (ids) => saved("enemy-nations:" + ids.join(","), () =>
+        query("nations", ids, { uuid: true, name: true, residents: true }),
+      )),
+    ]);
+    const byPlayer = new Map();
+    const enemies = new Set(allIds);
+    for (const enemy of matches.records) {
+      if (!enemies.has(enemy.uuid?.toLowerCase()) || typeof enemy.name !== "string") continue;
+      for (const id of idsOf(enemy.residents)) byPlayer.set(id, enemy.name);
+    }
+    return {
+      players: online.players.filter((player) => byPlayer.has(player.uuid))
+        .map((player) => ({ ...player, nation: byPlayer.get(player.uuid) })),
+      complete: matches.complete && allIds.length <= 100 &&
+        matches.records.every((enemy) => Array.isArray(enemy.residents)),
+    };
+  }
+  async function personalAccess(profile, nation) {
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(profile.username || "")) return null;
+    const players = await query("players", [profile.username], { name: true, uuid: true, town: true });
+    const player = players.find((item) => item?.name?.toLowerCase() === profile.username.toLowerCase());
+    if (!uuid(player?.uuid)) return null;
+    const playerId = player.uuid.toLowerCase();
+    const homeId = uuid(player.town?.uuid) ? player.town.uuid.toLowerCase() : null;
+    const nationIds = idsOf(nation.towns);
+    const townIds = [...new Set([...nationIds.slice(0, 150), ...(homeId ? [homeId] : [])])];
+    const scanned = await scan(townIds, overviewTownBatch);
+    const towns = list(scanned.records.filter((town) => townIds.includes(town.uuid?.toLowerCase())));
+    const records = new Map(scanned.records.filter((town) => uuid(town?.uuid))
+      .map((town) => [town.uuid.toLowerCase(), town]));
+    const home = records.get(homeId);
+    const quarterIds = idsOf(towns.flatMap((town) => {
+      const quarters = records.get(town.uuid)?.quarters;
+      return Array.isArray(quarters) ? quarters : [];
+    }));
+    const quarters = await scan(quarterIds.slice(0, 200), (ids) =>
+      saved("overview-quarters:" + ids.join(","), () =>
+        query("quarters", ids, { uuid: true, name: true, town: true, trusted: true }),
+      ),
+    );
+    return {
+      homeTown: home?.name || player.town?.name || null,
+      homeOutlaws: Array.isArray(home?.outlaws) ? list(home.outlaws) : null,
+      trustedTowns: towns.filter((town) => hasPlayer(records.get(town.uuid)?.trusted, playerId)),
+      outlawedTowns: towns.filter((town) => hasPlayer(records.get(town.uuid)?.outlaws, playerId)),
+      trustedQuarters: quarters.records.filter((quarter) =>
+        uuid(quarter?.uuid) && quarterIds.includes(quarter.uuid.toLowerCase()) &&
+        hasPlayer(quarter.trusted, playerId),
+      ).map((quarter) => ({
+        uuid: quarter.uuid.toLowerCase(),
+        name: typeof quarter.name === "string" && quarter.name ? quarter.name : "Unnamed quarter",
+        town: typeof quarter.town?.name === "string" ? quarter.town.name : null,
+      })),
+      townsComplete: Array.isArray(nation.towns) && scanned.complete && nationIds.length <= 150,
+      quartersComplete: quarters.complete && quarterIds.length <= 200,
+    };
+  }
   return {
+    earthmcOverviewCommunity: async (profile) => {
+      allowed(profile);
+      const nation = await overviewNation();
+      const [online, access] = await Promise.allSettled([
+        enemyPresence(nation),
+        personalAccess(profile, nation),
+      ]);
+      return {
+        nationOutlaws: Array.isArray(nation.outlaws) ? list(nation.outlaws) : null,
+        onlineEnemies: online.status === "fulfilled" ? online.value : null,
+        access: access.status === "fulfilled" ? access.value : null,
+      };
+    },
     earthmcOverview: async (profile) => {
       allowed(profile);
       return saved("overview", async () => {
-        const matches = await query("nations", ["Byzantium"]);
-        const item = matches.find(
-          (n) => n?.name?.toLowerCase() === "byzantium",
-        );
-        if (!item)
-          throw new ApiError(
-            503,
-            "Byzantium is currently unavailable on EarthMC.",
-          );
+        const item = await overviewNation();
         const valid = (n) =>
           typeof n === "number" && Number.isFinite(n) && n >= 0 ? n : null;
         const nation = {
@@ -143,8 +238,7 @@ export function createEarthMcDirectory({
         let chartError = "";
         try {
           for (let start = 0; start < names.length; start += 50) {
-            const batch = await query(
-              "towns",
+            const batch = await overviewTownBatch(
               names.slice(start, start + 50).map((t) => t.uuid || t.name),
             );
             for (const town of batch)
@@ -195,14 +289,7 @@ export function createEarthMcDirectory({
     },
     earthmcOnline: async (profile) => {
       allowed(profile);
-      return saved(
-        "online",
-        async () => ({
-          players: list(await query("online")),
-          checkedAt: new Date(now()).toISOString(),
-        }),
-        20000,
-      );
+      return onlinePlayers();
     },
     earthmcDirectory: async (profile) => {
       allowed(profile);

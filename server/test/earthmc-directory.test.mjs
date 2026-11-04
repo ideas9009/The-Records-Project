@@ -127,3 +127,61 @@ test("upstream errors and invalid payloads are safely reported", async () => {
 });
 
 test('player opt-out is rechecked without returning a formerly cached public profile',async()=>{let calls=0;const service=createEarthMcDirectory({fetchImpl:async()=>({ok:true,json:async()=>++calls===1?[{name:'Example',uuid:a,stats:{balance:99}}]:[]})});assert.equal((await service.earthmcPlayer(viewer,a)).player.stats.balance,99);await assert.rejects(()=>service.earthmcPlayer(viewer,a),error=>error.status===404&&/unavailable|opted out/.test(error.message));assert.equal(calls,2);});
+
+test("overview keeps nation and home-town outlaws separate and matches only publicly online enemies", async () => {
+  const id = (index) => "00000000-0000-4000-8000-" + String(index).padStart(12, "0");
+  const person = (name, index) => ({ name, uuid: id(index) });
+  const self = person("Viewer", 1);
+  const enemy = person("Enemy", 2);
+  const omitted = person("Omitted", 3);
+  const home = person("Home", 4);
+  const otherTown = person("OtherTown", 5);
+  const hostile = person("HostileNation", 6);
+  const townOutlaw = person("TownOutlaw", 7);
+  const nationOutlaw = person("NationOutlaw", 8);
+  const quarter = person("Market apartment", 9);
+  const service = createEarthMcDirectory({
+    fetchImpl: async (url, options) => {
+      const endpoint = url.split("/").at(-1);
+      const { query } = options.body ? JSON.parse(options.body) : {};
+      const response = {
+        nations: query?.[0] === "Byzantium"
+          ? [{ name: "Byzantium", towns: [home, otherTown], enemies: [hostile], outlaws: [nationOutlaw] }]
+          : [{ ...hostile, residents: [enemy, omitted] }],
+        players: [{ ...self, town: home }],
+        towns: [
+          { ...home, trusted: [], outlaws: [townOutlaw], quarters: [quarter] },
+          { ...otherTown, trusted: [self], outlaws: [self], quarters: [] },
+        ],
+        quarters: [{ ...quarter, town: home, trusted: [self] }],
+        online: { count: 3, players: [enemy, person("Neutral", 10)] },
+      }[endpoint];
+      return { ok: true, json: async () => response };
+    },
+  });
+  const result = await service.earthmcOverviewCommunity({ ...viewer, username: self.name });
+  assert.deepEqual(result.nationOutlaws, [nationOutlaw]);
+  assert.deepEqual(result.access.homeOutlaws, [townOutlaw]);
+  assert.deepEqual(result.onlineEnemies, {
+    players: [{ ...enemy, nation: hostile.name }],
+    complete: true,
+  });
+  assert.deepEqual(result.access.trustedTowns, [otherTown]);
+  assert.deepEqual(result.access.outlawedTowns, [otherTown]);
+  assert.deepEqual(result.access.trustedQuarters, [{ ...quarter, town: home.name }]);
+});
+
+test("overview keeps missing personal and outlaw data distinct from an empty enemy list", async () => {
+  const service = createEarthMcDirectory({
+    fetchImpl: async (url) => ({
+      ok: true,
+      json: async () => url.endsWith("/nations") ? [{ name: "Byzantium", enemies: [] }] : [],
+    }),
+  });
+  const result = await service.earthmcOverviewCommunity({ ...viewer, username: "Viewer" });
+  assert.deepEqual(result, {
+    nationOutlaws: null,
+    onlineEnemies: { players: [], complete: true },
+    access: null,
+  });
+});
