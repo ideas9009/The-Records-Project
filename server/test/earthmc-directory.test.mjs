@@ -159,6 +159,7 @@ test("overview keeps nation and home-town outlaws separate and matches only publ
       return { ok: true, json: async () => response };
     },
   });
+  await service.refreshWorldTrust();
   const result = await service.earthmcOverviewCommunity({ ...viewer, username: self.name });
   assert.deepEqual(result.nationOutlaws, [nationOutlaw]);
   assert.deepEqual(result.access.homeOutlaws, [townOutlaw]);
@@ -178,7 +179,7 @@ test("overview keeps missing personal and outlaw data distinct from an empty ene
       json: async () => url.endsWith("/nations") ? [{ name: "Byzantium", enemies: [] }] : [],
     }),
   });
-  const result = await service.earthmcOverviewCommunity({ ...viewer, username: "Viewer" });
+  const result = await service.earthmcOverviewCommunity(viewer);
   assert.deepEqual(result, {
     nationOutlaws: null,
     onlineEnemies: { players: [], complete: true },
@@ -194,7 +195,7 @@ test("world trust includes towns outside Byzantium and matches username-only lis
       const endpoint = url.split("/").at(-1);
       let data = [];
       if (endpoint === "nations") data = [{ name: "Byzantium", towns: [], enemies: [] }];
-      if (endpoint === "players") data = [{ uuid: a, name: "Viewer" }];
+      // The profile can be missing while a public trust entry contains the signed-in name.
       if (endpoint === "towns" && options.method === "GET") {
         directoryReads++;
         data = [outside];
@@ -208,11 +209,12 @@ test("world trust includes towns outside Byzantium and matches username-only lis
     },
   });
   const profile = { ...viewer, username: "Viewer" };
-  await service.earthmcOverviewCommunity(profile);
-  await new Promise(setImmediate);
+  const stop = service.startEarthMcTrustScan();
+  await service.refreshWorldTrust();
+  stop();
   const { access } = await service.earthmcOverviewCommunity(profile);
   assert.deepEqual(access.trustedTowns, [outside]);
   assert.deepEqual(access.trustedQuarters, [{ uuid: n, name: "Unnamed quarter", town: outside.name }]);
-  assert.equal(access.townsComplete, true);
+  assert.equal(access.towns.complete, true);
   assert.equal(directoryReads, 1);
 });

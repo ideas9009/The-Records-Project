@@ -19,8 +19,10 @@ if(provider==='openrouter'){
  ai.apiKey=process.env.OPENROUTER_API_KEY?.trim()||'';
  if(!ai.apiKey)try{ai.apiKey=await loadLegacyOpenRouterKey()}catch{console.warn('OpenRouter setup could not load. Set OPENROUTER_API_KEY in the server environment.')}
 }
-const api=createApi(createService(store,{sampleTown,ai}),{origins,trustRenderProxy:!!process.env.RENDER});
+const service=createService(store,{sampleTown,ai});
+const api=createApi(service,{origins,trustRenderProxy:!!process.env.RENDER});
 api.requestTimeout=30000;api.headersTimeout=10000;
 api.listen(Number(process.env.PORT)||8787,'0.0.0.0',()=>console.log('The Records Project API is ready.'));
 const cleanup=async()=>{try{for(const collection of ['server_oauth','server_registration_receipts']){const expired=await store.expired(collection,Date.now());await Promise.all(expired.map(item=>store.remove(collection+'/'+item.id)))}}catch{console.warn('Expired verification cleanup will retry.')}};void cleanup();const cleanupTimer=setInterval(()=>void cleanup(),10*60000);cleanupTimer.unref();
-process.on('SIGTERM',()=>api.close(()=>process.exit(0)));
+const stopTrustScan=service.startEarthMcTrustScan();
+process.on('SIGTERM',()=>{stopTrustScan();api.close(()=>process.exit(0))});
